@@ -1,0 +1,142 @@
+erDiagram
+    USER {
+        id UserId PK
+        text Email
+        text UserType
+        text Status
+    }
+
+    PATIENT_PROFILE {
+        id PatientProfileId PK
+        id UserId FK
+        text FullName
+        date BirthDate
+    }
+
+    MEDICAL_DOCUMENT {
+        id DocumentId PK
+        id PatientProfileId FK
+        text DocumentType
+        text Title
+        date DocumentDate
+    }
+
+    EXTRACTED_FIELD {
+        id ExtractedFieldId PK
+        id DocumentId FK
+        text FieldGroup
+        text FieldName
+        text ExtractedValue
+        number Confidence
+    }
+
+    FIELD_REVIEW {
+        id FieldReviewId PK
+        id ExtractedFieldId FK
+        id MedicalRecordId FK
+        text Decision
+        text CorrectedValue
+        date ReviewedAt
+    }
+
+    MEDICAL_RECORD {
+        id MedicalRecordId PK
+        id PatientProfileId FK
+        text RecordType
+        text DisplayName
+        date ClinicalDate
+        text Status
+    }
+
+    SOURCE_REFERENCE {
+        id SourceReferenceId PK
+        id MedicalRecordId FK
+        id DocumentId FK
+        text PageReference
+    }
+
+    DOCUMENT_CHUNK {
+        id DocumentChunkId PK
+        id DocumentId FK
+        number SequenceNumber
+        text PageReference
+    }
+
+    MEDICAL_CV {
+        id MedicalCVId PK
+        id PatientProfileId FK
+        text Title
+    }
+
+    MEDICAL_CV_VERSION {
+        id MedicalCVVersionId PK
+        id MedicalCVId FK
+        number VersionNumber
+        text Status
+        date CreatedAt
+    }
+
+    REMINDER {
+        id ReminderId PK
+        id PatientProfileId FK
+        id MedicalRecordId FK
+        text ReminderType
+        date ScheduledFor
+        text RepeatPattern
+        text Status
+    }
+
+    CONSENT_RECORD {
+        id ConsentRecordId PK
+        id PatientProfileId FK
+        text ConsentType
+        text Decision
+        date EffectiveAt
+        date ExpiresAt
+    }
+
+    SHARED_CV_LINK {
+        id SharedCVLinkId PK
+        id MedicalCVVersionId FK
+        id ConsentRecordId FK
+        text Recipient
+        text Permission
+        date ExpiresAt
+        text Status
+    }
+
+    AUDIT_LOG {
+        id AuditLogId PK
+        id ActorUserId FK
+        id PatientProfileId FK
+        text Action
+        text Target
+        date OccurredAt
+    }
+
+    USER ||--o| PATIENT_PROFILE : has
+
+    PATIENT_PROFILE ||--o{ MEDICAL_DOCUMENT : owns
+    MEDICAL_DOCUMENT ||--o{ EXTRACTED_FIELD : produces
+    EXTRACTED_FIELD ||--o| FIELD_REVIEW : receives
+
+    PATIENT_PROFILE ||--o{ MEDICAL_RECORD : owns
+    MEDICAL_RECORD o|--o{ FIELD_REVIEW : assembled_from
+    MEDICAL_RECORD ||--|{ SOURCE_REFERENCE : has_sources
+    MEDICAL_DOCUMENT ||--o{ SOURCE_REFERENCE : supports
+
+    MEDICAL_DOCUMENT ||--o{ DOCUMENT_CHUNK : produces
+
+    PATIENT_PROFILE ||--o{ MEDICAL_CV : owns
+    MEDICAL_CV ||--|{ MEDICAL_CV_VERSION : has_versions
+    MEDICAL_CV_VERSION }o--|{ MEDICAL_RECORD : summarizes
+
+    PATIENT_PROFILE ||--o{ REMINDER : owns
+    MEDICAL_RECORD o|--o{ REMINDER : may_trigger
+
+    PATIENT_PROFILE ||--o{ CONSENT_RECORD : controls
+    CONSENT_RECORD ||--o{ SHARED_CV_LINK : authorizes
+    MEDICAL_CV_VERSION ||--o{ SHARED_CV_LINK : shared_as
+
+    USER o|--o{ AUDIT_LOG : performs
+    PATIENT_PROFILE o|--o{ AUDIT_LOG : scopes
