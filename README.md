@@ -1,2 +1,0 @@
-# Islamic-competition-platform
-

@@ -1,9 +1,0 @@
-namespace Hakeem.Domain.Enums.Notifications;
-
-public enum OutboxEventStatus
-{
-    Pending = 0,
-    Processing = 1,
-    Processed = 2,
-    Failed = 3
-}
