@@ -121,7 +121,19 @@
     <value>Block with id : {0} not found</value>
     <comment/>
   </data>
-
-
- 
+  <data name="Profile.NotFound" xml:space="preserve">
+    <value>No patient profile found.</value>
+  </data>
+  <data name="Profile.Retrieved" xml:space="preserve">
+    <value>Profile retrieved successfully.</value>
+  </data>
+  <data name="Profile.Updated" xml:space="preserve">
+    <value>Profile updated successfully.</value>
+  </data>
+  <data name="Profile.InvalidRequest" xml:space="preserve">
+    <value>At least one valid field must be provided.</value>
+  </data>
+  <data name="Profile.ValidationFailed" xml:space="preserve">
+    <value>Profile validation failed.</value>
+  </data>
 </root>
