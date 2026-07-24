@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Hakeem.Api.Authentication;
 using Hakeem.Api.Extensions;
+using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Common.ResponseModel;
 using Hakeem.Application.Configurations;
 using Hakeem.Application.Constants;
@@ -65,6 +67,10 @@ public class Program
                     options.JsonSerializerOptions.MaxDepth = 64;
 
                 });
+
+            builder.Services.AddScoped<
+                ICurrentUserContext,
+                DevelopmentCurrentUserContext>();
 
             var app = builder.Build();
 
@@ -176,6 +182,14 @@ public class Program
             logger.LogWarning("DbContext {Context} is not registered. Skipping migration.", displayName);
             return;
         }
+
+        var connection = dbContext.Database.GetDbConnection();
+
+        logger.LogCritical(
+            "ACTUAL DATABASE => Server: {Server} | Database: {Database} | ConnectionString: {ConnectionString}",
+            connection.DataSource,
+            connection.Database,
+            connection.ConnectionString);
 
         logger.LogInformation("Applying migrations for {Context}...", displayName);
 
