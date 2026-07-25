@@ -136,4 +136,16 @@
   <data name="Profile.ValidationFailed" xml:space="preserve">
     <value>Profile validation failed.</value>
   </data>
+  <data name="Auth.PasswordResetSent" xml:space="preserve">
+    <value>If the account exists, password reset instructions have been issued.</value>
+  </data>
+  <data name="Auth.PasswordResetSuccess" xml:space="preserve">
+    <value>Password reset completed.</value>
+  </data>
+  <data name="Auth.InvalidResetToken" xml:space="preserve">
+    <value>The password reset token is invalid or has expired.</value>
+  </data>
+  <data name="Validation.InvalidRequest" xml:space="preserve">
+    <value>The request body is invalid.</value>
+  </data>
 </root>

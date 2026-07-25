@@ -132,4 +132,16 @@
   <data name="Profile.ValidationFailed" xml:space="preserve">
     <value>فشل التحقق من صحة الملف الشخصي.</value>
   </data>
+  <data name="Auth.PasswordResetSent" xml:space="preserve">
+    <value>إذا كان الحساب موجودًا، فسيتم إصدار تعليمات استعادة كلمة المرور.</value>
+  </data>
+  <data name="Auth.PasswordResetSuccess" xml:space="preserve">
+    <value>تمت إعادة تعيين كلمة المرور بنجاح.</value>
+  </data>
+  <data name="Auth.InvalidResetToken" xml:space="preserve">
+    <value>رمز استعادة كلمة المرور غير صالح أو منتهي الصلاحية.</value>
+  </data>
+  <data name="Validation.InvalidRequest" xml:space="preserve">
+    <value>نص الطلب غير صالح.</value>
+  </data>
 </root>
