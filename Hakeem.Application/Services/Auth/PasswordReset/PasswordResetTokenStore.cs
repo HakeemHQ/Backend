@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Hakeem.Domain.Interfaces.ServiceLifetime;
 
-namespace Hakeem.Application.Services.Auth;
+namespace Hakeem.Application.Services.Auth.PasswordReset;
 
 public interface IPasswordResetTokenStore : IScoped
 {

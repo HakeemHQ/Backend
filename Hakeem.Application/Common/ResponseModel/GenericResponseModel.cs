@@ -18,7 +18,7 @@ public class GenericResponseModel<TResponse> : BaseResponseModel
 
     public GenericResponseModel(string message, TResponse data) : base(message) => Data = data;
 
-    public static GenericResponseModel<TResponse> Success(TResponse data, string message = "")
+    public new static GenericResponseModel<TResponse> Success(TResponse data, string message = "")
         => new GenericResponseModel<TResponse>(message, data);
 
     public static GenericResponseModel<TResponse> Failure(string message, IList<ErrorResponseModel> errorList)

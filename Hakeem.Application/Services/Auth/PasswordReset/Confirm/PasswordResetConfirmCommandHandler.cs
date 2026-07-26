@@ -1,15 +1,18 @@
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Repositories.Users;
+using Hakeem.Application.Services.Auth.PasswordHashing;
+using Hakeem.Application.Services.Auth.PasswordReset;
 using Hakeem.Domain.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 
-namespace Hakeem.Application.Services.Auth;
+namespace Hakeem.Application.Services.Auth.PasswordReset.Confirm;
 
 public sealed class PasswordResetConfirmCommandHandler(
     IUserRepository userRepository,
     IPasswordResetTokenStore passwordResetTokenStore,
+    IPasswordHasher passwordHasher,
     IUnitOfWork unitOfWork)
     : IRequestHandler<PasswordResetConfirmCommand, Unit>
 {
@@ -32,8 +35,7 @@ public sealed class PasswordResetConfirmCommandHandler(
             throw new LocalizedHttpException(ErrorCodes.AuthInvalidResetToken, StatusCodes.Status422UnprocessableEntity);
         }
 
-        var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
-        user.PasswordHash = passwordHash;
+        user.PasswordHash = passwordHasher.Hash(request.NewPassword);
 
         await unitOfWork.SaveChanges(cancellationToken);
 

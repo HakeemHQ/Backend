@@ -15,6 +15,11 @@ public class UserRepository : IUserRepository, IScoped
         _dbContext = dbContext;
     }
 
+    public void Add(User user)
+    {
+        _dbContext.Users.Add(user);
+    }
+
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
     {
         return await _dbContext.Users

@@ -2,13 +2,14 @@ using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Repositories.Notifications;
 using Hakeem.Application.Repositories.Users;
+using Hakeem.Application.Services.Auth.PasswordReset;
 using Hakeem.Domain.DomainEvents.Outbox;
 using Hakeem.Domain.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 
-namespace Hakeem.Application.Services.Auth;
+namespace Hakeem.Application.Services.Auth.PasswordReset.Request;
 
 public sealed class PasswordResetRequestCommandHandler(
     IUserRepository userRepository,

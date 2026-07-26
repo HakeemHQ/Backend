@@ -9,6 +9,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     public void Configure(EntityTypeBuilder<User> builder)
     {
         builder.HasKey(e => e.Id);
+        builder.HasIndex(e => e.Email).IsUnique();
+        builder.Property(e => e.Email).HasMaxLength(256);
+
         builder.HasOne(u => u.PatientProfile)
                .WithOne(p => p.User)
                .HasForeignKey<PatientProfile>(p => p.UserId);

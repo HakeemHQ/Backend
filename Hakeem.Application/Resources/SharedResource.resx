@@ -142,6 +142,15 @@
   <data name="Auth.PasswordResetSuccess" xml:space="preserve">
     <value>Password reset completed.</value>
   </data>
+  <data name="Auth.Registered" xml:space="preserve">
+    <value>Account created successfully.</value>
+  </data>
+  <data name="User.EmailAlreadyExists" xml:space="preserve">
+    <value>This email address is already registered.</value>
+  </data>
+  <data name="Validation.Error" xml:space="preserve">
+    <value>One or more fields are invalid.</value>
+  </data>
   <data name="Auth.InvalidResetToken" xml:space="preserve">
     <value>The password reset token is invalid or has expired.</value>
   </data>
@@ -153,6 +162,24 @@
   </data>
   <data name="Validation.InvalidEmail" xml:space="preserve">
     <value>Invalid email format.</value>
+  </data>
+  <data name="Validation.EmailTooLong" xml:space="preserve">
+    <value>Email must not exceed 256 characters.</value>
+  </data>
+  <data name="Validation.FirstNameTooLong" xml:space="preserve">
+    <value>First name must not exceed 100 characters.</value>
+  </data>
+  <data name="Validation.LastNameTooLong" xml:space="preserve">
+    <value>Last name must not exceed 100 characters.</value>
+  </data>
+  <data name="Validation.InvalidPhoneNumber" xml:space="preserve">
+    <value>Phone number must contain 8 to 15 digits and may start with +.</value>
+  </data>
+  <data name="Validation.InvalidGender" xml:space="preserve">
+    <value>Gender must be Male or Female.</value>
+  </data>
+  <data name="Validation.BirthDateInPast" xml:space="preserve">
+    <value>Birth date must be in the past.</value>
   </data>
   <data name="Validation.PasswordTooShort" xml:space="preserve">
     <value>Password must be at least 8 characters long.</value>

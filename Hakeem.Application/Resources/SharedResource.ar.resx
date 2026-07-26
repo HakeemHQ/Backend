@@ -138,6 +138,15 @@
   <data name="Auth.PasswordResetSuccess" xml:space="preserve">
     <value>تمت إعادة تعيين كلمة المرور بنجاح.</value>
   </data>
+  <data name="Auth.Registered" xml:space="preserve">
+    <value>تم إنشاء الحساب بنجاح.</value>
+  </data>
+  <data name="User.EmailAlreadyExists" xml:space="preserve">
+    <value>هذا البريد الإلكتروني مسجل بالفعل.</value>
+  </data>
+  <data name="Validation.Error" xml:space="preserve">
+    <value>حقل واحد أو أكثر غير صالح.</value>
+  </data>
   <data name="Auth.InvalidResetToken" xml:space="preserve">
     <value>رمز استعادة كلمة المرور غير صالح أو منتهي الصلاحية.</value>
   </data>
@@ -149,6 +158,24 @@
   </data>
   <data name="Validation.InvalidEmail" xml:space="preserve">
     <value>تنسيق البريد الإلكتروني غير صالح.</value>
+  </data>
+  <data name="Validation.EmailTooLong" xml:space="preserve">
+    <value>يجب ألا يتجاوز البريد الإلكتروني 256 حرفًا.</value>
+  </data>
+  <data name="Validation.FirstNameTooLong" xml:space="preserve">
+    <value>يجب ألا يتجاوز الاسم الأول 100 حرف.</value>
+  </data>
+  <data name="Validation.LastNameTooLong" xml:space="preserve">
+    <value>يجب ألا يتجاوز اسم العائلة 100 حرف.</value>
+  </data>
+  <data name="Validation.InvalidPhoneNumber" xml:space="preserve">
+    <value>يجب أن يحتوي رقم الهاتف على 8 إلى 15 رقمًا ويمكن أن يبدأ بعلامة +.</value>
+  </data>
+  <data name="Validation.InvalidGender" xml:space="preserve">
+    <value>يجب أن يكون النوع ذكرًا أو أنثى.</value>
+  </data>
+  <data name="Validation.BirthDateInPast" xml:space="preserve">
+    <value>يجب أن يكون تاريخ الميلاد في الماضي.</value>
   </data>
   <data name="Validation.PasswordTooShort" xml:space="preserve">
     <value>يجب أن تكون كلمة المرور على الأقل 8 أحرف.</value>

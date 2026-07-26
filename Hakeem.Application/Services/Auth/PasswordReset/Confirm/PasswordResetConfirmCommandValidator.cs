@@ -2,7 +2,7 @@ using FluentValidation;
 using Hakeem.Application.Resources;
 using Microsoft.Extensions.Localization;
 
-namespace Hakeem.Application.Services.Auth;
+namespace Hakeem.Application.Services.Auth.PasswordReset.Confirm;
 
 public sealed class PasswordResetConfirmCommandValidator : AbstractValidator<PasswordResetConfirmCommand>
 {

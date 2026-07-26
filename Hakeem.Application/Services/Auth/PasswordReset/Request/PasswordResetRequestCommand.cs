@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace Hakeem.Application.Services.Auth;
+namespace Hakeem.Application.Services.Auth.PasswordReset.Request;
 
 public sealed class PasswordResetRequestCommand : IRequest<Unit>
 {
