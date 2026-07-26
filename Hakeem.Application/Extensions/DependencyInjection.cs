@@ -4,11 +4,10 @@ using FluentValidation.AspNetCore;
 using Mapster;
 using MapsterMapper;
 using Microsoft.Extensions.DependencyInjection;
-using Hakeem.Application.Abstractions;
 using Hakeem.Domain.Interfaces.ServiceLifetime;
+using Hakeem.Application.Abstractions;
 
 namespace Hakeem.Application.Extensions;
-
 public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)

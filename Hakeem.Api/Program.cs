@@ -71,7 +71,7 @@ public class Program
             await ApplyDatabaseMigrationsAsync(app.Services);
 
             LogStartupInformation(app);
-
+         
             app.UseWebApiMiddleware();
 
             if (!app.Environment.IsDevelopment())

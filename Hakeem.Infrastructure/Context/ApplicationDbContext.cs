@@ -1,17 +1,16 @@
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Entities.NotificationsEntites;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Hakeem.Infrastructure.Context;
-
-
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext: IdentityDbContext<User, IdentityRole<Guid>, Guid>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
-    }
 
+    }
     public virtual DbSet<OutboxEvent> OutboxEvents { get; set; }
     public virtual DbSet<EmailRecipient> EmailRecipients { get; set; }
     public virtual DbSet<EmailTemplate> EmailTemplates { get; set; }
@@ -34,8 +33,12 @@ public class ApplicationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<User>().ToTable("Users");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
+
+   
 
     public override int SaveChanges()
     {

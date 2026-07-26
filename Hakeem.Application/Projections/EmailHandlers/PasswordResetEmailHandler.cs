@@ -1,5 +1,4 @@
 using Hakeem.Application.Abstractions;
-using Hakeem.Application.Interfaces;
 using Hakeem.Application.Interfaces.Notifications;
 using Hakeem.Application.Repositories.Notifications;
 using Hakeem.Domain.DomainEvents.Outbox;

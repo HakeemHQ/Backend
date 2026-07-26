@@ -46,9 +46,6 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Hakeem.Application\Hakeem.Application.csproj" />
     <ProjectReference Include="..\Hakeem.Infrastructure\Hakeem.Infrastructure.csproj" />
   </ItemGroup>

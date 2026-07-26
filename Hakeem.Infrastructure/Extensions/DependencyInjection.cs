@@ -1,19 +1,22 @@
-﻿using System.Reflection;
+using Hakeem.Application.Interfaces.Notifications;
+using Hakeem.Domain.DomainEvents.Outbox;
+using Hakeem.Domain.Entities;
 using Hakeem.Domain.Interfaces.ServiceLifetime;
+using Hakeem.Infrastructure.Context;
+using Hakeem.Infrastructure.Services;
+using Hakeem.Infrastructure.Services.Notifications;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Hakeem.Domain.DomainEvents.Outbox;
-using Hakeem.Infrastructure.Services;
-using Hakeem.Infrastructure.Context;
+using Microsoft.Extensions.Options;
+using System.Reflection;
 
 namespace Hakeem.Infrastructure.Extensions;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructure(
-        this IServiceCollection services,
-        IConfiguration configuration,
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration,
         bool isDevelopment)
     {
         services.RegisterServicesWithLifetime(Assembly.GetExecutingAssembly());
@@ -29,6 +32,23 @@ public static class DependencyInjection
                 options.EnableDetailedErrors();
             }
         });
+
+        services.AddIdentityCore<User>(options =>
+        {
+            options.Password.RequiredLength = 6;
+            options.Password.RequireDigit = true;
+            options.Password.RequireUppercase = false;
+            options.Password.RequireNonAlphanumeric = false;
+        })
+        .AddEntityFrameworkStores<ApplicationDbContext>()
+        .AddSignInManager()
+        .AddDefaultTokenProviders();
+
+        services.Configure<ClientAppSettings>(
+        configuration.GetSection("ClientAppSettings"));
+
+        services.AddSingleton<IClientAppSettings>(sp =>
+        sp.GetRequiredService<IOptions<ClientAppSettings>>().Value);
 
         services.AddHttpClient();
 
