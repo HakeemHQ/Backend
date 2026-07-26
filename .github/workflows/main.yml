@@ -1,6 +1,10 @@
 name: Build, publish and deploy to MonsterASP.NET
-on: [push]
-
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch: # optional - allows manual run
+  
 jobs:
   build_and_deploy:
     runs-on: windows-latest
