@@ -4,6 +4,7 @@ using Hakeem.Application.Resources;
 using Hakeem.Application.Services.Auth.PasswordReset.Confirm;
 using Hakeem.Application.Services.Auth.PasswordReset.Request;
 using Hakeem.Application.Services.Auth.Registration;
+using Hakeem.Application.Services.Auth.Login;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using MediatR;
@@ -19,15 +20,53 @@ public class AuthController : ApiControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IValidator<RegisterCommand> _registerValidator;
+    private readonly IValidator<LoginCommand> _loginValidator;
 
     public AuthController(
         IMediator mediator,
         IValidator<RegisterCommand> registerValidator,
+        IValidator<LoginCommand> loginValidator,
         IStringLocalizer<SharedResource> localizer)
         : base(localizer)
     {
         _mediator = mediator;
         _registerValidator = registerValidator;
+        _loginValidator = loginValidator;
+    }
+
+    [AllowAnonymous]
+    [HttpPost("login")]
+    [ProducesResponseType(typeof(GenericResponseModel<LoginResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GenericResponseModel<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(GenericResponseModel<object>), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Login(
+        [FromBody, CustomizeValidator(Skip = true)] LoginCommand request,
+        CancellationToken cancellationToken)
+    {
+        if (request is null)
+        {
+            return BadRequest(GenericResponseModel<object>.Failure(
+                Localizer["Validation.InvalidRequest"].Value,
+                "Validation.InvalidRequest"));
+        }
+
+        var validationResult = await _loginValidator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            var errors = validationResult.Errors
+                .Select(error => ErrorResponseModel.Create(
+                    error.PropertyName,
+                    error.ErrorMessage,
+                    error.ErrorCode))
+                .ToList();
+
+            return BadRequest(GenericResponseModel<object>.Failure(
+                Localizer["Validation.Error"].Value,
+                errors));
+        }
+
+        var result = await _mediator.Send(request, cancellationToken);
+        return SuccessResponse(result, "Auth.LoggedIn");
     }
 
     [AllowAnonymous]

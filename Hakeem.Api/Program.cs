@@ -70,7 +70,7 @@ public class Program
 
             builder.Services.AddScoped<
                 ICurrentUserContext,
-                DevelopmentCurrentUserContext>();
+                HttpCurrentUserContext>();
 
             var app = builder.Build();
 

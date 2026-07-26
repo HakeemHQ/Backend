@@ -145,6 +145,15 @@
   <data name="Auth.Registered" xml:space="preserve">
     <value>Account created successfully.</value>
   </data>
+  <data name="Auth.LoggedIn" xml:space="preserve">
+    <value>Login successful.</value>
+  </data>
+  <data name="Auth.InvalidCredentials" xml:space="preserve">
+    <value>The email or password is incorrect.</value>
+  </data>
+  <data name="Auth.AccountInactive" xml:space="preserve">
+    <value>This account is inactive.</value>
+  </data>
   <data name="User.EmailAlreadyExists" xml:space="preserve">
     <value>This email address is already registered.</value>
   </data>

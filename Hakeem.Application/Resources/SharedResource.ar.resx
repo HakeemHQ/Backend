@@ -141,6 +141,15 @@
   <data name="Auth.Registered" xml:space="preserve">
     <value>تم إنشاء الحساب بنجاح.</value>
   </data>
+  <data name="Auth.LoggedIn" xml:space="preserve">
+    <value>تم تسجيل الدخول بنجاح.</value>
+  </data>
+  <data name="Auth.InvalidCredentials" xml:space="preserve">
+    <value>البريد الإلكتروني أو كلمة المرور غير صحيحة.</value>
+  </data>
+  <data name="Auth.AccountInactive" xml:space="preserve">
+    <value>هذا الحساب غير نشط.</value>
+  </data>
   <data name="User.EmailAlreadyExists" xml:space="preserve">
     <value>هذا البريد الإلكتروني مسجل بالفعل.</value>
   </data>

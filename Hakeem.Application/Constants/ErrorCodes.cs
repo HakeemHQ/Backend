@@ -35,6 +35,7 @@ public static class ErrorCodes
     public const string AuthPasswordResetSent = "Auth.PasswordResetSent";
     public const string AuthPasswordResetSuccess = "Auth.PasswordResetSuccess";
     public const string AuthRegistered = "Auth.Registered";
+    public const string AuthLoggedIn = "Auth.LoggedIn";
 
     // ── User ─────────────────────────────────────────────────────────────
     public const string UserNotFound = "User.NotFound";
