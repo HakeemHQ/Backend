@@ -19,6 +19,32 @@ public sealed class RefreshTokenRepository(ApplicationDbContext dbContext)
                 cancellationToken);
     }
 
+    public Task<RefreshToken?> GetByJwtIdAsync(
+        string jwtId,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.RefreshTokens.SingleOrDefaultAsync(
+            refreshToken =>
+                refreshToken.JwtId == jwtId &&
+                refreshToken.UserId == userId,
+            cancellationToken);
+    }
+
+    public Task<bool> IsSessionActiveAsync(
+        string jwtId,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.RefreshTokens.AnyAsync(
+            refreshToken =>
+                refreshToken.JwtId == jwtId &&
+                refreshToken.UserId == userId &&
+                !refreshToken.IsUsed &&
+                !refreshToken.IsRevoked,
+            cancellationToken);
+    }
+
     public void Add(RefreshToken refreshToken)
     {
         dbContext.RefreshTokens.Add(refreshToken);

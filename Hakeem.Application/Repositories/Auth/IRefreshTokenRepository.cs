@@ -9,5 +9,15 @@ public interface IRefreshTokenRepository : IScoped
         string hashedToken,
         CancellationToken cancellationToken);
 
+    Task<RefreshToken?> GetByJwtIdAsync(
+        string jwtId,
+        Guid userId,
+        CancellationToken cancellationToken);
+
+    Task<bool> IsSessionActiveAsync(
+        string jwtId,
+        Guid userId,
+        CancellationToken cancellationToken);
+
     void Add(RefreshToken refreshToken);
 }

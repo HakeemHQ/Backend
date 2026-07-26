@@ -551,6 +551,9 @@ namespace Hakeem.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("JwtId")
+                        .IsUnique();
+
                     b.HasIndex("Token")
                         .IsUnique();
 
