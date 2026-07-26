@@ -5,6 +5,7 @@ using Hakeem.Application.Services.Auth.PasswordReset.Confirm;
 using Hakeem.Application.Services.Auth.PasswordReset.Request;
 using Hakeem.Application.Services.Auth.Registration;
 using Hakeem.Application.Services.Auth.Login;
+using Hakeem.Application.Services.Auth.Logout;
 using Hakeem.Application.Services.Auth.Refresh;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -12,6 +13,9 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Hakeem.Application.Common.Interfaces;
 
 namespace Hakeem.Api.Controllers;
 
@@ -24,18 +28,22 @@ public class AuthController : ApiControllerBase
     private readonly IValidator<LoginCommand> _loginValidator;
     private readonly IValidator<RefreshCommand> _refreshValidator;
 
+    private readonly ICurrentUserContext _currentUserContext;
+
     public AuthController(
         IMediator mediator,
         IValidator<RegisterCommand> registerValidator,
         IValidator<LoginCommand> loginValidator,
         IValidator<RefreshCommand> refreshValidator,
-        IStringLocalizer<SharedResource> localizer)
+        IStringLocalizer<SharedResource> localizer,
+        ICurrentUserContext currentUser)
         : base(localizer)
     {
         _mediator = mediator;
         _registerValidator = registerValidator;
         _loginValidator = loginValidator;
         _refreshValidator = refreshValidator;
+        _currentUserContext = currentUser;
     }
 
     [AllowAnonymous]
@@ -106,6 +114,30 @@ public class AuthController : ApiControllerBase
 
         var result = await _mediator.Send(request, cancellationToken);
         return SuccessResponse(result, "Auth.TokenRefreshed");
+    }
+
+    [Authorize(Roles = "Patient")]
+    [HttpPost("logout")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(
+     typeof(GenericResponseModel<object>),
+     StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Logout(
+     CancellationToken cancellationToken)
+    {
+        var userId = _currentUserContext.UserId;
+        var jwtId = User.FindFirstValue(JwtRegisteredClaimNames.Jti);
+
+        if (string.IsNullOrWhiteSpace(jwtId))
+        {
+            return Unauthorized();
+        }
+
+        await _mediator.Send(
+            new LogoutCommand(userId, jwtId),
+            cancellationToken);
+
+        return NoContent();
     }
 
     [AllowAnonymous]

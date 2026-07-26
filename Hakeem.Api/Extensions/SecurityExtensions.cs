@@ -1,7 +1,10 @@
 using System.Text;
 using Hakeem.Api.Configuration;
+using Hakeem.Application.Repositories.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace Hakeem.Api.Extensions;
 
@@ -94,15 +97,40 @@ public static class SecurityExtensions
 
                         return Task.CompletedTask;
                     },
-                    OnTokenValidated = context =>
+                    OnTokenValidated = async context =>
                     {
                         var logger = context.HttpContext.RequestServices
                             .GetRequiredService<ILogger<JwtBearerEvents>>();
 
+                        var userIdClaim = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                        var jwtId = context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Jti);
+
+                        if (!Guid.TryParse(userIdClaim, out var userId) ||
+                            string.IsNullOrWhiteSpace(jwtId))
+                        {
+                            context.Fail("The access token is missing required session claims.");
+                            return;
+                        }
+
+                        var refreshTokenRepository = context.HttpContext.RequestServices
+                            .GetRequiredService<IRefreshTokenRepository>();
+                        var isSessionActive = await refreshTokenRepository.IsSessionActiveAsync(
+                            jwtId,
+                            userId,
+                            context.HttpContext.RequestAborted);
+
+                        if (!isSessionActive)
+                        {
+                            logger.LogWarning(
+                                "Revoked or inactive JWT rejected for user {UserId} from {IP}",
+                                userId,
+                                context.HttpContext.Connection.RemoteIpAddress);
+                            context.Fail("The access token session has been revoked.");
+                            return;
+                        }
+
                         logger.LogInformation("JWT Token validated for user: {User}",
                             context.Principal?.Identity?.Name ?? "Unknown");
-
-                        return Task.CompletedTask;
                     },
                     OnChallenge = context =>
                     {
