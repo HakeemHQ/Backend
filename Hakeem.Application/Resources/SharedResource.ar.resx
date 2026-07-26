@@ -144,4 +144,25 @@
   <data name="Validation.InvalidRequest" xml:space="preserve">
     <value>نص الطلب غير صالح.</value>
   </data>
+  <data name="Validation.Required" xml:space="preserve">
+    <value>هذا الحقل مطلوب.</value>
+  </data>
+  <data name="Validation.InvalidEmail" xml:space="preserve">
+    <value>تنسيق البريد الإلكتروني غير صالح.</value>
+  </data>
+  <data name="Validation.PasswordTooShort" xml:space="preserve">
+    <value>يجب أن تكون كلمة المرور على الأقل 8 أحرف.</value>
+  </data>
+  <data name="Validation.PasswordMissingUppercase" xml:space="preserve">
+    <value>يجب أن تحتوي كلمة المرور على حرف كبير واحد على الأقل.</value>
+  </data>
+  <data name="Validation.PasswordMissingLowercase" xml:space="preserve">
+    <value>يجب أن تحتوي كلمة المرور على حرف صغير واحد على الأقل.</value>
+  </data>
+  <data name="Validation.PasswordMissingDigit" xml:space="preserve">
+    <value>يجب أن تحتوي كلمة المرور على رقم واحد على الأقل.</value>
+  </data>
+  <data name="Validation.PasswordMissingSpecial" xml:space="preserve">
+    <value>يجب أن تحتوي كلمة المرور على رمز خاص واحد على الأقل.</value>
+  </data>
 </root>

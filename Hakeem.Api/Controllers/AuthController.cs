@@ -46,6 +46,6 @@ public class AuthController : ApiControllerBase
 
         await _mediator.Send(request, cancellationToken);
 
-        return Ok(GenericResponseModel<object>.Success(null!, Localizer["Auth.PasswordResetSuccess"].Value));
+        return SuccessResponse("Auth.PasswordResetSuccess");
     }
 }

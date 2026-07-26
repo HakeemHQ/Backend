@@ -1,27 +1,29 @@
 using FluentValidation;
+using Hakeem.Application.Resources;
+using Microsoft.Extensions.Localization;
 
 namespace Hakeem.Application.Services.Auth;
 
 public sealed class PasswordResetConfirmCommandValidator : AbstractValidator<PasswordResetConfirmCommand>
 {
-    public PasswordResetConfirmCommandValidator()
+    public PasswordResetConfirmCommandValidator(IStringLocalizer<SharedResource> localizer)
     {
         RuleFor(x => x.ResetToken)
             .NotEmpty()
-            .WithMessage("Reset token is required.");
+            .WithMessage(localizer["Validation.Required"].Value);
 
         RuleFor(x => x.NewPassword)
             .NotEmpty()
-            .WithMessage("New password is required.")
+            .WithMessage(localizer["Validation.Required"].Value)
             .MinimumLength(8)
-            .WithMessage("Password must be at least 8 characters long.")
+            .WithMessage(localizer["Validation.PasswordTooShort"].Value)
             .Matches("[A-Z]")
-            .WithMessage("Password must contain at least one uppercase letter.")
+            .WithMessage(localizer["Validation.PasswordMissingUppercase"].Value)
             .Matches("[a-z]")
-            .WithMessage("Password must contain at least one lowercase letter.")
+            .WithMessage(localizer["Validation.PasswordMissingLowercase"].Value)
             .Matches("[0-9]")
-            .WithMessage("Password must contain at least one number.")
+            .WithMessage(localizer["Validation.PasswordMissingDigit"].Value)
             .Matches("[^A-Za-z0-9]")
-            .WithMessage("Password must contain at least one special character.");
+            .WithMessage(localizer["Validation.PasswordMissingSpecial"].Value);
     }
 }
