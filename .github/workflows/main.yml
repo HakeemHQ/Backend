@@ -2,7 +2,7 @@ name: Build, publish and deploy to MonsterASP.NET
 on:
   push:
     branches:
-      - main
+      - dev
   workflow_dispatch: # optional - allows manual run
 
 jobs:
