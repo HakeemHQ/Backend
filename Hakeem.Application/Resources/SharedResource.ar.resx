@@ -144,6 +144,15 @@
   <data name="Auth.LoggedIn" xml:space="preserve">
     <value>تم تسجيل الدخول بنجاح.</value>
   </data>
+  <data name="Auth.TokenRefreshed" xml:space="preserve">
+    <value>تم تحديث الرموز بنجاح.</value>
+  </data>
+  <data name="Auth.InvalidRefreshToken" xml:space="preserve">
+    <value>رمز التحديث غير صالح أو منتهي الصلاحية أو ملغى.</value>
+  </data>
+  <data name="Validation.InvalidRefreshTokenFormat" xml:space="preserve">
+    <value>تنسيق رمز التحديث غير صالح.</value>
+  </data>
   <data name="Auth.InvalidCredentials" xml:space="preserve">
     <value>البريد الإلكتروني أو كلمة المرور غير صحيحة.</value>
   </data>

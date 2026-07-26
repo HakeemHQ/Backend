@@ -5,6 +5,7 @@ using Hakeem.Application.Services.Auth.PasswordReset.Confirm;
 using Hakeem.Application.Services.Auth.PasswordReset.Request;
 using Hakeem.Application.Services.Auth.Registration;
 using Hakeem.Application.Services.Auth.Login;
+using Hakeem.Application.Services.Auth.Refresh;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using MediatR;
@@ -21,17 +22,20 @@ public class AuthController : ApiControllerBase
     private readonly IMediator _mediator;
     private readonly IValidator<RegisterCommand> _registerValidator;
     private readonly IValidator<LoginCommand> _loginValidator;
+    private readonly IValidator<RefreshCommand> _refreshValidator;
 
     public AuthController(
         IMediator mediator,
         IValidator<RegisterCommand> registerValidator,
         IValidator<LoginCommand> loginValidator,
+        IValidator<RefreshCommand> refreshValidator,
         IStringLocalizer<SharedResource> localizer)
         : base(localizer)
     {
         _mediator = mediator;
         _registerValidator = registerValidator;
         _loginValidator = loginValidator;
+        _refreshValidator = refreshValidator;
     }
 
     [AllowAnonymous]
@@ -67,6 +71,41 @@ public class AuthController : ApiControllerBase
 
         var result = await _mediator.Send(request, cancellationToken);
         return SuccessResponse(result, "Auth.LoggedIn");
+    }
+
+    [AllowAnonymous]
+    [HttpPost("/refresh")]
+    [ProducesResponseType(typeof(GenericResponseModel<RefreshResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GenericResponseModel<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(GenericResponseModel<object>), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Refresh(
+        [FromBody, CustomizeValidator(Skip = true)] RefreshCommand request,
+        CancellationToken cancellationToken)
+    {
+        if (request is null)
+        {
+            return BadRequest(GenericResponseModel<object>.Failure(
+                Localizer["Validation.InvalidRequest"].Value,
+                "Validation.InvalidRequest"));
+        }
+
+        var validationResult = await _refreshValidator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            var errors = validationResult.Errors
+                .Select(error => ErrorResponseModel.Create(
+                    error.PropertyName,
+                    error.ErrorMessage,
+                    error.ErrorCode))
+                .ToList();
+
+            return BadRequest(GenericResponseModel<object>.Failure(
+                Localizer["Validation.Error"].Value,
+                errors));
+        }
+
+        var result = await _mediator.Send(request, cancellationToken);
+        return SuccessResponse(result, "Auth.TokenRefreshed");
     }
 
     [AllowAnonymous]

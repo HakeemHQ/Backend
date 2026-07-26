@@ -5,5 +5,9 @@ namespace Hakeem.Application.Repositories.Auth;
 
 public interface IRefreshTokenRepository : IScoped
 {
+    Task<RefreshToken?> GetByTokenAsync(
+        string hashedToken,
+        CancellationToken cancellationToken);
+
     void Add(RefreshToken refreshToken);
 }
