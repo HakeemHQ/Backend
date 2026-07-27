@@ -30,6 +30,7 @@ public class ApplicationDbContext : DbContext
     public virtual DbSet<SharedCvLink> SharedCvLinks { get; set; }
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
     public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
+    public virtual DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

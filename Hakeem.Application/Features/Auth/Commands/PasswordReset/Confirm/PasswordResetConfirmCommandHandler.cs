@@ -1,5 +1,6 @@
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
+using Hakeem.Application.Repositories.Auth;
 using Hakeem.Application.Repositories.Users;
 using Hakeem.Application.Interfaces.Services.Auth;
 using Hakeem.Domain.Interfaces;
@@ -10,7 +11,8 @@ namespace Hakeem.Application.Features.Auth.Commands.PasswordReset.Confirm;
 
 public sealed class PasswordResetConfirmCommandHandler(
     IUserRepository userRepository,
-    IPasswordResetTokenStore passwordResetTokenStore,
+    IPasswordResetTokenRepository passwordResetTokenRepository,
+    ITokenService tokenService,
     IPasswordHasher passwordHasher,
     IUnitOfWork unitOfWork)
     : IRequestHandler<PasswordResetConfirmCommand, Unit>
@@ -22,18 +24,23 @@ public sealed class PasswordResetConfirmCommandHandler(
             throw new LocalizedHttpException(ErrorCodes.ValidationInvalid, StatusCodes.Status400BadRequest);
         }
 
-        var (isValid, userId) = await passwordResetTokenStore.ValidateAndConsumeAsync(request.ResetToken, cancellationToken);
-        if (!isValid || userId == Guid.Empty)
+        var tokenHash = tokenService.HashPasswordResetToken(request.ResetToken);
+        var storedToken = await passwordResetTokenRepository.GetByHashAsync(tokenHash, cancellationToken);
+
+        if (storedToken is null ||
+            storedToken.IsUsed ||
+            storedToken.ExpiresAt < DateTime.UtcNow)
         {
             throw new LocalizedHttpException(ErrorCodes.AuthInvalidResetToken, StatusCodes.Status422UnprocessableEntity);
         }
 
-        var user = await userRepository.GetByIdAsync(userId, cancellationToken);
+        var user = await userRepository.GetByIdAsync(storedToken.UserId, cancellationToken);
         if (user is null)
         {
             throw new LocalizedHttpException(ErrorCodes.AuthInvalidResetToken, StatusCodes.Status422UnprocessableEntity);
         }
 
+        storedToken.IsUsed = true;
         user.PasswordHash = passwordHasher.Hash(request.NewPassword);
 
         await unitOfWork.SaveChanges(cancellationToken);

@@ -16,4 +16,5 @@ public class User : BaseEntity
     public virtual PatientProfile? PatientProfile { get; set; }
     public virtual ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
     public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    public virtual ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = new List<PasswordResetToken>();
 }

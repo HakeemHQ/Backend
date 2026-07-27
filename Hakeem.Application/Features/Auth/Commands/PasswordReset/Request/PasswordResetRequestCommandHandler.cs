@@ -2,7 +2,9 @@ using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Repositories.Notifications;
 using Hakeem.Application.Repositories.Users;
-using Hakeem.Application.Features.Auth.Commands.PasswordReset;
+using Hakeem.Application.Repositories.Auth;
+using Hakeem.Application.Interfaces.Services.Auth;
+using Hakeem.Domain.Entities;
 using Hakeem.Domain.DomainEvents.Outbox;
 using Hakeem.Domain.Interfaces;
 using MediatR;
@@ -13,7 +15,8 @@ namespace Hakeem.Application.Features.Auth.Commands.PasswordReset.Request;
 
 public sealed class PasswordResetRequestCommandHandler(
     IUserRepository userRepository,
-    IPasswordResetTokenStore passwordResetTokenStore,
+    IPasswordResetTokenRepository passwordResetTokenRepository,
+    ITokenService tokenService,
     IOutboxEventRepository outboxEventRepository,
     IUnitOfWork unitOfWork,
     IConfiguration configuration)
@@ -31,8 +34,18 @@ public sealed class PasswordResetRequestCommandHandler(
 
         if (user is not null)
         {
-            var resetToken = await passwordResetTokenStore.CreateTokenAsync(user.Id, cancellationToken);
-            var resetLink = BuildResetLink(resetToken);
+            var issuedToken = tokenService.CreatePasswordResetToken();
+
+            passwordResetTokenRepository.Add(new PasswordResetToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TokenHash = issuedToken.TokenHash,
+                ExpiresAt = issuedToken.ExpiresAt,
+                IsUsed = false
+            });
+
+            var resetLink = BuildResetLink(issuedToken.Token);
             var passwordResetEvent = new PasswordResetEmailEvent
             {
                 RecipientEmail = user.Email,

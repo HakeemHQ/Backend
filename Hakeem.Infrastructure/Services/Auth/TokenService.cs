@@ -12,6 +12,7 @@ namespace Hakeem.Infrastructure.Services.Auth.Tokens;
 
 public sealed class TokenService(IOptions<JwtConfiguration> options) : ITokenService
 {
+    private static readonly TimeSpan PasswordResetTokenLifetime = TimeSpan.FromMinutes(15);
     private readonly JwtConfiguration _configuration = options.Value;
 
     public IssuedTokenPair CreateTokenPair(User user)
@@ -58,11 +59,31 @@ public sealed class TokenService(IOptions<JwtConfiguration> options) : ITokenSer
             refreshTokenExpiresAt);
     }
 
+    public IssuedPasswordResetToken CreatePasswordResetToken()
+    {
+        var token = Base64UrlEncoder.Encode(RandomNumberGenerator.GetBytes(32));
+
+        return new IssuedPasswordResetToken(
+            token,
+            HashPasswordResetToken(token),
+            DateTime.UtcNow.Add(PasswordResetTokenLifetime));
+    }
+
     public string HashRefreshToken(string refreshToken)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(refreshToken);
+        return HashToken(refreshToken);
+    }
 
-        var tokenBytes = Encoding.UTF8.GetBytes(refreshToken);
+    public string HashPasswordResetToken(string passwordResetToken)
+    {
+        return HashToken(passwordResetToken);
+    }
+
+    private static string HashToken(string token)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(token);
+
+        var tokenBytes = Encoding.UTF8.GetBytes(token);
         var hashBytes = SHA256.HashData(tokenBytes);
 
         return Convert.ToHexString(hashBytes);
