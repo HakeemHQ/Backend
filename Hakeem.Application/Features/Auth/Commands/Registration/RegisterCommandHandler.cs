@@ -33,7 +33,7 @@ public sealed class RegisterCommandHandler(
         }
 
         var userId = Guid.NewGuid();
-        var profile = new PatientProfile
+        var profile = new Hakeem.Domain.Entities.PatientProfile
         {
             Id = Guid.NewGuid(),
             UserId = userId,

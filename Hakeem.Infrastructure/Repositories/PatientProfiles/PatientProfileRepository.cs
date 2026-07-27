@@ -1,4 +1,3 @@
-using Hakeem.Application.DTOs.PatientProfiles;
 using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Interfaces.ServiceLifetime;
@@ -30,7 +29,12 @@ public class PatientProfileRepository : IPatientProfileRepository, IScoped
 
     public async Task<PatientProfile?> UpdateByUserIdAsync(
         Guid userId,
-        UpdatePatientProfileRequest request,
+        string? fullName,
+        DateTime? birthDate,
+        string? firstName,
+        string? lastName,
+        string? phoneNumber,
+        string? gender,
         CancellationToken cancellationToken)
     {
         var profile = await _dbContext.PatientProfiles
@@ -44,14 +48,36 @@ public class PatientProfileRepository : IPatientProfileRepository, IScoped
             return null;
         }
 
-        if (request.FullName is not null)
+        if (fullName is not null)
         {
-            profile.FullName = request.FullName.Trim();
+            profile.FullName = fullName.Trim();
         }
 
-        if (request.BirthDate.HasValue)
+        if (birthDate.HasValue)
         {
-            profile.BirthDate = request.BirthDate.Value;
+            profile.BirthDate = birthDate.Value;
+        }
+
+        if (firstName is not null)
+        {
+            profile.User.FirstName = firstName.Trim();
+        }
+
+        if (lastName is not null)
+        {
+            profile.User.LastName = lastName.Trim();
+        }
+
+        if (phoneNumber is not null)
+        {
+            profile.User.PhoneNumber = phoneNumber.Trim();
+        }
+
+        if (gender is not null)
+        {
+            var trimmedGender = gender.Trim();
+            profile.User.Gender = char.ToUpperInvariant(trimmedGender[0])
+                + trimmedGender[1..].ToLowerInvariant();
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);

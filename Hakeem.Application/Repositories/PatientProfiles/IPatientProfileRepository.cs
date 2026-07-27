@@ -1,6 +1,4 @@
-using Hakeem.Application.DTOs.PatientProfiles;
 using Hakeem.Domain.Entities;
-using Hakeem.Domain.Interfaces.ServiceLifetime;
 
 namespace Hakeem.Application.Repositories.PatientProfiles;
 
@@ -12,6 +10,11 @@ public interface IPatientProfileRepository
 
     Task<PatientProfile?> UpdateByUserIdAsync(
         Guid userId,
-        UpdatePatientProfileRequest request,
+        string? fullName,
+        DateTime? birthDate,
+        string? firstName,
+        string? lastName,
+        string? phoneNumber,
+        string? gender,
         CancellationToken cancellationToken);
 }
