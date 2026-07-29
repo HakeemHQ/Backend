@@ -10,9 +10,17 @@ public class MedicalDocumentConfiguration : IEntityTypeConfiguration<MedicalDocu
     {
         builder.HasKey(e => e.Id);
         
-        builder.HasMany(d => d.ExtractedFields)
-               .WithOne(e => e.MedicalDocument)
-               .HasForeignKey(e => e.DocumentId)
+        builder.Property(d => d.ExtractionStatus)
+               .HasConversion<string>()
+               .HasMaxLength(20)
+               .IsRequired();
+
+        builder.Property(d => d.FailureCode)
+               .HasMaxLength(100);
+
+        builder.HasMany(d => d.ExtractedItems)
+               .WithOne(i => i.MedicalDocument)
+               .HasForeignKey(i => i.MedicalDocumentId)
                .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(d => d.SourceReferences)

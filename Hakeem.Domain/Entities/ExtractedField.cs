@@ -5,12 +5,13 @@ namespace Hakeem.Domain.Entities;
 
 public class ExtractedField : BaseEntity
 {
-    public Guid DocumentId { get; set; }
-    public string FieldGroup { get; set; } = string.Empty;
+    public Guid ExtractedItemId { get; set; }
     public string FieldName { get; set; } = string.Empty;
     public string ExtractedValue { get; set; } = string.Empty;
     public decimal Confidence { get; set; }
+    public string EvidenceText { get; set; } = string.Empty;
+    public string Issues { get; set; } = string.Empty;
 
-    public virtual MedicalDocument MedicalDocument { get; set; } = null!;
+    public virtual ExtractedItem ExtractedItem { get; set; } = null!;
     public virtual FieldReview? FieldReview { get; set; }
 }

@@ -18,6 +18,7 @@ public class ApplicationDbContext : DbContext
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<PatientProfile> PatientProfiles { get; set; }
     public virtual DbSet<MedicalDocument> MedicalDocuments { get; set; }
+    public virtual DbSet<ExtractedItem> ExtractedItems { get; set; }
     public virtual DbSet<ExtractedField> ExtractedFields { get; set; }
     public virtual DbSet<FieldReview> FieldReviews { get; set; }
     public virtual DbSet<MedicalRecord> MedicalRecords { get; set; }
