@@ -9,7 +9,11 @@ public class MedicalDocumentConfiguration : IEntityTypeConfiguration<MedicalDocu
     public void Configure(EntityTypeBuilder<MedicalDocument> builder)
     {
         builder.HasKey(e => e.Id);
-        
+
+        builder.Property(d => d.FilePath)
+               .HasMaxLength(1024)
+               .IsRequired();
+
         builder.Property(d => d.ExtractionStatus)
                .HasConversion<string>()
                .HasMaxLength(20)

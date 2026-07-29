@@ -214,4 +214,31 @@
   <data name="Validation.PasswordMissingSpecial" xml:space="preserve">
     <value>Password must contain at least one special character.</value>
   </data>
+  <data name="Document.Uploaded" xml:space="preserve">
+    <value>Medical document uploaded successfully and queued for extraction.</value>
+  </data>
+  <data name="Document.PatientProfileNotFound" xml:space="preserve">
+    <value>No patient profile was found for the authenticated user.</value>
+  </data>
+  <data name="Document.FileRequired" xml:space="preserve">
+    <value>A non-empty document file is required.</value>
+  </data>
+  <data name="Document.FileTooLarge" xml:space="preserve">
+    <value>The document exceeds the maximum allowed size of {0} bytes.</value>
+  </data>
+  <data name="Document.UnsupportedMediaType" xml:space="preserve">
+    <value>Only PDF, JPEG, PNG, GIF, BMP, and WebP files are supported.</value>
+  </data>
+  <data name="Document.InvalidFileContent" xml:space="preserve">
+    <value>The file content does not match a supported PDF or image format.</value>
+  </data>
+  <data name="Document.DocumentTypeTooLong" xml:space="preserve">
+    <value>Document type must not exceed 100 characters.</value>
+  </data>
+  <data name="Document.TitleTooLong" xml:space="preserve">
+    <value>Title must not exceed 200 characters.</value>
+  </data>
+  <data name="Document.DateInFuture" xml:space="preserve">
+    <value>Document date cannot be in the future.</value>
+  </data>
 </root>

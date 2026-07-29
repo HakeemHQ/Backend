@@ -10,6 +10,7 @@ public class MedicalDocument : BaseEntity
     public string DocumentType { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public DateTime DocumentDate { get; set; }
+    public string FilePath { get; set; } = string.Empty;
     public ExtractionStatus ExtractionStatus { get; private set; } = ExtractionStatus.Queued;
     public string? FailureCode { get; private set; }
 

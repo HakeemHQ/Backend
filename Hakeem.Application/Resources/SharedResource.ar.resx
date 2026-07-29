@@ -210,4 +210,31 @@
   <data name="Validation.PasswordMissingSpecial" xml:space="preserve">
     <value>يجب أن تحتوي كلمة المرور على رمز خاص واحد على الأقل.</value>
   </data>
+  <data name="Document.Uploaded" xml:space="preserve">
+    <value>تم رفع المستند الطبي بنجاح وإضافته إلى قائمة انتظار الاستخراج.</value>
+  </data>
+  <data name="Document.PatientProfileNotFound" xml:space="preserve">
+    <value>لم يتم العثور على ملف مريض للمستخدم الحالي.</value>
+  </data>
+  <data name="Document.FileRequired" xml:space="preserve">
+    <value>يجب إرفاق ملف مستند غير فارغ.</value>
+  </data>
+  <data name="Document.FileTooLarge" xml:space="preserve">
+    <value>يتجاوز المستند الحد الأقصى المسموح به وهو {0} بايت.</value>
+  </data>
+  <data name="Document.UnsupportedMediaType" xml:space="preserve">
+    <value>يُسمح فقط بملفات PDF وJPEG وPNG وGIF وBMP وWebP.</value>
+  </data>
+  <data name="Document.InvalidFileContent" xml:space="preserve">
+    <value>لا يتطابق محتوى الملف مع تنسيق PDF أو صورة مدعوم.</value>
+  </data>
+  <data name="Document.DocumentTypeTooLong" xml:space="preserve">
+    <value>يجب ألا يتجاوز نوع المستند 100 حرف.</value>
+  </data>
+  <data name="Document.TitleTooLong" xml:space="preserve">
+    <value>يجب ألا يتجاوز العنوان 200 حرف.</value>
+  </data>
+  <data name="Document.DateInFuture" xml:space="preserve">
+    <value>لا يمكن أن يكون تاريخ المستند في المستقبل.</value>
+  </data>
 </root>

@@ -63,6 +63,17 @@ public static class ErrorCodes
     public const string FileValidationMinCount = "FileValidation.MinCount";
     public const string FileValidationMaxCount = "FileValidation.MaxCount";
 
+    // Medical documents
+    public const string DocumentUploaded = "Document.Uploaded";
+    public const string DocumentPatientProfileNotFound = "Document.PatientProfileNotFound";
+    public const string DocumentFileRequired = "Document.FileRequired";
+    public const string DocumentFileTooLarge = "Document.FileTooLarge";
+    public const string DocumentUnsupportedMediaType = "Document.UnsupportedMediaType";
+    public const string DocumentInvalidFileContent = "Document.InvalidFileContent";
+    public const string DocumentTypeTooLong = "Document.DocumentTypeTooLong";
+    public const string DocumentTitleTooLong = "Document.TitleTooLong";
+    public const string DocumentDateInFuture = "Document.DateInFuture";
+
     // ── JSON ─────────────────────────────────────────────────────────────
     public const string InvalidJson = "Invalid.Json";
 }
