@@ -241,4 +241,10 @@
   <data name="Document.DateInFuture" xml:space="preserve">
     <value>Document date cannot be in the future.</value>
   </data>
+  <data name="Document.NotFound" xml:space="preserve">
+    <value>The requested document was not found.</value>
+  </data>
+  <data name="Document.ExtractedFieldsRetrieved" xml:space="preserve">
+    <value>Extracted document fields retrieved successfully.</value>
+  </data>
 </root>

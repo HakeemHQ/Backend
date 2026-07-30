@@ -31,6 +31,8 @@ public sealed class MedicalDocumentRepository(ApplicationDbContext dbContext)
             .Where(
                 item =>
                     item.MedicalDocumentId == documentId)
+            .Include(item => item.ExtractedFields)
+            .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
 

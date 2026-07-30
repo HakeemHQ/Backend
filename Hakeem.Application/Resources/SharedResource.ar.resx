@@ -237,4 +237,10 @@
   <data name="Document.DateInFuture" xml:space="preserve">
     <value>لا يمكن أن يكون تاريخ المستند في المستقبل.</value>
   </data>
+  <data name="Document.NotFound" xml:space="preserve">
+    <value>لم يتم العثور على المستند المطلوب.</value>
+  </data>
+  <data name="Document.ExtractedFieldsRetrieved" xml:space="preserve">
+    <value>تم استرجاع حقول المستند المستخرجة بنجاح.</value>
+  </data>
 </root>

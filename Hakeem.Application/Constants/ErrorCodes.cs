@@ -73,6 +73,8 @@ public static class ErrorCodes
     public const string DocumentTypeTooLong = "Document.DocumentTypeTooLong";
     public const string DocumentTitleTooLong = "Document.TitleTooLong";
     public const string DocumentDateInFuture = "Document.DateInFuture";
+    public const string DocumentNotFound = "Document.NotFound";
+    public const string DocumentExtractedFieldsRetrieved = "Document.ExtractedFieldsRetrieved";
 
     // ── JSON ─────────────────────────────────────────────────────────────
     public const string InvalidJson = "Invalid.Json";
