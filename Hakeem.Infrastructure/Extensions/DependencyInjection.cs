@@ -2,8 +2,10 @@ using System.Reflection;
 using Azure;
 using Azure.AI.DocumentIntelligence;
 using Hakeem.Application.Configurations;
+using Hakeem.Application.Interfaces.Agents;
 using Hakeem.Domain.DomainEvents.Outbox;
 using Hakeem.Domain.Interfaces.ServiceLifetime;
+using Hakeem.Infrastructure.AI.Agents;
 using Hakeem.Infrastructure.Context;
 using Hakeem.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +23,9 @@ public static class DependencyInjection
         bool isDevelopment)
     {
         services.RegisterServicesWithLifetime(Assembly.GetExecutingAssembly());
+        services.AddScoped<
+            IDocumentProcessingAgent,
+            DocumentProcessingAgent>();
         // Configure Entity Framework DbContext
         var DbConnectionString = configuration.GetConnectionString("DefaultConnection")!;
         services.AddDbContext<ApplicationDbContext>(options =>

@@ -4,7 +4,7 @@ using Hakeem.Application.Configurations;
 using Hakeem.Application.Interfaces.Ocr;
 using Microsoft.Extensions.Options;
 
-namespace Hakeem.Infrastructure.Services.Ocr;
+namespace Hakeem.Infrastructure.AI.Ocr;
 
 public sealed class AzureDocumentOcrService(
     DocumentIntelligenceClient client,

@@ -36,7 +36,7 @@ public class Program
             builder.Services.AddMemoryCache();
             builder.Services
                 .AddWebApiServices(builder.Configuration)
-                .AddApplication()
+                .AddApplication(builder.Configuration)
                 .AddInfrastructure(builder.Configuration, builder.Environment.IsProduction());
 
             builder.Services.Configure<FileStorageConfiguration>(

@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hakeem.Infrastructure", "Ha
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hakeem.Api", "Hakeem.Api\Hakeem.Api.csproj", "{3505964C-E7CB-455C-9971-907D26E392CC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hakeem.Infrastructure.Tests", "Hakeem.Infrastructure.Tests\Hakeem.Infrastructure.Tests.csproj", "{F87149D2-EA98-45C7-98A3-63BFD2431C93}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,6 +32,10 @@ Global
 		{3505964C-E7CB-455C-9971-907D26E392CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3505964C-E7CB-455C-9971-907D26E392CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3505964C-E7CB-455C-9971-907D26E392CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F87149D2-EA98-45C7-98A3-63BFD2431C93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F87149D2-EA98-45C7-98A3-63BFD2431C93}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F87149D2-EA98-45C7-98A3-63BFD2431C93}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F87149D2-EA98-45C7-98A3-63BFD2431C93}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
