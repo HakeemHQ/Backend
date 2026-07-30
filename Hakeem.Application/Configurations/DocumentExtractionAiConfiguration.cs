@@ -3,7 +3,6 @@ namespace Hakeem.Application.Configurations;
 public sealed class DocumentExtractionAiConfiguration
 {
     public const string SectionName = "DocumentExtractionAi";
-    public const string ServiceId = "DocumentExtractionAi";
 
     public string BaseUrl { get; set; } = string.Empty;
     public string ChatEndpoint { get; set; } = string.Empty;

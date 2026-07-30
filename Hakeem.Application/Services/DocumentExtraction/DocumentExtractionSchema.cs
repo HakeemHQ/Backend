@@ -1,0 +1,59 @@
+namespace Hakeem.Application.Services.DocumentExtraction;
+
+internal static class DocumentExtractionSchema
+{
+    public static readonly IReadOnlySet<string> DocumentTypes =
+        new HashSet<string>(StringComparer.Ordinal)
+        {
+            "Prescription",
+            "LabReport",
+            "DischargeSummary",
+            "MedicalVisit",
+            "RadiologyReport",
+            "ClinicalNote",
+            "Other"
+        };
+
+    public static readonly IReadOnlySet<string> ItemTypes =
+        new HashSet<string>(StringComparer.Ordinal)
+        {
+            "Medication",
+            "LabResult",
+            "Condition",
+            "Allergy",
+            "Procedure",
+            "Visit",
+            "Facility",
+            "PatientInformation"
+        };
+
+    public static readonly IReadOnlySet<string> FieldNames =
+        new HashSet<string>(StringComparer.Ordinal)
+        {
+            "MedicationName",
+            "Dose",
+            "Frequency",
+            "Route",
+            "LabTestName",
+            "LabValue",
+            "Unit",
+            "ReferenceRange",
+            "ConditionName",
+            "ProcedureName",
+            "Date",
+            "DoctorName",
+            "FacilityName"
+        };
+
+    public static readonly IReadOnlySet<string> Issues =
+        new HashSet<string>(StringComparer.Ordinal)
+        {
+            "LowConfidence",
+            "Unclear",
+            "PartiallyReadable",
+            "MissingValue",
+            "Conflicting",
+            "Duplicate",
+            "PossibleOcrError"
+        };
+}

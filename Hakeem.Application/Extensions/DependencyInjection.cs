@@ -7,6 +7,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Hakeem.Application.Abstractions;
 using Hakeem.Application.Configurations;
+using Hakeem.Application.Interfaces.Processors;
+using Hakeem.Application.Services.DocumentExtraction;
 using Hakeem.Domain.Interfaces.ServiceLifetime;
 using Microsoft.SemanticKernel;
 
@@ -23,6 +25,9 @@ public static class DependencyInjection
         AddDocumentExtractionAi(services, configuration);
 
         services.RegisterServicesWithLifetime(assembly);
+        services.AddScoped<
+            IDocumentExtractionProcessor,
+            DocumentExtractionProcessor>();
         services.AddValidatorsFromAssembly(assembly);
         services.AddFluentValidationAutoValidation();
 
@@ -86,8 +91,7 @@ public static class DependencyInjection
         services.AddOpenAIChatCompletion(
             modelId: options.ModelId,
             endpoint: options.GetChatEndpointUri(),
-            apiKey: options.ApiKey,
-            serviceId: DocumentExtractionAiConfiguration.ServiceId);
+            apiKey: options.ApiKey);
 #pragma warning restore SKEXP0010
     }
 

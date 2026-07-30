@@ -13,12 +13,6 @@ public class ExtractedFieldConfiguration : IEntityTypeConfiguration<ExtractedFie
         builder.Property(e => e.FieldName)
                .IsRequired();
 
-        builder.Property(e => e.ExtractedValue)
-               .IsRequired();
-
-        builder.Property(e => e.EvidenceText)
-               .IsRequired();
-
         builder.Property(e => e.Issues)
                .IsRequired();
 

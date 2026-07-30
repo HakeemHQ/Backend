@@ -54,13 +54,13 @@ internal static class DocumentExtractionPrompt
         FIELD DEFINITIONS
 
         documentType:
-        A concise classification of the complete document, such as Prescription, LabReport, DischargeSummary, MedicalVisit, RadiologyReport, ClinicalNote, or Other. Choose the classification supported by the document content.
+        The classification of the complete document. It must be exactly one of: Prescription, LabReport, DischargeSummary, MedicalVisit, RadiologyReport, ClinicalNote, or Other.
 
         items:
         A list of distinct medical subjects extracted from the document.
 
         itemType:
-        The category of the extracted subject, such as Medication, LabResult, Condition, Allergy, Procedure, Visit, Facility, PatientInformation, or another concise category supported by the document.
+        The category of the extracted subject. It must be exactly one of: Medication, LabResult, Condition, Allergy, Procedure, Visit, Facility, or PatientInformation.
 
         sequenceNumber:
         A positive integer identifying the occurrence of an item within its item type.
@@ -74,7 +74,7 @@ internal static class DocumentExtractionPrompt
         A list of atomic fields belonging to the item.
 
         fieldName:
-        A concise field identifier describing the value, such as MedicationName, Dose, Frequency, Route, LabTestName, LabValue, Unit, ReferenceRange, ConditionName, ProcedureName, Date, DoctorName, or FacilityName.
+        The field identifier. It must be exactly one of: MedicationName, Dose, Frequency, Route, LabTestName, LabValue, Unit, ReferenceRange, ConditionName, ProcedureName, Date, DoctorName, or FacilityName.
 
         value:
         The extracted value supported by the OCR text. Use null when the value is unavailable or unreadable.

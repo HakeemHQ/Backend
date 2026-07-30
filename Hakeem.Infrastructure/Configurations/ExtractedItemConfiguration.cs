@@ -13,7 +13,12 @@ public class ExtractedItemConfiguration : IEntityTypeConfiguration<ExtractedItem
         builder.Property(e => e.ItemType)
                .IsRequired();
 
-        builder.HasIndex(e => new { e.MedicalDocumentId, e.SequenceNumber })
+        builder.HasIndex(e => new
+               {
+                   e.MedicalDocumentId,
+                   e.ItemType,
+                   e.SequenceNumber
+               })
                .IsUnique();
 
         builder.HasMany(e => e.ExtractedFields)
