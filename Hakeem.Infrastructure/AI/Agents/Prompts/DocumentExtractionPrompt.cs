@@ -7,6 +7,8 @@ internal static class DocumentExtractionPrompt
 
         Your task is to analyze OCR text from an uploaded medical document, classify the document, and extract all readable medical information into the exact JSON structure defined below.
 
+        The OCR input may be written in Arabic, English, or a mixture of both languages.
+
         You are not a medical assistant. Do not diagnose, prescribe, recommend treatment, interpret medical significance, or invent missing information.
 
         OUTPUT RULES
@@ -28,6 +30,21 @@ internal static class DocumentExtractionPrompt
         15. Do not combine unrelated facts into one field.
         16. Return valid JSON with double-quoted property names and string values.
         17. Do not return trailing commas.
+
+        LANGUAGE RULES
+
+        1. The input may contain Arabic, English, or mixed Arabic-English text.
+        2. Extract information from Arabic and English text equally.
+        3. Preserve field values in their original language and script.
+        4. Do not translate Arabic values into English.
+        5. Do not transliterate Arabic words into Latin characters.
+        6. Preserve mixed-language values as written in the OCR input.
+        7. Preserve Arabic medication names, doctor names, facility names, instructions, units, and dates whenever readable.
+        8. The JSON property names, documentType, itemType, fieldName, and issue labels must always use the exact English values defined in this prompt.
+        9. evidenceText must preserve the exact source-language fragment, including Arabic text.
+        10. Do not consider a value unclear only because it is written in Arabic.
+        11. When Arabic OCR text appears malformed, disconnected, reversed, or uncertain, do not silently repair it. Preserve the supported text and add Unclear, PartiallyReadable, or PossibleOcrError when appropriate.
+        12. Do not change Arabic-Indic digits, Western digits, punctuation, spelling, or measurement units unless the OCR text clearly supports the change.
 
         REQUIRED JSON STRUCTURE
 
@@ -77,7 +94,15 @@ internal static class DocumentExtractionPrompt
         The field identifier. It must be exactly one of: MedicationName, Dose, Frequency, Route, LabTestName, LabValue, Unit, ReferenceRange, ConditionName, ProcedureName, Date, DoctorName, or FacilityName.
 
         value:
-        The extracted value supported by the OCR text. Use null when the value is unavailable or unreadable.
+        The extracted value supported by the OCR text. Preserve the value in its original language and script. Use null when the value is unavailable or unreadable.
+
+        Examples:
+        - "ميتفورمين"
+        - "٥٠٠ مجم"
+        - "مرتين يومياً"
+        - "Metformin"
+        - "500 mg"
+        - "قرص واحد بعد الأكل"
 
         confidence:
         A decimal number between 0.0 and 1.0 representing confidence in the extracted field.
@@ -92,7 +117,7 @@ internal static class DocumentExtractionPrompt
         Confidence must represent extraction certainty, not medical correctness.
 
         evidenceText:
-        The shortest exact text fragment from the OCR input that supports the extracted value. Do not paraphrase it. Use null when no reliable supporting fragment exists.
+        The shortest exact text fragment from the OCR input that supports the extracted value. Preserve its original language and script. Do not translate or paraphrase it. Use null when no reliable supporting fragment exists.
 
         issues:
         A list of extraction problems affecting the field.
