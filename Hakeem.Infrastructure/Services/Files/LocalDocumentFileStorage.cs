@@ -14,7 +14,7 @@ public sealed class LocalDocumentFileStorage(
     IOptions<FileStorageConfiguration> fileStorageOptions)
     : IDocumentFileStorage
 {
-    private const string StorageFolder = "TestDocument";
+    private const string StorageFolder = "TestDocuments";
 
     private static readonly IReadOnlyDictionary<string, string> ContentTypes =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
