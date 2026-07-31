@@ -10,7 +10,6 @@ using Hakeem.Application.Configurations;
 using Hakeem.Application.Interfaces.Processors;
 using Hakeem.Application.Services.DocumentExtraction;
 using Hakeem.Domain.Interfaces.ServiceLifetime;
-using Microsoft.SemanticKernel;
 
 namespace Hakeem.Application.Extensions;
 
@@ -81,18 +80,6 @@ public static class DependencyInjection
                 options => !string.IsNullOrWhiteSpace(options.ApiKey),
                 "DocumentExtractionAi ApiKey must be configured.")
             .ValidateOnStart();
-
-        var options = section
-            .Get<DocumentExtractionAiConfiguration>()
-            ?? throw new InvalidOperationException(
-                $"Configuration section '{DocumentExtractionAiConfiguration.SectionName}' is invalid.");
-
-#pragma warning disable SKEXP0010
-        services.AddOpenAIChatCompletion(
-            modelId: options.ModelId,
-            endpoint: options.GetChatEndpointUri(),
-            apiKey: options.ApiKey);
-#pragma warning restore SKEXP0010
     }
 
     private static IServiceCollection RegisterServicesWithLifetime(

@@ -6,17 +6,22 @@ using Hakeem.Application.Interfaces.Agents;
 using Hakeem.Domain.DomainEvents.Outbox;
 using Hakeem.Domain.Interfaces.ServiceLifetime;
 using Hakeem.Infrastructure.AI.Agents;
+using Hakeem.Infrastructure.AI.Chat;
 using Hakeem.Infrastructure.Context;
 using Hakeem.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace Hakeem.Infrastructure.Extensions;
 
 public static class DependencyInjection
 {
+    private const string DocumentExtractionAiHttpClient =
+        "DocumentExtractionAi";
+
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration,
@@ -39,7 +44,23 @@ public static class DependencyInjection
             }
         });
 
-        services.AddHttpClient();
+        services.AddHttpClient(DocumentExtractionAiHttpClient);
+        services.AddSingleton<IChatCompletionService>(
+            serviceProvider =>
+            {
+                var httpClientFactory =
+                    serviceProvider.GetRequiredService<
+                        IHttpClientFactory>();
+                var options = serviceProvider
+                    .GetRequiredService<
+                        IOptions<DocumentExtractionAiConfiguration>>()
+                    .Value;
+
+                return new ItiChatCompletionService(
+                    httpClientFactory.CreateClient(
+                        DocumentExtractionAiHttpClient),
+                    options);
+            });
 
         services.AddOptions<AzureDocumentIntelligenceOptions>()
             .Bind(configuration.GetSection(

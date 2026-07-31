@@ -39,10 +39,12 @@ internal static class DocumentExtractionSchema
             "Unit",
             "ReferenceRange",
             "ConditionName",
+            "AllergyName",
             "ProcedureName",
             "Date",
             "DoctorName",
-            "FacilityName"
+            "FacilityName",
+            "PatientName"
         };
 
     public static readonly IReadOnlySet<string> Issues =

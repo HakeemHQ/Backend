@@ -45,6 +45,8 @@ public sealed class DocumentProcessingAgent(
             "Starting AI processing for document {DocumentId}.",
             documentId);
 
+        await EnsureModelIsReachableAsync(cancellationToken);
+
         await using var document = await contentProvider.OpenReadAsync(
             documentId,
             cancellationToken);
@@ -82,11 +84,12 @@ public sealed class DocumentProcessingAgent(
         }
 
         DocumentExtractionResult? result;
+        var jsonPayload = ExtractJsonPayload(response.Content);
 
         try
         {
             result = JsonSerializer.Deserialize<DocumentExtractionResult>(
-                response.Content,
+                jsonPayload,
                 JsonOptions);
         }
         catch (JsonException exception)
@@ -109,6 +112,47 @@ public sealed class DocumentProcessingAgent(
             validatedResult.Items.Count);
 
         return validatedResult;
+    }
+
+    private static string ExtractJsonPayload(string content)
+    {
+        var trimmedContent = content.Trim();
+        var objectStart = trimmedContent.IndexOf(
+            '{',
+            StringComparison.Ordinal);
+        var objectEnd = trimmedContent.LastIndexOf(
+            '}');
+
+        if (objectStart < 0 || objectEnd < objectStart)
+        {
+            return trimmedContent;
+        }
+
+        return trimmedContent[objectStart..(objectEnd + 1)];
+    }
+
+    private async Task EnsureModelIsReachableAsync(
+        CancellationToken cancellationToken)
+    {
+        var chatHistory = new ChatHistory();
+        chatHistory.AddUserMessage("hi");
+
+        var executionSettings = new OpenAIPromptExecutionSettings
+        {
+            MaxTokens = 8,
+            Temperature = 0
+        };
+
+        logger.LogInformation(
+            "Checking that the document extraction model is reachable.");
+
+        await chatCompletionService.GetChatMessageContentAsync(
+            chatHistory,
+            executionSettings,
+            cancellationToken: cancellationToken);
+
+        logger.LogInformation(
+            "Document extraction model reachability check succeeded.");
     }
 
     private static void ValidateOcrResult(OcrResult ocrResult)

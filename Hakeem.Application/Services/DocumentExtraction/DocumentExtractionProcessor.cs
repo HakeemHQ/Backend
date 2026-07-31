@@ -180,13 +180,17 @@ public sealed class DocumentExtractionProcessor(
 
             foreach (var field in item.Fields)
             {
-                ValidateField(field, fieldNames);
+                ValidateField(
+                    field,
+                    item.ItemType,
+                    fieldNames);
             }
         }
     }
 
     private static void ValidateField(
         ExtractedFieldResult? field,
+        string itemType,
         ISet<string> fieldNames)
     {
         if (field is null)
@@ -195,17 +199,20 @@ public sealed class DocumentExtractionProcessor(
                 "The extraction result contains a null field.");
         }
 
-        if (!DocumentExtractionSchema.FieldNames.Contains(
-                field.FieldName))
+        var fieldName = CanonicalizeFieldName(
+            itemType,
+            field.FieldName);
+
+        if (!DocumentExtractionSchema.FieldNames.Contains(fieldName))
         {
             throw new InvalidDataException(
                 $"Field name '{field.FieldName}' is not allowed.");
         }
 
-        if (!fieldNames.Add(field.FieldName))
+        if (!fieldNames.Add(fieldName))
         {
             throw new InvalidDataException(
-                $"Duplicate field '{field.FieldName}' in one item.");
+                $"Duplicate field '{fieldName}' in one item.");
         }
 
         if (field.Confidence is < 0 or > 1)
@@ -255,7 +262,9 @@ public sealed class DocumentExtractionProcessor(
                         {
                             Id = Guid.NewGuid(),
                             ExtractedItemId = extractedItem.Id,
-                            FieldName = field.FieldName,
+                            FieldName = CanonicalizeFieldName(
+                                item.ItemType,
+                                field.FieldName),
                             ExtractedValue = field.Value,
                             Confidence = field.Confidence,
                             EvidenceText = field.EvidenceText,
@@ -267,5 +276,30 @@ public sealed class DocumentExtractionProcessor(
                 return extractedItem;
             })
             .ToList();
+    }
+
+    private static string CanonicalizeFieldName(
+        string itemType,
+        string fieldName)
+    {
+        if (!string.Equals(
+                fieldName,
+                "Name",
+                StringComparison.Ordinal))
+        {
+            return fieldName;
+        }
+
+        return itemType switch
+        {
+            "PatientInformation" => "PatientName",
+            "Medication" => "MedicationName",
+            "LabResult" => "LabTestName",
+            "Condition" => "ConditionName",
+            "Allergy" => "AllergyName",
+            "Procedure" => "ProcedureName",
+            "Facility" => "FacilityName",
+            _ => fieldName
+        };
     }
 }

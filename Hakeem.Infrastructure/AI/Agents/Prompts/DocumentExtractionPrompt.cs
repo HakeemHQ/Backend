@@ -91,7 +91,11 @@ internal static class DocumentExtractionPrompt
         A list of atomic fields belonging to the item.
 
         fieldName:
-        The field identifier. It must be exactly one of: MedicationName, Dose, Frequency, Route, LabTestName, LabValue, Unit, ReferenceRange, ConditionName, ProcedureName, Date, DoctorName, or FacilityName.
+        The field identifier. It must be exactly one of: MedicationName, Dose, Frequency, Route, LabTestName, LabValue, Unit, ReferenceRange, ConditionName, AllergyName, ProcedureName, Date, DoctorName, FacilityName, or PatientName.
+
+        Never use generic field names such as Name, Value, Result, Test, Patient, Doctor, or Facility.
+
+        Use PatientName for a patient's name, AllergyName for an allergy, MedicationName for a medication, LabTestName for a laboratory test, ConditionName for a condition, ProcedureName for a procedure, DoctorName for a doctor, and FacilityName for a medical facility.
 
         value:
         The extracted value supported by the OCR text. Preserve the value in its original language and script. Use null when the value is unavailable or unreadable.
