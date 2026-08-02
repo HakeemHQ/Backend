@@ -2,6 +2,7 @@ using System.Text.Json;
 using Hakeem.Application.Features.MedicalDocuments.DTOs;
 using Hakeem.Application.Interfaces.Agents;
 using Hakeem.Application.Interfaces.Processors;
+using Hakeem.Application.Interfaces.Validation;
 using Hakeem.Application.Repositories.MedicalDocuments;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Documents;
@@ -13,6 +14,7 @@ namespace Hakeem.Application.Services.DocumentExtraction;
 public sealed class DocumentExtractionProcessor(
     IMedicalDocumentRepository medicalDocumentRepository,
     IDocumentProcessingAgent documentProcessingAgent,
+    IDocumentExtractionValidator extractionValidator,
     IUnitOfWork unitOfWork,
     ILogger<DocumentExtractionProcessor> logger)
     : IDocumentExtractionProcessor
@@ -63,7 +65,14 @@ public sealed class DocumentExtractionProcessor(
                 documentId,
                 cancellationToken);
 
-        ValidateEntireResult(extractionResult);
+        var validationResult = extractionValidator.Validate(
+            extractionResult);
+
+        if (!validationResult.IsValid)
+        {
+            throw new InvalidDataException(
+                string.Join(Environment.NewLine, validationResult.Errors));
+        }
 
         var extractedItems = MapExtractionResult(
             medicalDocument.Id,
@@ -111,133 +120,6 @@ public sealed class DocumentExtractionProcessor(
         }
     }
 
-    private static void ValidateEntireResult(
-        DocumentExtractionResult? result)
-    {
-        if (result is null)
-        {
-            throw new InvalidDataException(
-                "The document extraction result cannot be null.");
-        }
-
-        if (!DocumentExtractionSchema.DocumentTypes.Contains(
-                result.DocumentType))
-        {
-            throw new InvalidDataException(
-                $"Document type '{result.DocumentType}' is not allowed.");
-        }
-
-        if (result.Items is null)
-        {
-            throw new InvalidDataException(
-                "The extraction items array cannot be null.");
-        }
-
-        var itemIdentities = new HashSet<(string, int)>();
-
-        foreach (var item in result.Items)
-        {
-            if (item is null)
-            {
-                throw new InvalidDataException(
-                    "The extraction result contains a null item.");
-            }
-
-            if (!DocumentExtractionSchema.ItemTypes.Contains(
-                    item.ItemType))
-            {
-                throw new InvalidDataException(
-                    $"Item type '{item.ItemType}' is not allowed.");
-            }
-
-            if (item.SequenceNumber <= 0)
-            {
-                throw new InvalidDataException(
-                    "Item sequence numbers must be positive.");
-            }
-
-            if (item.PageNumber <= 0)
-            {
-                throw new InvalidDataException(
-                    "Item page numbers must be positive.");
-            }
-
-            if (!itemIdentities.Add(
-                    (item.ItemType, item.SequenceNumber)))
-            {
-                throw new InvalidDataException(
-                    $"Duplicate item '{item.ItemType}' sequence '{item.SequenceNumber}'.");
-            }
-
-            if (item.Fields is null)
-            {
-                throw new InvalidDataException(
-                    "The extraction fields array cannot be null.");
-            }
-
-            var fieldNames = new HashSet<string>(
-                StringComparer.Ordinal);
-
-            foreach (var field in item.Fields)
-            {
-                ValidateField(
-                    field,
-                    item.ItemType,
-                    fieldNames);
-            }
-        }
-    }
-
-    private static void ValidateField(
-        ExtractedFieldResult? field,
-        string itemType,
-        ISet<string> fieldNames)
-    {
-        if (field is null)
-        {
-            throw new InvalidDataException(
-                "The extraction result contains a null field.");
-        }
-
-        var fieldName = CanonicalizeFieldName(
-            itemType,
-            field.FieldName);
-
-        if (!DocumentExtractionSchema.FieldNames.Contains(fieldName))
-        {
-            throw new InvalidDataException(
-                $"Field name '{field.FieldName}' is not allowed.");
-        }
-
-        if (!fieldNames.Add(fieldName))
-        {
-            throw new InvalidDataException(
-                $"Duplicate field '{fieldName}' in one item.");
-        }
-
-        if (field.Confidence is < 0 or > 1)
-        {
-            throw new InvalidDataException(
-                $"Field '{field.FieldName}' has an invalid confidence.");
-        }
-
-        if (field.Issues is null)
-        {
-            throw new InvalidDataException(
-                $"Field '{field.FieldName}' issues cannot be null.");
-        }
-
-        foreach (var issue in field.Issues)
-        {
-            if (issue is null ||
-                !DocumentExtractionSchema.Issues.Contains(issue))
-            {
-                throw new InvalidDataException(
-                    $"Field '{field.FieldName}' contains an invalid issue.");
-            }
-        }
-    }
-
     private static IReadOnlyList<ExtractedItem>
         MapExtractionResult(
             Guid medicalDocumentId,
@@ -262,7 +144,7 @@ public sealed class DocumentExtractionProcessor(
                         {
                             Id = Guid.NewGuid(),
                             ExtractedItemId = extractedItem.Id,
-                            FieldName = CanonicalizeFieldName(
+                            FieldName = DocumentExtractionSchema.CanonicalizeFieldName(
                                 item.ItemType,
                                 field.FieldName),
                             ExtractedValue = field.Value,
@@ -278,28 +160,4 @@ public sealed class DocumentExtractionProcessor(
             .ToList();
     }
 
-    private static string CanonicalizeFieldName(
-        string itemType,
-        string fieldName)
-    {
-        if (!string.Equals(
-                fieldName,
-                "Name",
-                StringComparison.Ordinal))
-        {
-            return fieldName;
-        }
-
-        return itemType switch
-        {
-            "PatientInformation" => "PatientName",
-            "Medication" => "MedicationName",
-            "LabResult" => "LabTestName",
-            "Condition" => "ConditionName",
-            "Allergy" => "AllergyName",
-            "Procedure" => "ProcedureName",
-            "Facility" => "FacilityName",
-            _ => fieldName
-        };
-    }
 }

@@ -61,13 +61,6 @@ public static class DependencyInjection
         services.AddOptions<GeminiChatConfiguration>()
             .Bind(section)
             .Validate(
-                options => Uri.TryCreate(
-                    options.BaseUrl,
-                    UriKind.Absolute,
-                    out var baseUrl) &&
-                    baseUrl.Scheme == Uri.UriSchemeHttps,
-                "GeminiChat BaseUrl must be an absolute HTTPS URI.")
-            .Validate(
                 options => !string.IsNullOrWhiteSpace(options.ModelId),
                 "GeminiChat ModelId must be configured.")
             .Validate(
@@ -76,6 +69,12 @@ public static class DependencyInjection
             .Validate(
                 options => !string.IsNullOrWhiteSpace(options.ApiKey),
                 "GeminiChat ApiKey must be configured.")
+            .Validate(
+                options => options.MaxAgentIterations is > 0 and <= 4,
+                "GeminiChat MaxAgentIterations must be between 1 and 4.")
+            .Validate(
+                options => options.AgentTimeoutSeconds > 0,
+                "GeminiChat AgentTimeoutSeconds must be greater than zero.")
             .ValidateOnStart();
     }
 

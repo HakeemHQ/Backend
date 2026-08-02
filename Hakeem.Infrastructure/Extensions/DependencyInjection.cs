@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.Google;
 
 namespace Hakeem.Infrastructure.Extensions;
 
@@ -30,6 +31,9 @@ public static class DependencyInjection
         services.AddScoped<
             IDocumentProcessingAgent,
             DocumentProcessingAgent>();
+        services.AddScoped<
+            IDocumentProcessingWorkflow,
+            DocumentProcessingWorkflow>();
         // Configure Entity Framework DbContext
         var DbConnectionString = configuration.GetConnectionString("DefaultConnection")!;
         services.AddDbContext<ApplicationDbContext>(options =>
@@ -43,7 +47,10 @@ public static class DependencyInjection
             }
         });
 
-        services.AddHttpClient(GeminiChatHttpClient);
+        services
+            .AddHttpClient(GeminiChatHttpClient)
+            .AddHttpMessageHandler(
+                () => new GeminiRequiredToolCallHandler());
         services.AddSingleton<IChatCompletionService>(
             serviceProvider =>
             {
@@ -55,10 +62,15 @@ public static class DependencyInjection
                         IOptions<GeminiChatConfiguration>>()
                     .Value;
 
-                return new GeminiChatCompletionService(
+#pragma warning disable SKEXP0070
+                return new GoogleAIGeminiChatCompletionService(
+                    options.ModelId,
+                    options.ApiKey,
+                    GoogleAIVersion.V1_Beta,
                     httpClientFactory.CreateClient(
                         GeminiChatHttpClient),
-                    options);
+                    loggerFactory: null);
+#pragma warning restore SKEXP0070
             });
 
         services.AddOptions<AzureDocumentIntelligenceOptions>()
