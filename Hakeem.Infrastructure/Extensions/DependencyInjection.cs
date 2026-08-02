@@ -14,13 +14,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.Google;
 
 namespace Hakeem.Infrastructure.Extensions;
 
 public static class DependencyInjection
 {
-    private const string DocumentExtractionAiHttpClient =
-        "DocumentExtractionAi";
+    private const string GeminiChatHttpClient = "GeminiChat";
 
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
@@ -31,6 +31,9 @@ public static class DependencyInjection
         services.AddScoped<
             IDocumentProcessingAgent,
             DocumentProcessingAgent>();
+        services.AddScoped<
+            IDocumentProcessingWorkflow,
+            DocumentProcessingWorkflow>();
         // Configure Entity Framework DbContext
         var DbConnectionString = configuration.GetConnectionString("DefaultConnection")!;
         services.AddDbContext<ApplicationDbContext>(options =>
@@ -44,7 +47,10 @@ public static class DependencyInjection
             }
         });
 
-        services.AddHttpClient(DocumentExtractionAiHttpClient);
+        services
+            .AddHttpClient(GeminiChatHttpClient)
+            .AddHttpMessageHandler(
+                () => new GeminiRequiredToolCallHandler());
         services.AddSingleton<IChatCompletionService>(
             serviceProvider =>
             {
@@ -53,13 +59,18 @@ public static class DependencyInjection
                         IHttpClientFactory>();
                 var options = serviceProvider
                     .GetRequiredService<
-                        IOptions<DocumentExtractionAiConfiguration>>()
+                        IOptions<GeminiChatConfiguration>>()
                     .Value;
 
-                return new ItiChatCompletionService(
+#pragma warning disable SKEXP0070
+                return new GoogleAIGeminiChatCompletionService(
+                    options.ModelId,
+                    options.ApiKey,
+                    GoogleAIVersion.V1_Beta,
                     httpClientFactory.CreateClient(
-                        DocumentExtractionAiHttpClient),
-                    options);
+                        GeminiChatHttpClient),
+                    loggerFactory: null);
+#pragma warning restore SKEXP0070
             });
 
         services.AddOptions<AzureDocumentIntelligenceOptions>()

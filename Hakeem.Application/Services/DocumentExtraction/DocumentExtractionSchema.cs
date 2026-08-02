@@ -44,7 +44,8 @@ internal static class DocumentExtractionSchema
             "Date",
             "DoctorName",
             "FacilityName",
-            "PatientName"
+            "PatientName",
+            "Quantity"
         };
 
     public static readonly IReadOnlySet<string> Issues =
@@ -58,4 +59,29 @@ internal static class DocumentExtractionSchema
             "Duplicate",
             "PossibleOcrError"
         };
+
+    public static string CanonicalizeFieldName(
+        string itemType,
+        string fieldName)
+    {
+        if (!string.Equals(
+                fieldName,
+                "Name",
+                StringComparison.Ordinal))
+        {
+            return fieldName;
+        }
+
+        return itemType switch
+        {
+            "PatientInformation" => "PatientName",
+            "Medication" => "MedicationName",
+            "LabResult" => "LabTestName",
+            "Condition" => "ConditionName",
+            "Allergy" => "AllergyName",
+            "Procedure" => "ProcedureName",
+            "Facility" => "FacilityName",
+            _ => fieldName
+        };
+    }
 }

@@ -159,6 +159,7 @@ public sealed class DocumentExtractionProcessorTests
         return new DocumentExtractionProcessor(
             repository,
             agent,
+            new DocumentExtractionValidator(),
             unitOfWork,
             NullLogger<DocumentExtractionProcessor>.Instance);
     }

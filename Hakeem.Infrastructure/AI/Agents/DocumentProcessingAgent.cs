@@ -1,34 +1,35 @@
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Hakeem.Application.Configurations;
 using Hakeem.Application.Features.MedicalDocuments.DTOs;
 using Hakeem.Application.Interfaces.Agents;
 using Hakeem.Application.Interfaces.Files;
 using Hakeem.Application.Interfaces.Ocr;
+using Hakeem.Application.Interfaces.Validation;
+using Hakeem.Infrastructure.AI.Agents.Plugins;
 using Hakeem.Infrastructure.AI.Agents.Prompts;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.SemanticKernel.Connectors.Google;
 
 namespace Hakeem.Infrastructure.AI.Agents;
 
 public sealed class DocumentProcessingAgent(
     IDocumentContentProvider contentProvider,
     IDocumentOcrService ocrService,
+    IDocumentExtractionValidator extractionValidator,
     IChatCompletionService chatCompletionService,
-    IOptions<DocumentExtractionAiConfiguration> options,
+    IOptions<GeminiChatConfiguration> options,
+    ILoggerFactory loggerFactory,
     ILogger<DocumentProcessingAgent> logger)
     : IDocumentProcessingAgent
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = false,
-        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow
-    };
+    private const string ExtractionPluginName = "documentextraction";
 
-    private readonly int _maxTokens = options.Value.MaxTokens;
+    private readonly GeminiChatConfiguration _configuration =
+        options.Value;
 
     public async Task<DocumentExtractionResult> ProcessAsync(
         Guid documentId,
@@ -41,207 +42,170 @@ public sealed class DocumentProcessingAgent(
                 nameof(documentId));
         }
 
-        logger.LogInformation(
-            "Starting AI processing for document {DocumentId}.",
-            documentId);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        await EnsureModelIsReachableAsync(cancellationToken);
-
-        await using var document = await contentProvider.OpenReadAsync(
+        var plugin = new DocumentExtractionPlugin(
             documentId,
-            cancellationToken);
+            contentProvider,
+            ocrService,
+            extractionValidator,
+            loggerFactory.CreateLogger<DocumentExtractionPlugin>());
 
-        var ocrResult = await ocrService.ExtractTextAsync(
-            document,
-            cancellationToken);
+        var invocationFilter = new BoundedToolInvocationFilter(
+            _configuration.MaxAgentIterations,
+            logger);
+        var extractionPlugin = KernelPluginFactory.CreateFromObject(
+            plugin,
+            ExtractionPluginName);
+        var readOcrKernel = CreatePhaseKernel(
+            chatCompletionService,
+            extractionPlugin["read_document_ocr"],
+            invocationFilter);
+        var submitKernel = CreatePhaseKernel(
+            chatCompletionService,
+            extractionPlugin["submit_extraction"],
+            invocationFilter);
+        var readOcrAgent = CreateAgent(
+            readOcrKernel,
+            readOcrKernel.Plugins[ExtractionPluginName]
+                ["read_document_ocr"]);
+        var submitAgent = CreateAgent(
+            submitKernel,
+            submitKernel.Plugins[ExtractionPluginName]
+                ["submit_extraction"]);
 
-        ValidateOcrResult(ocrResult);
+        using var timeoutSource = new CancellationTokenSource(
+            TimeSpan.FromSeconds(
+                _configuration.AgentTimeoutSeconds));
+        using var linkedSource = CancellationTokenSource
+            .CreateLinkedTokenSource(
+                cancellationToken,
+                timeoutSource.Token);
 
-        var chatHistory = new ChatHistory();
-        chatHistory.AddSystemMessage(DocumentExtractionPrompt.System);
-        chatHistory.AddUserMessage(BuildUserMessage(ocrResult));
-
-        var executionSettings = new OpenAIPromptExecutionSettings
-        {
-            MaxTokens = _maxTokens,
-            Temperature = 0,
-            ResponseFormat = typeof(DocumentExtractionResult)
-        };
-
-        var response = await chatCompletionService.GetChatMessageContentAsync(
-            chatHistory,
-            executionSettings,
-            cancellationToken: cancellationToken);
-
-        if (string.IsNullOrWhiteSpace(response.Content))
-        {
-            logger.LogWarning(
-                "The extraction model returned an empty response for document {DocumentId}.",
-                documentId);
-
-            throw new InvalidDataException(
-                "The extraction model returned an empty response.");
-        }
-
-        DocumentExtractionResult? result;
-        var jsonPayload = ExtractJsonPayload(response.Content);
+        logger.LogInformation(
+            "Starting bounded extraction agent for document {DocumentId}.",
+            documentId);
 
         try
         {
-            result = JsonSerializer.Deserialize<DocumentExtractionResult>(
-                jsonPayload,
-                JsonOptions);
-        }
-        catch (JsonException exception)
-        {
-            logger.LogWarning(
-                exception,
-                "The extraction model returned invalid JSON for document {DocumentId}.",
-                documentId);
+            AgentThread? thread = null;
 
-            throw new InvalidDataException(
-                "The extraction model returned invalid JSON.",
+            thread = await InvokeAgentAsync(
+                readOcrAgent,
+                DocumentExtractionAgentPrompt.ReadOcr,
+                thread,
+                linkedSource.Token);
+
+            if (!plugin.HasReadDocumentOcr)
+            {
+                throw new InvalidDataException(
+                    "The extraction agent did not call read_document_ocr.");
+            }
+
+            var maximumSubmissionAttempts =
+                _configuration.MaxAgentIterations - 1;
+
+            for (var attempt = 1;
+                 attempt <= maximumSubmissionAttempts &&
+                 plugin.AcceptedResult is null;
+                 attempt++)
+            {
+                var prompt = attempt == 1
+                    ? DocumentExtractionAgentPrompt.Submit
+                    : DocumentExtractionAgentPrompt.Repair;
+
+                thread = await InvokeAgentAsync(
+                    submitAgent,
+                    prompt,
+                    thread,
+                    linkedSource.Token);
+            }
+        }
+        catch (OperationCanceledException exception)
+            when (!cancellationToken.IsCancellationRequested &&
+                  timeoutSource.IsCancellationRequested)
+        {
+            throw new TimeoutException(
+                $"Document extraction exceeded the {_configuration.AgentTimeoutSeconds}-second timeout.",
                 exception);
         }
 
-        var validatedResult = ValidateResponseShape(result);
+        var acceptedResult = plugin.AcceptedResult
+            ?? throw new InvalidDataException(
+                "The extraction agent finished without submitting a valid result.");
 
         logger.LogInformation(
-            "AI processing completed for document {DocumentId} with {ItemCount} extracted items.",
+            "Bounded extraction agent completed for document {DocumentId} with {ItemCount} items.",
             documentId,
-            validatedResult.Items.Count);
+            acceptedResult.Items.Count);
 
-        return validatedResult;
+        return acceptedResult;
     }
 
-    private static string ExtractJsonPayload(string content)
+    private static Kernel CreatePhaseKernel(
+        IChatCompletionService chatCompletionService,
+        KernelFunction phaseFunction,
+        BoundedToolInvocationFilter invocationFilter)
     {
-        var trimmedContent = content.Trim();
-        var objectStart = trimmedContent.IndexOf(
-            '{',
-            StringComparison.Ordinal);
-        var objectEnd = trimmedContent.LastIndexOf(
-            '}');
+        var kernelBuilder = Kernel.CreateBuilder();
+        kernelBuilder.Services.AddSingleton(chatCompletionService);
+        var kernel = kernelBuilder.Build();
+        kernel.Plugins.AddFromFunctions(
+            ExtractionPluginName,
+            [phaseFunction]);
+        kernel.AutoFunctionInvocationFilters.Add(invocationFilter);
 
-        if (objectStart < 0 || objectEnd < objectStart)
-        {
-            return trimmedContent;
-        }
-
-        return trimmedContent[objectStart..(objectEnd + 1)];
+        return kernel;
     }
 
-    private async Task EnsureModelIsReachableAsync(
-        CancellationToken cancellationToken)
+    private ChatCompletionAgent CreateAgent(
+        Kernel kernel,
+        KernelFunction requiredFunction)
     {
-        var chatHistory = new ChatHistory();
-        chatHistory.AddUserMessage("hi");
-
-        var executionSettings = new OpenAIPromptExecutionSettings
+        var executionSettings = new GeminiPromptExecutionSettings
         {
-            MaxTokens = 8,
-            Temperature = 0
+            MaxTokens = _configuration.MaxTokens,
+            Temperature = 0,
+#pragma warning disable CS0618
+            ToolCallBehavior =
+                GeminiToolCallBehavior.AutoInvokeKernelFunctions,
+#pragma warning restore CS0618
+            FunctionChoiceBehavior = FunctionChoiceBehavior.Required(
+                [requiredFunction],
+                autoInvoke: true,
+                new FunctionChoiceBehaviorOptions
+                {
+                    AllowConcurrentInvocation = false,
+                    AllowParallelCalls = false,
+                    AllowStrictSchemaAdherence = true
+                })
         };
 
-        logger.LogInformation(
-            "Checking that the document extraction model is reachable.");
-
-        await chatCompletionService.GetChatMessageContentAsync(
-            chatHistory,
-            executionSettings,
-            cancellationToken: cancellationToken);
-
-        logger.LogInformation(
-            "Document extraction model reachability check succeeded.");
+        return new ChatCompletionAgent
+        {
+            Name = "DocumentExtractionAgent",
+            Instructions = DocumentExtractionAgentPrompt.System,
+            Kernel = kernel,
+            Arguments = new KernelArguments(executionSettings)
+        };
     }
 
-    private static void ValidateOcrResult(OcrResult ocrResult)
+    private static async Task<AgentThread?> InvokeAgentAsync(
+        ChatCompletionAgent agent,
+        string prompt,
+        AgentThread? thread,
+        CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(ocrResult);
-
-        if (ocrResult.Pages is null ||
-            ocrResult.Pages.Count == 0 ||
-            ocrResult.Pages.All(
-                page => string.IsNullOrWhiteSpace(page.RecognizedText)))
+        await foreach (var response in agent.InvokeAsync(
+                           prompt,
+                           thread,
+                           cancellationToken: cancellationToken))
         {
-            throw new InvalidDataException(
-                "OCR did not produce any readable document text.");
+            // Preserve tool results and validation errors on the thread,
+            // while deliberately ignoring arbitrary model text.
+            thread = response.Thread;
         }
 
-        if (ocrResult.Pages.Any(page => page.PageNumber <= 0))
-        {
-            throw new InvalidDataException(
-                "OCR returned an invalid page number.");
-        }
-    }
-
-    private static string BuildUserMessage(OcrResult ocrResult)
-    {
-        var message = new StringBuilder(
-            "Extract structured medical information from the following numbered OCR pages.");
-
-        foreach (var page in ocrResult.Pages)
-        {
-            message.AppendLine();
-            message.AppendLine();
-            message.Append("PAGE ");
-            message.AppendLine(page.PageNumber.ToString());
-            message.Append(page.RecognizedText.Trim());
-        }
-
-        message.AppendLine();
-        message.AppendLine();
-        message.Append("Return only the required JSON object.");
-
-        return message.ToString();
-    }
-
-    private static DocumentExtractionResult ValidateResponseShape(
-        DocumentExtractionResult? result)
-    {
-        if (result is null)
-        {
-            throw new InvalidDataException(
-                "The extraction response was empty.");
-        }
-
-        if (string.IsNullOrWhiteSpace(result.DocumentType))
-        {
-            throw new InvalidDataException(
-                "The extraction response is missing documentType.");
-        }
-
-        if (result.Items is null)
-        {
-            throw new InvalidDataException(
-                "The extraction response items array cannot be null.");
-        }
-
-        foreach (var item in result.Items)
-        {
-            if (item is null ||
-                string.IsNullOrWhiteSpace(item.ItemType) ||
-                item.SequenceNumber <= 0 ||
-                item.PageNumber <= 0 ||
-                item.Fields is null)
-            {
-                throw new InvalidDataException(
-                    "The extraction response contains an invalid item.");
-            }
-
-            foreach (var field in item.Fields)
-            {
-                if (field is null ||
-                    string.IsNullOrWhiteSpace(field.FieldName) ||
-                    field.Issues is null ||
-                    field.Confidence is < 0 or > 1)
-                {
-                    throw new InvalidDataException(
-                        "The extraction response contains an invalid field.");
-                }
-            }
-        }
-
-        return result;
+        return thread;
     }
 }
