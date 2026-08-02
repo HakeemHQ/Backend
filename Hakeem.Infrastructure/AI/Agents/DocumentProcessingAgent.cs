@@ -18,7 +18,7 @@ public sealed class DocumentProcessingAgent(
     IDocumentContentProvider contentProvider,
     IDocumentOcrService ocrService,
     IChatCompletionService chatCompletionService,
-    IOptions<DocumentExtractionAiConfiguration> options,
+    IOptions<GeminiChatConfiguration> options,
     ILogger<DocumentProcessingAgent> logger)
     : IDocumentProcessingAgent
 {

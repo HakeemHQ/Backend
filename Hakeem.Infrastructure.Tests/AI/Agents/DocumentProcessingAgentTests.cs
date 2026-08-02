@@ -235,7 +235,7 @@ public sealed class DocumentProcessingAgentTests
         FakeChatCompletionService chatService)
     {
         var options = Options.Create(
-            new DocumentExtractionAiConfiguration
+            new GeminiChatConfiguration
             {
                 MaxTokens = MaxTokens
             });

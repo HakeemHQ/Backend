@@ -44,7 +44,8 @@ internal static class DocumentExtractionSchema
             "Date",
             "DoctorName",
             "FacilityName",
-            "PatientName"
+            "PatientName",
+            "Quantity"
         };
 
     public static readonly IReadOnlySet<string> Issues =

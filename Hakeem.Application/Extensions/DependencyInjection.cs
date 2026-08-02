@@ -21,7 +21,7 @@ public static class DependencyInjection
     {
         var assembly = Hakeem.Application.AssemblyReference.Assembly;
 
-        AddDocumentExtractionAi(services, configuration);
+        AddGeminiChat(services, configuration);
 
         services.RegisterServicesWithLifetime(assembly);
         services.AddScoped<
@@ -51,34 +51,31 @@ public static class DependencyInjection
         return services;
     }
 
-    private static void AddDocumentExtractionAi(
+    private static void AddGeminiChat(
         IServiceCollection services,
         IConfiguration configuration)
     {
         var section = configuration.GetRequiredSection(
-            DocumentExtractionAiConfiguration.SectionName);
+            GeminiChatConfiguration.SectionName);
 
-        services.AddOptions<DocumentExtractionAiConfiguration>()
+        services.AddOptions<GeminiChatConfiguration>()
             .Bind(section)
             .Validate(
                 options => Uri.TryCreate(
                     options.BaseUrl,
                     UriKind.Absolute,
-                    out _),
-                "DocumentExtractionAi BaseUrl must be an absolute URI.")
-            .Validate(
-                options => !string.IsNullOrWhiteSpace(
-                    options.ChatEndpoint),
-                "DocumentExtractionAi ChatEndpoint must be configured.")
+                    out var baseUrl) &&
+                    baseUrl.Scheme == Uri.UriSchemeHttps,
+                "GeminiChat BaseUrl must be an absolute HTTPS URI.")
             .Validate(
                 options => !string.IsNullOrWhiteSpace(options.ModelId),
-                "DocumentExtractionAi ModelId must be configured.")
+                "GeminiChat ModelId must be configured.")
             .Validate(
                 options => options.MaxTokens > 0,
-                "DocumentExtractionAi MaxTokens must be greater than zero.")
+                "GeminiChat MaxTokens must be greater than zero.")
             .Validate(
                 options => !string.IsNullOrWhiteSpace(options.ApiKey),
-                "DocumentExtractionAi ApiKey must be configured.")
+                "GeminiChat ApiKey must be configured.")
             .ValidateOnStart();
     }
 

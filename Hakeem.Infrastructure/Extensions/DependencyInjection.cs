@@ -19,8 +19,7 @@ namespace Hakeem.Infrastructure.Extensions;
 
 public static class DependencyInjection
 {
-    private const string DocumentExtractionAiHttpClient =
-        "DocumentExtractionAi";
+    private const string GeminiChatHttpClient = "GeminiChat";
 
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
@@ -44,7 +43,7 @@ public static class DependencyInjection
             }
         });
 
-        services.AddHttpClient(DocumentExtractionAiHttpClient);
+        services.AddHttpClient(GeminiChatHttpClient);
         services.AddSingleton<IChatCompletionService>(
             serviceProvider =>
             {
@@ -53,12 +52,12 @@ public static class DependencyInjection
                         IHttpClientFactory>();
                 var options = serviceProvider
                     .GetRequiredService<
-                        IOptions<DocumentExtractionAiConfiguration>>()
+                        IOptions<GeminiChatConfiguration>>()
                     .Value;
 
-                return new ItiChatCompletionService(
+                return new GeminiChatCompletionService(
                     httpClientFactory.CreateClient(
-                        DocumentExtractionAiHttpClient),
+                        GeminiChatHttpClient),
                     options);
             });
 
