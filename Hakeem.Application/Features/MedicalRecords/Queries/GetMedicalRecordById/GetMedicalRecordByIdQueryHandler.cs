@@ -46,11 +46,10 @@ namespace Hakeem.Application.Features.MedicalRecords.Queries.GetMedicalRecordByI
                 medicalRecord.ClinicalDate,
                 medicalRecord.Status,
                 medicalRecord.SourceReferences.Select(source =>
-                    new SourceDto(
-                        source.DocumentId,
-                        source.MedicalDocument.Title,
-                        source.PageReference))
-                    .ToList());
+                new SourceDto(source.DocumentId,source.MedicalDocument.Title,source.PageReference))
+                    .ToList(),
+                medicalRecord.Fields
+               .Select(field => new MedicalRecordFieldDTO(field.Id,field.FieldName,field.Value)).ToList());
         }
     }
 }

@@ -92,16 +92,16 @@ namespace Hakeem.Application.Features.PatientReviewAndConfirmation.Commands
             item.ReviewedAt = DateTimeOffset.UtcNow;
 
             //Create Medical Record
+            var displayName = string.Join(", ",item.ExtractedFields.Select(f => $"{f.FieldName}: {f.ExtractedValue}"));
             var medicalRecord = new MedicalRecord
             {
                 Id = Guid.NewGuid(),
                 RecordType = item.ItemType,
                 SourceExtractedItemId = item.Id,
                 PatientProfileId = patient.Id,
-                DisplayName = item.ItemType+" Name",
+                DisplayName = displayName,
                 Status = "Confirmed",
                 ClinicalDate = item.CreatedAt,
-                
             };
             medicalRecordRepository.Add(medicalRecord);
      

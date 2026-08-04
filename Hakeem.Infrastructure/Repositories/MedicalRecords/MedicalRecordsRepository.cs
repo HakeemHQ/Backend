@@ -83,10 +83,12 @@ namespace Hakeem.Infrastructure.Repositories.MedicalRecords
         public async Task<MedicalRecord?> GetMedicalRecordByIdAsync(Guid medicalRecordId,Guid patientProfileId,
                                                                     CancellationToken cancellationToken)
         {
-            return await _context.MedicalRecords.AsNoTracking().Include(x => x.SourceReferences)
-                .ThenInclude(x => x.MedicalDocument).FirstOrDefaultAsync(x => x.Id == medicalRecordId &&
-                                                                         x.PatientProfileId == patientProfileId,
-                                                                         cancellationToken);
+            return await _context.MedicalRecords.AsNoTracking().Include(x => x.Fields)
+                        .Include(x => x.SourceReferences).ThenInclude(x => x.MedicalDocument)
+                        .FirstOrDefaultAsync(x => x.Id == medicalRecordId &&
+                                             x.PatientProfileId == patientProfileId,
+                                             cancellationToken);
+
         }
     }
 }
