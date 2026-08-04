@@ -1,0 +1,14 @@
+using Hakeem.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Hakeem.Application.Repositories.PatientReviewConfirmation
+{
+    public interface ISourceReferenceRepository
+    {
+        void Add(SourceReference sourceReference);
+    }
+}

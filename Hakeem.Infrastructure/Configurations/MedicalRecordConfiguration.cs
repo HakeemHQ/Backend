@@ -10,10 +10,10 @@ public class MedicalRecordConfiguration : IEntityTypeConfiguration<MedicalRecord
     {
         builder.HasKey(e => e.Id);
 
-        builder.HasMany(m => m.FieldReviews)
+        builder.HasMany(m => m.Fields)
                .WithOne(f => f.MedicalRecord)
                .HasForeignKey(f => f.MedicalRecordId)
-               .OnDelete(DeleteBehavior.Restrict);
+               .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(m => m.SourceReferences)
                .WithOne(s => s.MedicalRecord)
@@ -31,5 +31,14 @@ public class MedicalRecordConfiguration : IEntityTypeConfiguration<MedicalRecord
                .WithOne(r => r.MedicalRecord)
                .HasForeignKey(r => r.MedicalRecordId)
                .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => x.SourceExtractedItemId)
+             .IsUnique()
+             .HasFilter("[SourceExtractedItemId] IS NOT NULL");
+
+        builder.HasMany(m => m.Fields)
+              .WithOne(f => f.MedicalRecord)
+              .HasForeignKey(f => f.MedicalRecordId)
+              .OnDelete(DeleteBehavior.Cascade);
     }
 }
