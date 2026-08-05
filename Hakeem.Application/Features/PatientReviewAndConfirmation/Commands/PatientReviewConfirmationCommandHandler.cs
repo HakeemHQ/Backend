@@ -3,8 +3,10 @@ using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Repositories.MedicalDocuments;
 using Hakeem.Application.Repositories.MedicalRecords;
+using Hakeem.Application.Repositories.Notifications;
 using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Application.Repositories.PatientReviewConfirmation;
+using Hakeem.Domain.DomainEvents.Outbox;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Documents;
 using Hakeem.Domain.Enums.Reviews;
@@ -17,7 +19,8 @@ namespace Hakeem.Application.Features.PatientReviewAndConfirmation.Commands
     public sealed class PatientReviewConfirmationCommandHandler(ICurrentUserContext currentUserContext,
      IPatientProfileRepository patientProfileRepository,IMedicalDocumentRepository medicalDocumentRepository,
      IMedicalRecordsRepository medicalRecordRepository,IFieldReviewRepository fieldReviewRepository,
-     ISourceReferenceRepository sourceReferenceRepository,IUnitOfWork unitOfWork)
+     ISourceReferenceRepository sourceReferenceRepository,IOutboxEventRepository outboxEventRepository,
+     IUnitOfWork unitOfWork)
      :IRequestHandler< PatientReviewConfirmationCommand,ReviewExtractedItemResult>
     {
         public async Task<ReviewExtractedItemResult> Handle(PatientReviewConfirmationCommand request,CancellationToken cancellationToken)
@@ -114,14 +117,22 @@ namespace Hakeem.Application.Features.PatientReviewAndConfirmation.Commands
                 var value = decision == FieldReviewDecision.Corrected ? extractedField.FieldReview!.CorrectedValue!
                                          : extractedField.ExtractedValue;
 
-                medicalRecord.Fields.Add(new MedicalRecordField
+                var field = new MedicalRecordField
                 {
                     Id = Guid.NewGuid(),
                     MedicalRecordId = medicalRecord.Id,
                     FieldName = extractedField.FieldName,
                     SourceExtractedFieldId = extractedField.Id,
                     Value = value
-                });
+                };
+
+                medicalRecord.Fields.Add(field);
+                outboxEventRepository.Add(
+                    new MedicalRecordFieldIndexedEvent
+                    {
+                        MedicalRecordFieldId = field.Id
+                    },
+                    $"medical-record-field-index:{field.Id}");
             }
 
             // Create Source Reference
