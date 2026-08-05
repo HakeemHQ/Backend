@@ -1,5 +1,5 @@
 using MediatR;
-namespace Hakeem.Domain.Entities;
+namespace Hakeem.Domain.DomainEvents;
 
 public abstract class DomainEvent : INotification
 {

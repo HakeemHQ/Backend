@@ -2,7 +2,11 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Hakeem.Application.Common.ResponseModel;
 using Hakeem.Application.Constants;
+using Hakeem.Application.Common;
 using Hakeem.Application.Features.MedicalDocuments.Commands.UploadDocument;
+using Hakeem.Application.Features.MedicalDocuments.DTOs;
+using Hakeem.Application.Features.MedicalDocuments.Queries.GetDocumentById;
+using Hakeem.Application.Features.MedicalDocuments.Queries.GetDocuments;
 using Hakeem.Application.Resources;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -27,6 +31,26 @@ public sealed class MedicalDocumentController : ApiControllerBase
     {
         _mediator = mediator;
         _validator = validator;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetDocuments(
+        [FromQuery] GetDocumentsQuery query,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(query, cancellationToken);
+        return SuccessResponse(result);
+    }
+
+    [HttpGet("{documentId:guid}")]
+    public async Task<IActionResult> GetDocumentById(
+        Guid documentId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new GetDocumentByIdQuery(documentId),
+            cancellationToken);
+        return SuccessResponse(result);
     }
 
     [HttpPost]

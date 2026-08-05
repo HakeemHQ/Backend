@@ -1,3 +1,4 @@
+using Hakeem.Application.Common;
 using Hakeem.Application.Repositories.MedicalDocuments;
 using Hakeem.Domain.Entities;
 using Hakeem.Infrastructure.Context;
@@ -20,6 +21,51 @@ public sealed class MedicalDocumentRepository(ApplicationDbContext dbContext)
         return dbContext.MedicalDocuments.SingleOrDefaultAsync(
             document => document.Id == documentId,
             cancellationToken);
+    }
+
+    public Task<MedicalDocument?> GetByIdForPatientAsync(
+        Guid documentId,
+        Guid patientProfileId,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.MedicalDocuments
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                document =>
+                    document.Id == documentId &&
+                    document.PatientProfileId == patientProfileId,
+                cancellationToken);
+    }
+
+    public async Task<PaginatedResult<MedicalDocument>> GetDocumentsAsync(
+        Guid patientProfileId,
+        string? documentName,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var query = dbContext.MedicalDocuments
+            .AsNoTracking()
+            .Where(document => document.PatientProfileId == patientProfileId);
+
+        if (!string.IsNullOrWhiteSpace(documentName))
+        {
+            query = query.Where(document => document.Title.Contains(documentName));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .OrderBy(document => document.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PaginatedResult<MedicalDocument>(
+            items,
+            totalCount,
+            pageNumber,
+            pageSize);
     }
 
     public async Task<IReadOnlyList<ExtractedItem>>

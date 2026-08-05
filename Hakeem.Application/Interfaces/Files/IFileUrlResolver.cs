@@ -6,7 +6,6 @@ public interface IFileUrlResolver : IScoped
 {
     string ResolveFileUrl(string value);
     string ToAbsoluteUrl(string relativePath);
-    string ResolveJsonString(string json);
 }
 
 

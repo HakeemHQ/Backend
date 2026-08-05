@@ -1,3 +1,4 @@
+using Hakeem.Application.Common;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Interfaces.ServiceLifetime;
 
@@ -8,6 +9,18 @@ public interface IMedicalDocumentRepository : IScoped
     void Add(MedicalDocument medicalDocument);
 
     Task<MedicalDocument?> GetByIdAsync(Guid documentId, CancellationToken cancellationToken);
+
+    Task<MedicalDocument?> GetByIdForPatientAsync(
+        Guid documentId,
+        Guid patientProfileId,
+        CancellationToken cancellationToken);
+
+    Task<PaginatedResult<MedicalDocument>> GetDocumentsAsync(
+        Guid patientProfileId,
+        string? documentName,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken);
 
     Task<IReadOnlyList<ExtractedItem>> GetExtractedItemsAsync(Guid documentId,CancellationToken cancellationToken);
 
