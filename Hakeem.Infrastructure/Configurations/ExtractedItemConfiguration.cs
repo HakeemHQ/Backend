@@ -25,5 +25,12 @@ public class ExtractedItemConfiguration : IEntityTypeConfiguration<ExtractedItem
                .WithOne(f => f.ExtractedItem)
                .HasForeignKey(f => f.ExtractedItemId)
                .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(item => item.MedicalRecord)
+               .WithOne(record => record.SourceExtractedItem)
+               .HasForeignKey<MedicalRecord>(
+                 record => record.SourceExtractedItemId)
+               .OnDelete(DeleteBehavior.Restrict);
+
     }
 }

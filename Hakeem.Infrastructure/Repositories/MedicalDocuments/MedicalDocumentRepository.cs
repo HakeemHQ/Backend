@@ -47,4 +47,13 @@ public sealed class MedicalDocumentRepository(ApplicationDbContext dbContext)
     {
         dbContext.ExtractedItems.AddRange(extractedItems);
     }
+
+    public async Task<ExtractedItem?> GetExtractedItemForReviewAsync(Guid extractedItemId,CancellationToken cancellationToken)
+    {
+        return await dbContext.ExtractedItems.Include(e => e.MedicalDocument).Include(e => e.ExtractedFields)
+                                             .ThenInclude(f => f.FieldReview)
+                                             .FirstOrDefaultAsync(
+                                              e => e.Id == extractedItemId,
+                                              cancellationToken);
+    }
 }

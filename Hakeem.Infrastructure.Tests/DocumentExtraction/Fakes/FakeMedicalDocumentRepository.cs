@@ -50,4 +50,9 @@ internal sealed class FakeMedicalDocumentRepository(
     {
         AddedItems = extractedItems.ToList();
     }
+
+    public Task<ExtractedItem?> GetExtractedItemForReviewAsync(Guid extractedItemId, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
 }
