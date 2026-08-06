@@ -91,8 +91,17 @@ namespace Hakeem.Application.Features.PatientReviewAndConfirmation.Commands
             item.ReviewStatus = ExtractedItemReviewStatus.Confirmed;
             item.ReviewedAt = DateTimeOffset.UtcNow;
 
-            //Create Medical Record
-            var displayName = string.Join(", ",item.ExtractedFields.Select(f => $"{f.FieldName}: {f.ExtractedValue}"));
+            //Create Medical Record after review 
+            var displayName = string.Join(", ",item.ExtractedFields
+             .Where(f =>(f.FieldReview?.Decision ?? FieldReviewDecision.Approved)!= FieldReviewDecision.Rejected)
+             .Select(f =>
+           {
+            var value =(f.FieldReview?.Decision ?? FieldReviewDecision.Approved)== FieldReviewDecision.Corrected
+                    ? f.FieldReview!.CorrectedValue!: f.ExtractedValue;
+
+            return $"{f.FieldName}: {value}";
+           }));
+
             var medicalRecord = new MedicalRecord
             {
                 Id = Guid.NewGuid(),
