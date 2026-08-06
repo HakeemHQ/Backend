@@ -1,3 +1,4 @@
+using Hakeem.Application.Common;
 using Hakeem.Application.Repositories.MedicalDocuments;
 using Hakeem.Domain.Entities;
 
@@ -6,7 +7,7 @@ namespace Hakeem.Infrastructure.Tests.DocumentExtraction.Fakes;
 internal sealed class FakeMedicalDocumentRepository(
     MedicalDocument? medicalDocument,
     IReadOnlyList<ExtractedItem>? existingItems = null)
-    : IMedicalDocumentRepository
+    : IMedicalDocumentRepository 
 {
     private readonly IReadOnlyList<ExtractedItem> _existingItems =
         existingItems ?? [];
@@ -26,6 +27,53 @@ internal sealed class FakeMedicalDocumentRepository(
     {
         cancellationToken.ThrowIfCancellationRequested();
         return Task.FromResult(medicalDocument);
+    }
+
+    public Task<MedicalDocument?> GetByIdForPatientAsync(
+        Guid documentId,
+        Guid patientProfileId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (medicalDocument is null ||
+            medicalDocument.Id != documentId ||
+            medicalDocument.PatientProfileId != patientProfileId)
+        {
+            return Task.FromResult<MedicalDocument?>(null);
+        }
+
+        return Task.FromResult<MedicalDocument?>(medicalDocument);
+    }
+
+    public Task<PaginatedResult<MedicalDocument>> GetDocumentsAsync(
+        Guid patientProfileId,
+        string? documentName,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (medicalDocument is null || medicalDocument.PatientProfileId != patientProfileId)
+        {
+            return Task.FromResult(new PaginatedResult<MedicalDocument>(
+                [],
+                0,
+                pageNumber,
+                pageSize));
+        }
+
+        var matchesName = string.IsNullOrWhiteSpace(documentName) ||
+                          medicalDocument.Title.Contains(documentName, StringComparison.OrdinalIgnoreCase);
+
+        var items = matchesName ? new[] { medicalDocument } : Array.Empty<MedicalDocument>();
+
+        return Task.FromResult(new PaginatedResult<MedicalDocument>(
+            items,
+            items.Length,
+            pageNumber,
+            pageSize));
     }
 
     public Task<IReadOnlyList<ExtractedItem>>
