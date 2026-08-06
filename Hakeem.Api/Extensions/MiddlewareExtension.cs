@@ -151,7 +151,6 @@ public static class MiddlewareExtension
                 await response.WriteAsJsonAsync(forbiddenResponse);
             }
         });
-
         return app;
     }
 

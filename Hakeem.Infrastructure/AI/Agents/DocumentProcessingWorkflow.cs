@@ -14,6 +14,13 @@ using Microsoft.SemanticKernel.Connectors.Google;
 
 namespace Hakeem.Infrastructure.AI.Agents;
 
+
+
+
+/// ///////////////////////////////////////////////// LEGACY CODE /////////////////////////////////////////////////
+
+
+
 public sealed class DocumentProcessingWorkflow(
     IDocumentContentProvider contentProvider,
     IDocumentOcrService ocrService,
