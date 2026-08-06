@@ -1,12 +1,11 @@
 using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
+using Hakeem.Application.Interfaces.Rag;
 using Hakeem.Application.Repositories.MedicalDocuments;
 using Hakeem.Application.Repositories.MedicalRecords;
-using Hakeem.Application.Repositories.Notifications;
 using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Application.Repositories.PatientReviewConfirmation;
-using Hakeem.Domain.DomainEvents.Outbox;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Documents;
 using Hakeem.Domain.Enums.Reviews;
@@ -19,7 +18,7 @@ namespace Hakeem.Application.Features.PatientReviewAndConfirmation.Commands
     public sealed class PatientReviewConfirmationCommandHandler(ICurrentUserContext currentUserContext,
      IPatientProfileRepository patientProfileRepository,IMedicalDocumentRepository medicalDocumentRepository,
      IMedicalRecordsRepository medicalRecordRepository,IFieldReviewRepository fieldReviewRepository,
-     ISourceReferenceRepository sourceReferenceRepository,IOutboxEventRepository outboxEventRepository,
+     ISourceReferenceRepository sourceReferenceRepository,IMedicalRecordFieldIndexOutbox medicalRecordFieldIndexOutbox,
      IUnitOfWork unitOfWork)
      :IRequestHandler< PatientReviewConfirmationCommand,ReviewExtractedItemResult>
     {
@@ -127,12 +126,7 @@ namespace Hakeem.Application.Features.PatientReviewAndConfirmation.Commands
                 };
 
                 medicalRecord.Fields.Add(field);
-                outboxEventRepository.Add(
-                    new MedicalRecordFieldIndexedEvent
-                    {
-                        MedicalRecordFieldId = field.Id
-                    },
-                    $"medical-record-field-index:{field.Id}");
+                medicalRecordFieldIndexOutbox.EnqueueIndexing(field.Id);
             }
 
             // Create Source Reference
