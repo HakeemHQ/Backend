@@ -90,6 +90,18 @@ namespace Hakeem.Infrastructure.Repositories.MedicalRecords
                                              cancellationToken);
 
         }
+
+        public Task<MedicalRecord?> GetByIdWithFieldsAsync(
+            Guid medicalRecordId,
+            CancellationToken cancellationToken)
+        {
+            return _context.MedicalRecords
+                .AsNoTracking()
+                .Include(record => record.Fields)
+                .SingleOrDefaultAsync(
+                    record => record.Id == medicalRecordId,
+                    cancellationToken);
+        }
     }
 }
 

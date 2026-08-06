@@ -18,7 +18,7 @@ namespace Hakeem.Application.Features.PatientReviewAndConfirmation.Commands
     public sealed class PatientReviewConfirmationCommandHandler(ICurrentUserContext currentUserContext,
      IPatientProfileRepository patientProfileRepository,IMedicalDocumentRepository medicalDocumentRepository,
      IMedicalRecordsRepository medicalRecordRepository,IFieldReviewRepository fieldReviewRepository,
-     ISourceReferenceRepository sourceReferenceRepository,IMedicalRecordFieldIndexOutbox medicalRecordFieldIndexOutbox,
+     ISourceReferenceRepository sourceReferenceRepository,IMedicalRecordIndexOutbox medicalRecordIndexOutbox,
      IUnitOfWork unitOfWork)
      :IRequestHandler< PatientReviewConfirmationCommand,ReviewExtractedItemResult>
     {
@@ -126,8 +126,9 @@ namespace Hakeem.Application.Features.PatientReviewAndConfirmation.Commands
                 };
 
                 medicalRecord.Fields.Add(field);
-                medicalRecordFieldIndexOutbox.EnqueueIndexing(field.Id);
             }
+
+            medicalRecordIndexOutbox.EnqueueIndexing(medicalRecord.Id);
 
             // Create Source Reference
             sourceReferenceRepository.Add(new SourceReference

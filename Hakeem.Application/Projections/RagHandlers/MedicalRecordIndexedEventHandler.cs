@@ -4,16 +4,16 @@ using Hakeem.Domain.DomainEvents.Outbox;
 
 namespace Hakeem.Application.Projections.RagHandlers;
 
-public sealed class MedicalRecordFieldIndexedEventHandler(
-    IMedicalRecordFieldIndexProcessor processor)
-    : IOutboxEventHandler<MedicalRecordFieldIndexedEvent>
+public sealed class MedicalRecordIndexedEventHandler(
+    IMedicalRecordIndexProcessor processor)
+    : IOutboxEventHandler<MedicalRecordIndexedEvent>
 {
     public Task HandleAsync(
-        MedicalRecordFieldIndexedEvent @event,
+        MedicalRecordIndexedEvent @event,
         CancellationToken cancellationToken)
     {
         return processor.ProcessAsync(
-            @event.MedicalRecordFieldId,
+            @event.MedicalRecordId,
             cancellationToken);
     }
 }

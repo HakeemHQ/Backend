@@ -2,9 +2,9 @@ using Hakeem.Domain.Interfaces.ServiceLifetime;
 
 namespace Hakeem.Application.Interfaces.Processors;
 
-public interface IMedicalRecordFieldIndexProcessor : IScoped
+public interface IMedicalRecordIndexProcessor : IScoped
 {
     Task ProcessAsync(
-        Guid medicalRecordFieldId,
+        Guid medicalRecordId,
         CancellationToken cancellationToken);
 }

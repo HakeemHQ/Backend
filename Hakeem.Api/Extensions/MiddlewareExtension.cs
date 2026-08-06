@@ -2,6 +2,7 @@ using Hakeem.Application.Common.ResponseModel;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Resources;
 using Hakeem.Api.Configuration;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 namespace Hakeem.Api.Extensions;
@@ -66,20 +67,25 @@ public static class MiddlewareExtension
             {
                 if (context.Context.Request.Path.StartsWithSegments("/uploads"))
                 {
-                    var headers = context.Context.Response.Headers;
-
-                    headers["Cross-Origin-Resource-Policy"] = "cross-origin";
-                    headers.Remove("Cross-Origin-Embedder-Policy");
-                    headers.Remove("Cross-Origin-Opener-Policy");
-
-                    headers["Content-Security-Policy"] =
-                        "default-src 'self'; img-src 'self' data: https:;";
-
-                    headers["X-Content-Type-Options"] = "nosniff";
-                    headers.Remove("Set-Cookie");
+                    PrepareUploadedFileResponse(context.Context);
                 }
             }
         });
+
+        // Legacy uploads saved under ContentRoot/TestDocuments before wwwroot/uploads was used.
+        var legacyDocumentsPath = Path.Combine(app.Environment.ContentRootPath, "TestDocuments");
+        if (Directory.Exists(legacyDocumentsPath))
+        {
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(legacyDocumentsPath),
+                RequestPath = "/TestDocuments",
+                OnPrepareResponse = context =>
+                {
+                    PrepareUploadedFileResponse(context.Context);
+                }
+            });
+        }
 
         app.UseRouting();
 
@@ -96,6 +102,21 @@ public static class MiddlewareExtension
         });
 
         return app;
+    }
+
+    private static void PrepareUploadedFileResponse(HttpContext context)
+    {
+        var headers = context.Response.Headers;
+
+        headers["Cross-Origin-Resource-Policy"] = "cross-origin";
+        headers.Remove("Cross-Origin-Embedder-Policy");
+        headers.Remove("Cross-Origin-Opener-Policy");
+
+        headers["Content-Security-Policy"] =
+            "default-src 'self'; img-src 'self' data: https:;";
+
+        headers["X-Content-Type-Options"] = "nosniff";
+        headers.Remove("Set-Cookie");
     }
 
 

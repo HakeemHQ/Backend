@@ -11,7 +11,7 @@ namespace Hakeem.Infrastructure.Rag;
 public sealed class QdrantTestService(
     QdrantClient qdrantClient,
     IEmbeddingService embeddingService,
-    IMedicalRecordFieldVectorStore vectorStore,
+    IMedicalRecordVectorStore vectorStore,
     IOptions<QdrantConfiguration> options,
     ILogger<QdrantTestService> logger)
     : IQdrantTestService
@@ -27,14 +27,14 @@ public sealed class QdrantTestService(
             cancellationToken);
 
         var pointId = Guid.NewGuid();
-        var document = new MedicalRecordFieldVectorDocument(
+        var document = new MedicalRecordVectorDocument(
             pointId,
             Guid.NewGuid(),
-            Guid.NewGuid(),
             "TestRecord",
-            "TestField",
             text,
-            DateTime.UtcNow);
+            "Confirmed",
+            DateTime.UtcNow,
+            [new MedicalRecordFieldPayload("TestField", text)]);
 
         await vectorStore.UpsertAsync(
             document,
@@ -79,8 +79,8 @@ public sealed class QdrantTestService(
                 ParsePointId(point.Id),
                 point.Score,
                 GetPayloadValue(point.Payload, "content"),
-                GetPayloadValue(point.Payload, "field_name"),
-                GetPayloadValue(point.Payload, "value")))
+                GetPayloadValue(point.Payload, "display_name"),
+                GetPayloadValue(point.Payload, "fields")))
             .ToList();
     }
 

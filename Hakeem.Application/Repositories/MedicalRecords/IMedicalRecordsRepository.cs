@@ -16,5 +16,9 @@ namespace Hakeem.Application.Repositories.MedicalRecords
         void Add(MedicalRecord record);
         Task<MedicalRecord?> GetBySourceExtractedItemIdAsync(Guid extractedItemId,CancellationToken cancellationToken);
         Task<MedicalRecord?> GetMedicalRecordByIdAsync(Guid medicalRecordId,Guid patientProfileId,CancellationToken cancellationToken);
+
+        Task<MedicalRecord?> GetByIdWithFieldsAsync(
+            Guid medicalRecordId,
+            CancellationToken cancellationToken);
     }
 }

@@ -152,8 +152,8 @@ public static class DependencyInjection
 
         services.AddScoped<IEmbeddingService, HuggingFaceEmbeddingService>();
         services.AddScoped<
-            IMedicalRecordFieldVectorStore,
-            QdrantMedicalRecordFieldVectorStore>();
+            IMedicalRecordVectorStore,
+            QdrantMedicalRecordVectorStore>();
     }
 
     private static void AddQdrant(

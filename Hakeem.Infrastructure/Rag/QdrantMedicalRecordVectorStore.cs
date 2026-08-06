@@ -7,39 +7,37 @@ using Qdrant.Client.Grpc;
 
 namespace Hakeem.Infrastructure.Rag;
 
-public sealed class QdrantMedicalRecordFieldVectorStore(
+public sealed class QdrantMedicalRecordVectorStore(
     QdrantClient qdrantClient,
     IOptions<QdrantConfiguration> options,
-    ILogger<QdrantMedicalRecordFieldVectorStore> logger)
-    : IMedicalRecordFieldVectorStore
+    ILogger<QdrantMedicalRecordVectorStore> logger)
+    : IMedicalRecordVectorStore
 {
     private readonly QdrantConfiguration _configuration = options.Value;
     private readonly SemaphoreSlim _collectionLock = new(1, 1);
     private bool _collectionEnsured;
 
     public async Task UpsertAsync(
-        MedicalRecordFieldVectorDocument document,
+        MedicalRecordVectorDocument document,
         float[] embedding,
         CancellationToken cancellationToken)
     {
         await EnsureCollectionExistsAsync(cancellationToken);
 
+        var payloadValues = MedicalRecordVectorPayloadBuilder.SelectConfiguredFields(
+            document,
+            _configuration);
+
         var point = new PointStruct
         {
-            Id = document.MedicalRecordFieldId,
-            Vectors = embedding,
-            Payload =
-            {
-                ["medical_record_field_id"] = document.MedicalRecordFieldId.ToString(),
-                ["medical_record_id"] = document.MedicalRecordId.ToString(),
-                ["patient_profile_id"] = document.PatientProfileId.ToString(),
-                ["record_type"] = document.RecordType,
-                ["field_name"] = document.FieldName,
-                ["value"] = document.Value,
-                ["clinical_date"] = document.ClinicalDate.ToString("O"),
-                ["content"] = $"{document.FieldName}: {document.Value}"
-            }
+            Id = document.MedicalRecordId,
+            Vectors = embedding
         };
+
+        foreach (var (key, value) in payloadValues)
+        {
+            point.Payload[key] = value;
+        }
 
         await qdrantClient.UpsertAsync(
             _configuration.CollectionName,
@@ -47,8 +45,8 @@ public sealed class QdrantMedicalRecordFieldVectorStore(
             cancellationToken: cancellationToken);
 
         logger.LogInformation(
-            "Upserted medical record field {MedicalRecordFieldId} into Qdrant collection {CollectionName}.",
-            document.MedicalRecordFieldId,
+            "Upserted medical record {MedicalRecordId} into Qdrant collection {CollectionName}.",
+            document.MedicalRecordId,
             _configuration.CollectionName);
     }
 

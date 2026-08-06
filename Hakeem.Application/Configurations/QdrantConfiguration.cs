@@ -12,9 +12,21 @@ public sealed class QdrantConfiguration
 
     public bool UseTls { get; set; }
 
-    public string CollectionName { get; set; } = "medical_record_fields";
+    public string CollectionName { get; set; } = "medical_records";
 
     public int VectorSize { get; set; } = 768;
+
+    public string[] PayloadFields { get; set; } =
+    [
+        "medical_record_id",
+        "patient_profile_id",
+        "record_type",
+        "display_name",
+        "status",
+        "clinical_date",
+        "content",
+        "fields"
+    ];
 
     public QdrantConnectionSettings GetConnectionSettings()
     {

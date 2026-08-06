@@ -2,10 +2,10 @@ using Hakeem.Domain.Interfaces.ServiceLifetime;
 
 namespace Hakeem.Application.Interfaces.Rag;
 
-public interface IMedicalRecordFieldVectorStore : IScoped
+public interface IMedicalRecordVectorStore : IScoped
 {
     Task UpsertAsync(
-        MedicalRecordFieldVectorDocument document,
+        MedicalRecordVectorDocument document,
         float[] embedding,
         CancellationToken cancellationToken);
 }
