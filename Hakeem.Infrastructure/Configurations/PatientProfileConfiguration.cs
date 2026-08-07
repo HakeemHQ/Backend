@@ -22,7 +22,7 @@ public class PatientProfileConfiguration : IEntityTypeConfiguration<PatientProfi
 
         builder.HasMany(p => p.MedicalCvs)
                .WithOne(c => c.PatientProfile)
-               .HasForeignKey(c => c.PatientProfileId)
+               .HasForeignKey(c => c.PatientId)
                .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(p => p.Reminders)

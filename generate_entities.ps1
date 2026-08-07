@@ -1,8 +1,32 @@
 $entitiesDir = "d:\ITI\GP\Backend\Hakeem.Domain\Entities"
 $configsDir = "d:\ITI\GP\Backend\Hakeem.Infrastructure\Configurations"
+$medicalCvEnumsDir = "d:\ITI\GP\Backend\Hakeem.Domain\Enums\MedicalCvs"
 
 if (!(Test-Path -Path $entitiesDir)) { New-Item -ItemType Directory -Path $entitiesDir | Out-Null }
 if (!(Test-Path -Path $configsDir)) { New-Item -ItemType Directory -Path $configsDir | Out-Null }
+if (!(Test-Path -Path $medicalCvEnumsDir)) { New-Item -ItemType Directory -Path $medicalCvEnumsDir | Out-Null }
+
+$medicalCvEnums = @{
+    "MedicalCvScopeType" = @"
+namespace Hakeem.Domain.Enums.MedicalCvs;
+
+public enum MedicalCvScopeType
+{
+    Full,
+    Focused
+}
+"@;
+
+    "MedicalCvVersionStatus" = @"
+namespace Hakeem.Domain.Enums.MedicalCvs;
+
+public enum MedicalCvVersionStatus
+{
+    Draft,
+    Approved
+}
+"@;
+}
 
 $entities = @{
     "User" = @"
@@ -163,7 +187,7 @@ namespace Hakeem.Domain.Entities;
 
 public class MedicalCv : BaseEntity
 {
-    public Guid PatientProfileId { get; set; }
+    public Guid PatientId { get; set; }
     public string Title { get; set; } = string.Empty;
 
     public virtual PatientProfile PatientProfile { get; set; } = null!;
@@ -174,6 +198,7 @@ public class MedicalCv : BaseEntity
     "MedicalCvVersion" = @"
 using System;
 using System.Collections.Generic;
+using Hakeem.Domain.Enums.MedicalCvs;
 
 namespace Hakeem.Domain.Entities;
 
@@ -181,7 +206,11 @@ public class MedicalCvVersion : BaseEntity
 {
     public Guid MedicalCvId { get; set; }
     public int VersionNumber { get; set; }
-    public string Status { get; set; } = string.Empty;
+    public MedicalCvScopeType ScopeType { get; set; }
+    public string? Focus { get; set; }
+    public MedicalCvVersionStatus Status { get; set; } = MedicalCvVersionStatus.Draft;
+    public string PdfFileKey { get; set; } = string.Empty;
+    public DateTime? ApprovedAt { get; set; }
 
     public virtual MedicalCv MedicalCv { get; set; } = null!;
     public virtual ICollection<MedicalRecord> SummarizedRecords { get; set; } = new List<MedicalRecord>();
@@ -339,7 +368,7 @@ public class PatientProfileConfiguration : IEntityTypeConfiguration<PatientProfi
 
         builder.HasMany(p => p.MedicalCvs)
                .WithOne(c => c.PatientProfile)
-               .HasForeignKey(c => c.PatientProfileId)
+               .HasForeignKey(c => c.PatientId)
                .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(p => p.Reminders)
@@ -510,6 +539,10 @@ public class MedicalCvConfiguration : IEntityTypeConfiguration<MedicalCv>
     {
         builder.HasKey(e => e.Id);
 
+        builder.Property(e => e.Title)
+               .HasMaxLength(200)
+               .IsRequired();
+
         builder.HasMany(m => m.Versions)
                .WithOne(v => v.MedicalCv)
                .HasForeignKey(v => v.MedicalCvId)
@@ -530,6 +563,26 @@ public class MedicalCvVersionConfiguration : IEntityTypeConfiguration<MedicalCvV
     public void Configure(EntityTypeBuilder<MedicalCvVersion> builder)
     {
         builder.HasKey(e => e.Id);
+
+        builder.HasIndex(e => new { e.MedicalCvId, e.VersionNumber })
+               .IsUnique();
+
+        builder.Property(e => e.ScopeType)
+               .HasConversion<string>()
+               .HasMaxLength(20)
+               .IsRequired();
+
+        builder.Property(e => e.Focus)
+               .HasMaxLength(200);
+
+        builder.Property(e => e.Status)
+               .HasConversion<string>()
+               .HasMaxLength(20)
+               .IsRequired();
+
+        builder.Property(e => e.PdfFileKey)
+               .HasMaxLength(500)
+               .IsRequired();
 
         builder.HasMany(m => m.SharedCvLinks)
                .WithOne(s => s.MedicalCvVersion)
@@ -628,6 +681,11 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
 foreach ($key in $entities.Keys) {
     $filePath = Join-Path -Path $entitiesDir -ChildPath "$key.cs"
     Set-Content -Path $filePath -Value $entities[$key] -Encoding UTF8
+}
+
+foreach ($key in $medicalCvEnums.Keys) {
+    $filePath = Join-Path -Path $medicalCvEnumsDir -ChildPath "$key.cs"
+    Set-Content -Path $filePath -Value $medicalCvEnums[$key] -Encoding UTF8
 }
 
 foreach ($key in $configs.Keys) {

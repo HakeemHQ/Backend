@@ -5,7 +5,7 @@ namespace Hakeem.Domain.Entities;
 
 public class MedicalCv : BaseEntity
 {
-    public Guid PatientProfileId { get; set; }
+    public Guid PatientId { get; set; }
     public string Title { get; set; } = string.Empty;
 
     public virtual PatientProfile PatientProfile { get; set; } = null!;

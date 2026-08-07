@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Hakeem.Domain.Enums.MedicalCvs;
 
 namespace Hakeem.Domain.Entities;
 
@@ -7,7 +8,11 @@ public class MedicalCvVersion : BaseEntity
 {
     public Guid MedicalCvId { get; set; }
     public int VersionNumber { get; set; }
-    public string Status { get; set; } = string.Empty;
+    public MedicalCvScopeType ScopeType { get; set; }
+    public string? Focus { get; set; }
+    public MedicalCvVersionStatus Status { get; set; } = MedicalCvVersionStatus.Draft;
+    public string PdfFileKey { get; set; } = string.Empty;
+    public DateTime? ApprovedAt { get; set; }
 
     public virtual MedicalCv MedicalCv { get; set; } = null!;
     public virtual ICollection<MedicalRecord> SummarizedRecords { get; set; } = new List<MedicalRecord>();
