@@ -102,6 +102,18 @@ namespace Hakeem.Infrastructure.Repositories.MedicalRecords
                     record => record.Id == medicalRecordId,
                     cancellationToken);
         }
+
+        public async Task<IReadOnlyList<MedicalRecord>> GetAllConfirmedAsync(
+            Guid patientProfileId,
+            CancellationToken cancellationToken)
+        {
+            return await _context.MedicalRecords
+                .Where(record =>
+                    record.PatientProfileId == patientProfileId &&
+                    record.Status == "Confirmed")
+                .OrderByDescending(record => record.ClinicalDate)
+                .ToListAsync(cancellationToken);
+        }
     }
 }
 

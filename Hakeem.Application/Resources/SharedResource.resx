@@ -247,4 +247,7 @@
   <data name="Document.ExtractedFieldsRetrieved" xml:space="preserve">
     <value>Extracted document fields retrieved successfully.</value>
   </data>
+  <data name="MedicalCv.PatientNotFound" xml:space="preserve">
+    <value>The requested patient profile was not found.</value>
+  </data>
 </root>

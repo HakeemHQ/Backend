@@ -243,4 +243,7 @@
   <data name="Document.ExtractedFieldsRetrieved" xml:space="preserve">
     <value>تم استرجاع حقول المستند المستخرجة بنجاح.</value>
   </data>
+  <data name="MedicalCv.PatientNotFound" xml:space="preserve">
+    <value>لم يتم العثور على ملف المريض المطلوب.</value>
+  </data>
 </root>

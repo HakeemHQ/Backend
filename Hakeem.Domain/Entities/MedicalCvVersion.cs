@@ -8,8 +8,6 @@ public class MedicalCvVersion : BaseEntity
 {
     public Guid MedicalCvId { get; set; }
     public int VersionNumber { get; set; }
-    public MedicalCvScopeType ScopeType { get; set; }
-    public string? Focus { get; set; }
     public MedicalCvVersionStatus Status { get; set; } = MedicalCvVersionStatus.Draft;
     public string PdfFileKey { get; set; } = string.Empty;
     public DateTime? ApprovedAt { get; set; }

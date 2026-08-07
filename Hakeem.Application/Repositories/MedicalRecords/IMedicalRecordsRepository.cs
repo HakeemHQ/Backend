@@ -20,5 +20,9 @@ namespace Hakeem.Application.Repositories.MedicalRecords
         Task<MedicalRecord?> GetByIdWithFieldsAsync(
             Guid medicalRecordId,
             CancellationToken cancellationToken);
+
+        Task<IReadOnlyList<MedicalRecord>> GetAllConfirmedAsync(
+            Guid patientProfileId,
+            CancellationToken cancellationToken);
     }
 }

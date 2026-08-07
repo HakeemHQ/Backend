@@ -13,14 +13,6 @@ public class MedicalCvVersionConfiguration : IEntityTypeConfiguration<MedicalCvV
         builder.HasIndex(e => new { e.MedicalCvId, e.VersionNumber })
                .IsUnique();
 
-        builder.Property(e => e.ScopeType)
-               .HasConversion<string>()
-               .HasMaxLength(20)
-               .IsRequired();
-
-        builder.Property(e => e.Focus)
-               .HasMaxLength(200);
-
         builder.Property(e => e.Status)
                .HasConversion<string>()
                .HasMaxLength(20)

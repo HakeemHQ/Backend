@@ -4,6 +4,10 @@ namespace Hakeem.Application.Repositories.PatientProfiles;
 
 public interface IPatientProfileRepository
 {
+    Task<PatientProfile?> GetByIdAsync(
+        Guid patientProfileId,
+        CancellationToken cancellationToken);
+
     Task<PatientProfile?> GetByUserIdAsync(
         Guid userId,
         CancellationToken cancellationToken);

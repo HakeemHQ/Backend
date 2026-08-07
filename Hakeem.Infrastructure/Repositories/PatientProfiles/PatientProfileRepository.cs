@@ -15,6 +15,18 @@ public class PatientProfileRepository : IPatientProfileRepository, IScoped
         _dbContext = dbContext;
     }
 
+    public async Task<PatientProfile?> GetByIdAsync(
+        Guid patientProfileId,
+        CancellationToken cancellationToken)
+    {
+        return await _dbContext.PatientProfiles
+            .AsNoTracking()
+            .Include(profile => profile.User)
+            .SingleOrDefaultAsync(
+                profile => profile.Id == patientProfileId,
+                cancellationToken);
+    }
+
     public async Task<PatientProfile?> GetByUserIdAsync(
      Guid userId,
      CancellationToken cancellationToken)

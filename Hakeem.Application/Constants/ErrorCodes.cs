@@ -92,6 +92,9 @@ public static class ErrorCodes
     public const string MedicalRecordNotFound = "MedicalRecord.NotFound";
     public const string MedicalRecordFieldNotFound = "MedicalRecordField.NotFound";
 
+    // --- Medical CVs --------------------------------------------
+    public const string MedicalCvPatientNotFound = "MedicalCv.PatientNotFound";
+
     // ---- JSON -------------------------------------------------
     public const string InvalidJson = "Invalid.Json";
 }
