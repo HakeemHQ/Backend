@@ -246,4 +246,34 @@
   <data name="MedicalCv.PatientNotFound" xml:space="preserve">
     <value>لم يتم العثور على ملف المريض المطلوب.</value>
   </data>
+  <data name="MedicalCv.NotFound" xml:space="preserve">
+    <value>لم يتم العثور على نسخة السيرة الطبية المطلوبة.</value>
+  </data>
+  <data name="MedicalCv.NoConfirmedInformation" xml:space="preserve">
+    <value>لا تتوفر معلومات طبية مؤكدة مناسبة لإنشاء السيرة الطبية.</value>
+  </data>
+  <data name="MedicalCv.AiUnavailable" xml:space="preserve">
+    <value>خدمة إنشاء السيرة الطبية غير متاحة مؤقتًا. يرجى المحاولة لاحقًا.</value>
+  </data>
+  <data name="MedicalCv.Generated" xml:space="preserve">
+    <value>تم إنشاء مسودة السيرة الطبية بنجاح.</value>
+  </data>
+  <data name="MedicalCv.Queued" xml:space="preserve">
+    <value>تمت إضافة طلب إنشاء السيرة الطبية إلى قائمة الانتظار.</value>
+  </data>
+  <data name="MedicalCv.NotReady" xml:space="preserve">
+    <value>لا يزال ملف السيرة الطبية قيد الإنشاء.</value>
+  </data>
+  <data name="MedicalCv.GenerationFailed" xml:space="preserve">
+    <value>فشل إنشاء السيرة الطبية. يرجى المحاولة مرة أخرى لاحقًا.</value>
+  </data>
+  <data name="MedicalCv.PreviewInvalidOrExpired" xml:space="preserve">
+    <value>رابط معاينة السيرة الطبية غير صالح أو انتهت صلاحيته.</value>
+  </data>
+  <data name="MedicalCv.TitleRequired" xml:space="preserve">
+    <value>عنوان السيرة الطبية مطلوب.</value>
+  </data>
+  <data name="MedicalCv.TitleTooLong" xml:space="preserve">
+    <value>يجب ألا يتجاوز عنوان السيرة الطبية 200 حرف.</value>
+  </data>
 </root>

@@ -36,6 +36,37 @@ public sealed class MedicalCvRepository(ApplicationDbContext context)
         return latestVersion.GetValueOrDefault() + 1;
     }
 
+    public Task<MedicalCvVersion?> GetVersionForPatientAsync(
+        Guid medicalCvId,
+        Guid medicalCvVersionId,
+        Guid patientId,
+        CancellationToken cancellationToken)
+    {
+        return context.MedicalCvVersions
+            .AsNoTracking()
+            .Include(version => version.MedicalCv)
+            .SingleOrDefaultAsync(
+                version =>
+                    version.Id == medicalCvVersionId &&
+                    version.MedicalCvId == medicalCvId &&
+                    version.MedicalCv.PatientId == patientId,
+                cancellationToken);
+    }
+
+    public Task<MedicalCvVersion?> GetVersionForGenerationAsync(
+        Guid medicalCvVersionId,
+        CancellationToken cancellationToken)
+    {
+        return context.MedicalCvVersions
+            .Include(version => version.MedicalCv)
+                .ThenInclude(medicalCv => medicalCv.PatientProfile)
+                    .ThenInclude(patient => patient.User)
+            .Include(version => version.SummarizedRecords)
+            .SingleOrDefaultAsync(
+                version => version.Id == medicalCvVersionId,
+                cancellationToken);
+    }
+
     public void Add(MedicalCv medicalCv)
     {
         context.MedicalCvs.Add(medicalCv);

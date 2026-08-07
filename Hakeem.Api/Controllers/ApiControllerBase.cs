@@ -43,4 +43,12 @@ public abstract class ApiControllerBase : ControllerBase
             : Localizer["Operation.Success"].Value;
         return StatusCode(StatusCodes.Status201Created, GenericResponseModel<T>.Success(data, message));
     }
+
+    protected IActionResult AcceptedResponse<T>(T data, string? messageKey = null, params object[] args)
+    {
+        var message = messageKey is not null
+            ? Localizer[messageKey, args].Value
+            : Localizer["Operation.Success"].Value;
+        return StatusCode(StatusCodes.Status202Accepted, GenericResponseModel<T>.Success(data, message));
+    }
 }

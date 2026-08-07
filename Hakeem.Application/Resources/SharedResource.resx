@@ -250,4 +250,34 @@
   <data name="MedicalCv.PatientNotFound" xml:space="preserve">
     <value>The requested patient profile was not found.</value>
   </data>
+  <data name="MedicalCv.NotFound" xml:space="preserve">
+    <value>The requested medical CV version was not found.</value>
+  </data>
+  <data name="MedicalCv.NoConfirmedInformation" xml:space="preserve">
+    <value>No suitable confirmed medical information is available to generate a CV.</value>
+  </data>
+  <data name="MedicalCv.AiUnavailable" xml:space="preserve">
+    <value>Medical CV generation is temporarily unavailable. Please try again later.</value>
+  </data>
+  <data name="MedicalCv.Generated" xml:space="preserve">
+    <value>Medical CV draft generated successfully.</value>
+  </data>
+  <data name="MedicalCv.Queued" xml:space="preserve">
+    <value>Medical CV generation has been queued.</value>
+  </data>
+  <data name="MedicalCv.NotReady" xml:space="preserve">
+    <value>The medical CV PDF is still being generated.</value>
+  </data>
+  <data name="MedicalCv.GenerationFailed" xml:space="preserve">
+    <value>Medical CV generation failed. Please try again later.</value>
+  </data>
+  <data name="MedicalCv.PreviewInvalidOrExpired" xml:space="preserve">
+    <value>The medical CV preview link is invalid or has expired.</value>
+  </data>
+  <data name="MedicalCv.TitleRequired" xml:space="preserve">
+    <value>A medical CV title is required.</value>
+  </data>
+  <data name="MedicalCv.TitleTooLong" xml:space="preserve">
+    <value>Medical CV title must not exceed 200 characters.</value>
+  </data>
 </root>

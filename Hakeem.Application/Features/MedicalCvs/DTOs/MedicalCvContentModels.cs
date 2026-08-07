@@ -20,7 +20,8 @@ public sealed record MedicalCvContentRequest(
     MedicalCvPatientInformation Patient,
     MedicalCvScopeType ScopeType,
     string? Focus,
-    IReadOnlyList<MedicalCvEvidenceItem> Evidence);
+    IReadOnlyList<MedicalCvEvidenceItem> Evidence,
+    string? Title = null);
 
 public sealed class MedicalCvContent
 {
@@ -52,8 +53,10 @@ public sealed record MedicalCvPdfDocument(
 public sealed record MedicalCvGenerationResult(
     Guid MedicalCvId,
     Guid MedicalCvVersionId,
+    string Title,
     int VersionNumber,
     MedicalCvScopeType ScopeType,
     string? Focus,
     string PdfFileKey,
-    MedicalCvVersionStatus Status);
+    MedicalCvVersionStatus Status,
+    DateTime CreatedAt);

@@ -94,6 +94,16 @@ public static class ErrorCodes
 
     // --- Medical CVs --------------------------------------------
     public const string MedicalCvPatientNotFound = "MedicalCv.PatientNotFound";
+    public const string MedicalCvNotFound = "MedicalCv.NotFound";
+    public const string MedicalCvNoConfirmedInformation = "MedicalCv.NoConfirmedInformation";
+    public const string MedicalCvAiUnavailable = "MedicalCv.AiUnavailable";
+    public const string MedicalCvGenerated = "MedicalCv.Generated";
+    public const string MedicalCvQueued = "MedicalCv.Queued";
+    public const string MedicalCvNotReady = "MedicalCv.NotReady";
+    public const string MedicalCvGenerationFailed = "MedicalCv.GenerationFailed";
+    public const string MedicalCvPreviewInvalidOrExpired = "MedicalCv.PreviewInvalidOrExpired";
+    public const string MedicalCvTitleRequired = "MedicalCv.TitleRequired";
+    public const string MedicalCvTitleTooLong = "MedicalCv.TitleTooLong";
 
     // ---- JSON -------------------------------------------------
     public const string InvalidJson = "Invalid.Json";

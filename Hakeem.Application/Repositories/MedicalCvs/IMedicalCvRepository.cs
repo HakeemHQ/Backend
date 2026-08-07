@@ -15,6 +15,16 @@ public interface IMedicalCvRepository
         Guid medicalCvId,
         CancellationToken cancellationToken);
 
+    Task<MedicalCvVersion?> GetVersionForPatientAsync(
+        Guid medicalCvId,
+        Guid medicalCvVersionId,
+        Guid patientId,
+        CancellationToken cancellationToken);
+
+    Task<MedicalCvVersion?> GetVersionForGenerationAsync(
+        Guid medicalCvVersionId,
+        CancellationToken cancellationToken);
+
     void Add(MedicalCv medicalCv);
     void AddVersion(MedicalCvVersion version);
 }

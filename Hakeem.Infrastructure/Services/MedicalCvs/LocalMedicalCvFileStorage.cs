@@ -43,23 +43,31 @@ public sealed class LocalMedicalCvFileStorage(IHostEnvironment hostEnvironment)
 
         var fileName = $"version-{versionNumber}.pdf";
         var absolutePath = Path.Combine(cvDirectory, fileName);
+        var temporaryPath = Path.Combine(
+            cvDirectory,
+            $".{fileName}.{Guid.NewGuid():N}.tmp");
 
         try
         {
-            await using var destination = new FileStream(
-                absolutePath,
-                FileMode.CreateNew,
-                FileAccess.Write,
-                FileShare.None,
-                bufferSize: 81920,
-                useAsync: true);
-            await destination.WriteAsync(pdfBytes, cancellationToken);
+            await using (var destination = new FileStream(
+                             temporaryPath,
+                             FileMode.CreateNew,
+                             FileAccess.Write,
+                             FileShare.None,
+                             bufferSize: 81920,
+                             useAsync: true))
+            {
+                await destination.WriteAsync(pdfBytes, cancellationToken);
+                await destination.FlushAsync(cancellationToken);
+            }
+
+            File.Move(temporaryPath, absolutePath, overwrite: true);
         }
         catch
         {
-            if (File.Exists(absolutePath))
+            if (File.Exists(temporaryPath))
             {
-                File.Delete(absolutePath);
+                File.Delete(temporaryPath);
             }
 
             throw;
@@ -74,6 +82,37 @@ public sealed class LocalMedicalCvFileStorage(IHostEnvironment hostEnvironment)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        var absolutePath = ResolveAbsolutePath(fileKey);
+
+        if (!File.Exists(absolutePath))
+        {
+            return Task.FromResult(false);
+        }
+
+        File.Delete(absolutePath);
+        return Task.FromResult(true);
+    }
+
+    public Task<Stream> OpenReadAsync(
+        string fileKey,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var absolutePath = ResolveAbsolutePath(fileKey);
+        Stream stream = new FileStream(
+            absolutePath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 81920,
+            useAsync: true);
+
+        return Task.FromResult(stream);
+    }
+
+    private string ResolveAbsolutePath(string fileKey)
+    {
         var absolutePath = Path.GetFullPath(
             Path.Combine(hostEnvironment.ContentRootPath, fileKey));
         var expectedPrefix = _storageRoot + Path.DirectorySeparatorChar;
@@ -86,12 +125,6 @@ public sealed class LocalMedicalCvFileStorage(IHostEnvironment hostEnvironment)
                 "The medical CV file path is outside the configured storage folder.");
         }
 
-        if (!File.Exists(absolutePath))
-        {
-            return Task.FromResult(false);
-        }
-
-        File.Delete(absolutePath);
-        return Task.FromResult(true);
+        return absolutePath;
     }
 }

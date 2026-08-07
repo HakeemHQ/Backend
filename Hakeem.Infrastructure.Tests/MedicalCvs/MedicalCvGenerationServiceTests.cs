@@ -1,10 +1,14 @@
 using Hakeem.Application.Common;
+using Hakeem.Application.Constants;
+using Hakeem.Application.Exceptions;
 using Hakeem.Application.Features.MedicalCvs.DTOs;
 using Hakeem.Application.Interfaces.MedicalCvs;
 using Hakeem.Application.Repositories.MedicalCvs;
 using Hakeem.Application.Repositories.MedicalRecords;
+using Hakeem.Application.Repositories.Notifications;
 using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Application.Services.MedicalCvs;
+using Hakeem.Domain.DomainEvents.Outbox;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.MedicalCvs;
 using Hakeem.Domain.Interfaces;
@@ -39,34 +43,42 @@ public sealed class MedicalCvGenerationServiceTests
         var contentGenerator = new FakeContentGenerator();
         var evidenceProvider = new FakeFocusedEvidenceProvider();
         var unitOfWork = new FakeUnitOfWork();
+        var outboxRepository = new FakeOutboxEventRepository();
         var service = CreateService(
             patient,
             recordsRepository,
             cvRepository,
             evidenceProvider,
             contentGenerator,
-            unitOfWork);
+            unitOfWork,
+            outboxRepository);
 
-        var result = await service.GenerateFullAsync(patient.Id);
+        var result = await service.GenerateFullAsync(
+            patient.Id,
+            "Mazen Medical CV");
 
         Assert.Equal(1, recordsRepository.GetAllConfirmedCallCount);
         Assert.Equal(0, evidenceProvider.CallCount);
-        Assert.NotNull(contentGenerator.Request);
-        Assert.Equal(MedicalCvScopeType.Full, contentGenerator.Request.ScopeType);
-        var evidence = Assert.Single(contentGenerator.Request.Evidence);
-        Assert.Equal(confirmedRecord.DisplayName, evidence.Content);
-        Assert.DoesNotContain("This field must not be read", evidence.Content);
+        Assert.Equal(0, contentGenerator.CallCount);
         Assert.NotNull(cvRepository.AddedMedicalCv);
+        Assert.Equal("Mazen Medical CV", cvRepository.AddedMedicalCv.Title);
         Assert.Equal(MedicalCvScopeType.Full, cvRepository.AddedMedicalCv.ScopeType);
         Assert.Null(cvRepository.AddedMedicalCv.Focus);
         Assert.NotNull(cvRepository.AddedVersion);
+        Assert.Equal(MedicalCvVersionStatus.Queued, cvRepository.AddedVersion.Status);
+        Assert.Empty(cvRepository.AddedVersion.PdfFileKey);
         Assert.Same(
             confirmedRecord,
             Assert.Single(cvRepository.AddedVersion.SummarizedRecords));
         Assert.Equal(1, unitOfWork.SaveChangesCallCount);
+        var queuedEvent = Assert.IsType<CreateMedicalCvRequest>(
+            outboxRepository.AddedEvent);
+        Assert.Equal(result.MedicalCvVersionId, queuedEvent.MedicalCvVersionId);
         Assert.Equal(
-            $"medical-cvs/{result.MedicalCvId}/version-1.pdf",
-            result.PdfFileKey);
+            $"medical-cv-generation:{result.MedicalCvVersionId}",
+            outboxRepository.IdempotencyKey);
+        Assert.Equal(MedicalCvVersionStatus.Queued, result.Status);
+        Assert.Empty(result.PdfFileKey);
     }
 
     [Fact]
@@ -118,14 +130,27 @@ public sealed class MedicalCvGenerationServiceTests
         var cvRepository = new FakeMedicalCvRepository();
         var service = CreateService(
             patient,
-            new FakeMedicalRecordsRepository([]),
+            new FakeMedicalRecordsRepository(
+            [
+                new MedicalRecord
+                {
+                    Id = Guid.NewGuid(),
+                    PatientProfileId = patient.Id,
+                    DisplayName = "Confirmed medical record",
+                    Status = "Confirmed"
+                }
+            ]),
             cvRepository,
             new FakeFocusedEvidenceProvider(),
             new FakeContentGenerator(),
             new FakeUnitOfWork());
 
-        var fullVersion1 = await service.GenerateFullAsync(patient.Id);
-        var fullVersion2 = await service.GenerateFullAsync(patient.Id);
+        var fullVersion1 = await service.GenerateFullAsync(
+            patient.Id,
+            "Initial Full CV");
+        var fullVersion2 = await service.GenerateFullAsync(
+            patient.Id,
+            "Ignored Replacement Title");
         var diabetesVersion1 = await service.GenerateFocusedAsync(
             patient.Id,
             "Diabetes");
@@ -137,6 +162,7 @@ public sealed class MedicalCvGenerationServiceTests
             "Cardiology");
 
         Assert.Equal(fullVersion1.MedicalCvId, fullVersion2.MedicalCvId);
+        Assert.Equal("Initial Full CV", fullVersion2.Title);
         Assert.Equal(1, fullVersion1.VersionNumber);
         Assert.Equal(2, fullVersion2.VersionNumber);
 
@@ -165,13 +191,45 @@ public sealed class MedicalCvGenerationServiceTests
                   cv.Focus == "Cardiology");
     }
 
+    [Fact]
+    public async Task GenerateFullAsync_WithoutSuitableConfirmedRecords_Returns422Error()
+    {
+        var patient = CreatePatient();
+        var contentGenerator = new FakeContentGenerator();
+        var service = CreateService(
+            patient,
+            new FakeMedicalRecordsRepository(
+            [
+                new MedicalRecord
+                {
+                    Id = Guid.NewGuid(),
+                    PatientProfileId = patient.Id,
+                    DisplayName = "   ",
+                    Status = "Confirmed"
+                }
+            ]),
+            new FakeMedicalCvRepository(),
+            new FakeFocusedEvidenceProvider(),
+            contentGenerator,
+            new FakeUnitOfWork());
+
+        var exception = await Assert.ThrowsAsync<UnprocessableEntityException>(
+            () => service.GenerateFullAsync(patient.Id, "Medical CV"));
+
+        Assert.Equal(
+            ErrorCodes.MedicalCvNoConfirmedInformation,
+            exception.ErrorCode);
+        Assert.Equal(0, contentGenerator.CallCount);
+    }
+
     private static MedicalCvGenerationService CreateService(
         PatientProfile patient,
         FakeMedicalRecordsRepository recordsRepository,
         FakeMedicalCvRepository cvRepository,
         FakeFocusedEvidenceProvider evidenceProvider,
         FakeContentGenerator contentGenerator,
-        FakeUnitOfWork unitOfWork)
+        FakeUnitOfWork unitOfWork,
+        FakeOutboxEventRepository? outboxEventRepository = null)
     {
         return new MedicalCvGenerationService(
             new FakePatientProfileRepository(patient),
@@ -181,6 +239,7 @@ public sealed class MedicalCvGenerationServiceTests
             contentGenerator,
             new FakePdfGenerator(),
             new FakeFileStorage(),
+            outboxEventRepository ?? new FakeOutboxEventRepository(),
             unitOfWork,
             NullLogger<MedicalCvGenerationService>.Instance);
     }
@@ -312,6 +371,29 @@ public sealed class MedicalCvGenerationServiceTests
             return Task.FromResult(firstVersion + generatedVersionCount);
         }
 
+        public Task<MedicalCvVersion?> GetVersionForPatientAsync(
+            Guid medicalCvId,
+            Guid medicalCvVersionId,
+            Guid patientId,
+            CancellationToken cancellationToken)
+        {
+            var version = _versions.SingleOrDefault(item =>
+                item.Id == medicalCvVersionId &&
+                item.MedicalCvId == medicalCvId);
+            var belongsToPatient = _medicalCvs.Any(cv =>
+                cv.Id == medicalCvId &&
+                cv.PatientId == patientId);
+
+            return Task.FromResult(
+                belongsToPatient ? version : null);
+        }
+
+        public Task<MedicalCvVersion?> GetVersionForGenerationAsync(
+            Guid medicalCvVersionId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(_versions.SingleOrDefault(
+                version => version.Id == medicalCvVersionId));
+
         public void Add(MedicalCv medicalCv)
         {
             AddedMedicalCv = medicalCv;
@@ -354,12 +436,14 @@ public sealed class MedicalCvGenerationServiceTests
 
     private sealed class FakeContentGenerator : IMedicalCvContentGenerator
     {
+        public int CallCount { get; private set; }
         public MedicalCvContentRequest? Request { get; private set; }
 
         public Task<MedicalCvContent> GenerateAsync(
             MedicalCvContentRequest request,
             CancellationToken cancellationToken = default)
         {
+            CallCount++;
             Request = request;
 
             return Task.FromResult(new MedicalCvContent
@@ -397,6 +481,14 @@ public sealed class MedicalCvGenerationServiceTests
         {
             return Task.FromResult(true);
         }
+
+        public Task<Stream> OpenReadAsync(
+            string fileKey,
+            CancellationToken cancellationToken = default)
+        {
+            Stream stream = new MemoryStream("%PDF-1.7"u8.ToArray());
+            return Task.FromResult(stream);
+        }
     }
 
     private sealed class FakeUnitOfWork : IUnitOfWork
@@ -421,5 +513,27 @@ public sealed class MedicalCvGenerationServiceTests
         public Task CommitTransactionAsync() => Task.CompletedTask;
         public Task RollBackTransactionAsync() => Task.CompletedTask;
         public void Dispose() { }
+    }
+
+    private sealed class FakeOutboxEventRepository : IOutboxEventRepository
+    {
+        public OutboxEventBase? AddedEvent { get; private set; }
+        public string? IdempotencyKey { get; private set; }
+
+        public void Add<TEvent>(TEvent @event, string? idempotencyKey = null)
+            where TEvent : OutboxEventBase
+        {
+            AddedEvent = @event;
+            IdempotencyKey = idempotencyKey;
+        }
+
+        public Task<bool> ExistsByIdempotencyKeyAsync(
+            string key,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(false);
+
+        public Task SaveAsync(
+            CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
     }
 }

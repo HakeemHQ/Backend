@@ -11,4 +11,8 @@ public interface IMedicalCvFileStorage
     Task<bool> DeleteAsync(
         string fileKey,
         CancellationToken cancellationToken = default);
+
+    Task<Stream> OpenReadAsync(
+        string fileKey,
+        CancellationToken cancellationToken = default);
 }

@@ -12,6 +12,7 @@ using Hakeem.Infrastructure.Context;
 using Hakeem.Infrastructure.Rag;
 using Hakeem.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -32,6 +33,8 @@ public static class DependencyInjection
         bool isDevelopment)
     {
         services.RegisterServicesWithLifetime(Assembly.GetExecutingAssembly());
+        services.AddDataProtection()
+            .SetApplicationName("Hakeem");
         services.AddScoped<
             IDocumentProcessingAgent,
             DocumentProcessingAgent>();

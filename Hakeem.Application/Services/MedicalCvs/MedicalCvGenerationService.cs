@@ -4,7 +4,9 @@ using Hakeem.Application.Features.MedicalCvs.DTOs;
 using Hakeem.Application.Interfaces.MedicalCvs;
 using Hakeem.Application.Repositories.MedicalCvs;
 using Hakeem.Application.Repositories.MedicalRecords;
+using Hakeem.Application.Repositories.Notifications;
 using Hakeem.Application.Repositories.PatientProfiles;
+using Hakeem.Domain.DomainEvents.Outbox;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.MedicalCvs;
 using Hakeem.Domain.Interfaces;
@@ -21,19 +23,107 @@ public sealed class MedicalCvGenerationService(
     IMedicalCvContentGenerator contentGenerator,
     IMedicalCvPdfGenerator pdfGenerator,
     IMedicalCvFileStorage fileStorage,
+    IOutboxEventRepository outboxEventRepository,
     IUnitOfWork unitOfWork,
     ILogger<MedicalCvGenerationService> logger)
     : IMedicalCvGenerationService, IScoped
 {
-    public Task<MedicalCvGenerationResult> GenerateFullAsync(
+    public async Task<MedicalCvGenerationResult> GenerateFullAsync(
         Guid patientId,
+        string title,
         CancellationToken cancellationToken = default)
     {
-        return GenerateAsync(
+        ArgumentException.ThrowIfNullOrWhiteSpace(title);
+
+        if (patientId == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "A patient ID is required.",
+                nameof(patientId));
+        }
+
+        var patient = await patientProfileRepository.GetByIdAsync(
+            patientId,
+            cancellationToken);
+
+        if (patient is null)
+        {
+            throw new NotFoundException(ErrorCodes.MedicalCvPatientNotFound);
+        }
+
+        var summarizedRecords = (await medicalRecordsRepository
+                .GetAllConfirmedAsync(patientId, cancellationToken))
+            .Where(record => !string.IsNullOrWhiteSpace(record.DisplayName))
+            .ToArray();
+
+        if (summarizedRecords.Length == 0)
+        {
+            throw new UnprocessableEntityException(
+                ErrorCodes.MedicalCvNoConfirmedInformation);
+        }
+
+        var medicalCv = await medicalCvRepository.GetByLogicalIdentityAsync(
             patientId,
             MedicalCvScopeType.Full,
             focus: null,
             cancellationToken);
+
+        if (medicalCv is null)
+        {
+            medicalCv = new MedicalCv
+            {
+                Id = Guid.NewGuid(),
+                PatientId = patientId,
+                Title = title.Trim(),
+                ScopeType = MedicalCvScopeType.Full,
+                Focus = null
+            };
+
+            medicalCvRepository.Add(medicalCv);
+        }
+
+        var version = new MedicalCvVersion
+        {
+            Id = Guid.NewGuid(),
+            MedicalCvId = medicalCv.Id,
+            VersionNumber = await medicalCvRepository.GetNextVersionNumberAsync(
+                medicalCv.Id,
+                cancellationToken),
+            Status = MedicalCvVersionStatus.Queued,
+            PdfFileKey = string.Empty
+        };
+
+        foreach (var record in summarizedRecords)
+        {
+            version.SummarizedRecords.Add(record);
+        }
+
+        medicalCvRepository.AddVersion(version);
+        outboxEventRepository.Add(
+            new CreateMedicalCvRequest
+            {
+                MedicalCvVersionId = version.Id
+            },
+            $"medical-cv-generation:{version.Id}");
+
+        await unitOfWork.SaveChanges(cancellationToken);
+
+        logger.LogInformation(
+            "Queued full medical CV {MedicalCvId}, version {VersionNumber}, for patient {PatientId}.",
+            medicalCv.Id,
+            version.VersionNumber,
+            patientId);
+
+        return new MedicalCvGenerationResult(
+            medicalCv.Id,
+            version.Id,
+            medicalCv.Title,
+            version.VersionNumber,
+            MedicalCvScopeType.Full,
+            Focus: null,
+            version.PdfFileKey,
+            version.Status,
+            version.CreatedAt);
     }
 
     public Task<MedicalCvGenerationResult> GenerateFocusedAsync(
@@ -43,17 +133,15 @@ public sealed class MedicalCvGenerationService(
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(focus);
 
-        return GenerateAsync(
+        return GenerateFocusedInternalAsync(
             patientId,
-            MedicalCvScopeType.Focused,
             focus.Trim(),
             cancellationToken);
     }
 
-    private async Task<MedicalCvGenerationResult> GenerateAsync(
+    private async Task<MedicalCvGenerationResult> GenerateFocusedInternalAsync(
         Guid patientId,
-        MedicalCvScopeType scopeType,
-        string? focus,
+        string focus,
         CancellationToken cancellationToken)
     {
         if (patientId == Guid.Empty)
@@ -72,45 +160,25 @@ public sealed class MedicalCvGenerationService(
             throw new NotFoundException(ErrorCodes.MedicalCvPatientNotFound);
         }
 
-        IReadOnlyList<MedicalRecord> summarizedRecords = [];
-        IReadOnlyList<MedicalCvEvidenceItem> evidence;
+        var searchResponse = await focusedMedicalEvidenceProvider.SearchAsync(
+            patientId,
+            focus,
+            cancellationToken);
 
-        if (scopeType == MedicalCvScopeType.Full)
+        if (!string.IsNullOrWhiteSpace(searchResponse.GlobalErrorCode))
         {
-            summarizedRecords = await medicalRecordsRepository
-                .GetAllConfirmedAsync(patientId, cancellationToken);
-
-            evidence = summarizedRecords
-                .Select(record => new MedicalCvEvidenceItem(
-                    record.Id,
-                    Score: null,
-                    record.DisplayName,
-                    record.RecordType,
-                    record.ClinicalDate.ToString("yyyy-MM-dd")))
-                .ToArray();
+            throw new InvalidOperationException(
+                $"Focused medical evidence retrieval failed with code '{searchResponse.GlobalErrorCode}'.");
         }
-        else
-        {
-            var searchResponse = await focusedMedicalEvidenceProvider.SearchAsync(
-                patientId,
-                focus!,
-                cancellationToken);
 
-            if (!string.IsNullOrWhiteSpace(searchResponse.GlobalErrorCode))
-            {
-                throw new InvalidOperationException(
-                    $"Focused medical evidence retrieval failed with code '{searchResponse.GlobalErrorCode}'.");
-            }
-
-            evidence = searchResponse.Data
-                .Select(item => new MedicalCvEvidenceItem(
-                    item.PointId,
-                    item.Score,
-                    item.Content,
-                    item.FieldName,
-                    item.Value))
-                .ToArray();
-        }
+        var evidence = searchResponse.Data
+            .Select(item => new MedicalCvEvidenceItem(
+                item.PointId,
+                item.Score,
+                item.Content,
+                item.FieldName,
+                item.Value))
+            .ToArray();
 
         var patientInformation = new MedicalCvPatientInformation(
             patient.FullName,
@@ -122,14 +190,14 @@ public sealed class MedicalCvGenerationService(
         var content = await contentGenerator.GenerateAsync(
             new MedicalCvContentRequest(
                 patientInformation,
-                scopeType,
+                MedicalCvScopeType.Focused,
                 focus,
                 evidence),
             cancellationToken);
 
         var medicalCv = await medicalCvRepository.GetByLogicalIdentityAsync(
             patientId,
-            scopeType,
+            MedicalCvScopeType.Focused,
             focus,
             cancellationToken);
 
@@ -139,10 +207,8 @@ public sealed class MedicalCvGenerationService(
             {
                 Id = Guid.NewGuid(),
                 PatientId = patientId,
-                Title = scopeType == MedicalCvScopeType.Full
-                    ? $"Medical CV - {patient.FullName}"
-                    : $"{focus} Medical CV - {patient.FullName}",
-                ScopeType = scopeType,
+                Title = $"{focus} Medical CV - {patient.FullName}",
+                ScopeType = MedicalCvScopeType.Focused,
                 Focus = focus
             };
 
@@ -157,7 +223,7 @@ public sealed class MedicalCvGenerationService(
         var pdfBytes = pdfGenerator.Generate(
             new MedicalCvPdfDocument(
                 patientInformation,
-                scopeType,
+                MedicalCvScopeType.Focused,
                 focus,
                 generatedAtUtc,
                 content));
@@ -178,11 +244,6 @@ public sealed class MedicalCvGenerationService(
                 Status = MedicalCvVersionStatus.Draft,
                 PdfFileKey = fileKey
             };
-
-            foreach (var record in summarizedRecords)
-            {
-                version.SummarizedRecords.Add(record);
-            }
 
             medicalCvRepository.AddVersion(version);
             await unitOfWork.SaveChanges(cancellationToken);
@@ -206,7 +267,7 @@ public sealed class MedicalCvGenerationService(
 
         logger.LogInformation(
             "Generated {ScopeType} medical CV {MedicalCvId}, version {VersionNumber}, for patient {PatientId}.",
-            scopeType,
+            MedicalCvScopeType.Focused,
             medicalCv.Id,
             versionNumber,
             patientId);
@@ -214,10 +275,12 @@ public sealed class MedicalCvGenerationService(
         return new MedicalCvGenerationResult(
             medicalCv.Id,
             versionId,
+            medicalCv.Title,
             versionNumber,
-            scopeType,
+            MedicalCvScopeType.Focused,
             focus,
             fileKey,
-            version.Status);
+            version.Status,
+            version.CreatedAt);
     }
 }

@@ -22,6 +22,7 @@ public static class DependencyInjection
         var assembly = Hakeem.Application.AssemblyReference.Assembly;
 
         AddGeminiChat(services, configuration);
+        AddMedicalCvPreviewLinks(services, configuration);
 
         services.RegisterServicesWithLifetime(assembly);
         services.AddScoped<
@@ -67,6 +68,9 @@ public static class DependencyInjection
                 options => options.MaxTokens > 0,
                 "GeminiChat MaxTokens must be greater than zero.")
             .Validate(
+                options => options.MedicalCvMaxTokens is > 0 and <= 65_536,
+                "GeminiChat MedicalCvMaxTokens must be between 1 and 65536.")
+            .Validate(
                 options => !string.IsNullOrWhiteSpace(options.ApiKey),
                 "GeminiChat ApiKey must be configured.")
             .Validate(
@@ -75,6 +79,19 @@ public static class DependencyInjection
             .Validate(
                 options => options.AgentTimeoutSeconds > 0,
                 "GeminiChat AgentTimeoutSeconds must be greater than zero.")
+            .ValidateOnStart();
+    }
+
+    private static void AddMedicalCvPreviewLinks(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddOptions<MedicalCvPreviewLinkConfiguration>()
+            .Bind(configuration.GetSection(
+                MedicalCvPreviewLinkConfiguration.SectionName))
+            .Validate(
+                options => options.LifetimeMinutes is > 0 and <= 60,
+                "Medical CV preview link lifetime must be between 1 and 60 minutes.")
             .ValidateOnStart();
     }
 

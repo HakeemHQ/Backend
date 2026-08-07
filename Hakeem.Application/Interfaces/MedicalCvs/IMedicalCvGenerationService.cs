@@ -6,6 +6,7 @@ public interface IMedicalCvGenerationService
 {
     Task<MedicalCvGenerationResult> GenerateFullAsync(
         Guid patientId,
+        string title,
         CancellationToken cancellationToken = default);
 
     Task<MedicalCvGenerationResult> GenerateFocusedAsync(

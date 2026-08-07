@@ -8,7 +8,7 @@ public class MedicalCvVersion : BaseEntity
 {
     public Guid MedicalCvId { get; set; }
     public int VersionNumber { get; set; }
-    public MedicalCvVersionStatus Status { get; set; } = MedicalCvVersionStatus.Draft;
+    public MedicalCvVersionStatus Status { get; set; } = MedicalCvVersionStatus.Queued;
     public string PdfFileKey { get; set; } = string.Empty;
     public DateTime? ApprovedAt { get; set; }
 
