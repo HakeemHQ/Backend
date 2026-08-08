@@ -1,10 +1,8 @@
-using Google.Protobuf.Collections;
 using Hakeem.Application.Configurations;
 using Hakeem.Application.Interfaces.Rag;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Qdrant.Client;
-using Qdrant.Client.Grpc;
 
 namespace Hakeem.Infrastructure.Rag;
 
@@ -76,35 +74,11 @@ public sealed class QdrantTestService(
 
         return results
             .Select(point => new TestQdrantSearchResult(
-                ParsePointId(point.Id),
+                QdrantPayloadReader.ParsePointId(point.Id),
                 point.Score,
-                GetPayloadValue(point.Payload, "content"),
-                GetPayloadValue(point.Payload, "display_name"),
-                GetPayloadValue(point.Payload, "fields")))
+                QdrantPayloadReader.GetString(point.Payload, "content"),
+                QdrantPayloadReader.GetString(point.Payload, "display_name"),
+                QdrantPayloadReader.GetString(point.Payload, "fields")))
             .ToList();
-    }
-
-    private static Guid ParsePointId(PointId pointId)
-    {
-        return pointId.HasUuid
-            ? Guid.Parse(pointId.Uuid)
-            : Guid.Empty;
-    }
-
-    private static string? GetPayloadValue(MapField<string, Value> payload, string key)
-    {
-        if (!payload.TryGetValue(key, out var value))
-        {
-            return null;
-        }
-
-        return value.KindCase switch
-        {
-            Value.KindOneofCase.StringValue => value.StringValue,
-            Value.KindOneofCase.IntegerValue => value.IntegerValue.ToString(),
-            Value.KindOneofCase.DoubleValue => value.DoubleValue.ToString(),
-            Value.KindOneofCase.BoolValue => value.BoolValue.ToString(),
-            _ => value.ToString()
-        };
     }
 }

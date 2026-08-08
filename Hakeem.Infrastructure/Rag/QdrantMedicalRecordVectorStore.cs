@@ -50,6 +50,73 @@ public sealed class QdrantMedicalRecordVectorStore(
             _configuration.CollectionName);
     }
 
+    public async Task<IReadOnlyList<MedicalRecordSearchResult>> SearchAsync(
+        float[] embedding,
+        Guid patientProfileId,
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        await EnsureCollectionExistsAsync(cancellationToken);
+
+        var collections = await qdrantClient.ListCollectionsAsync(cancellationToken);
+        if (!collections.Contains(_configuration.CollectionName))
+        {
+            return [];
+        }
+
+        var filter = new Filter
+        {
+            Must =
+            {
+                new Condition
+                {
+                    Field = new FieldCondition
+                    {
+                        Key = _configuration.PatientProfileIdPayloadField,
+                        Match = new Match
+                        {
+                            Keyword = patientProfileId.ToString()
+                        }
+                    }
+                }
+            }
+        };
+
+        var results = await qdrantClient.SearchAsync(
+            _configuration.CollectionName,
+            embedding,
+            filter: filter,
+            limit: (ulong)limit,
+            cancellationToken: cancellationToken);
+
+        return results
+            .Select(MapSearchResult)
+            .ToList();
+    }
+
+    private MedicalRecordSearchResult MapSearchResult(ScoredPoint point)
+    {
+        var medicalRecordId = QdrantPayloadReader.GetGuid(
+            point.Payload,
+            "medical_record_id");
+
+        if (medicalRecordId == Guid.Empty)
+        {
+            medicalRecordId = QdrantPayloadReader.ParsePointId(point.Id);
+        }
+
+        return new MedicalRecordSearchResult(
+            medicalRecordId,
+            QdrantPayloadReader.GetGuid(point.Payload, _configuration.PatientProfileIdPayloadField),
+            point.Score,
+            QdrantPayloadReader.GetString(point.Payload, "record_type"),
+            QdrantPayloadReader.GetString(point.Payload, "display_name"),
+            QdrantPayloadReader.GetString(point.Payload, "status"),
+            QdrantPayloadReader.GetDateTime(point.Payload, "clinical_date"),
+            QdrantPayloadReader.GetString(point.Payload, "content"),
+            QdrantPayloadReader.GetString(point.Payload, "fields"));
+    }
+
     private async Task EnsureCollectionExistsAsync(CancellationToken cancellationToken)
     {
         if (_collectionEnsured)

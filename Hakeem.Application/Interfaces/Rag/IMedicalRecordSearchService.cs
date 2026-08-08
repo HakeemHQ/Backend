@@ -2,15 +2,10 @@ using Hakeem.Domain.Interfaces.ServiceLifetime;
 
 namespace Hakeem.Application.Interfaces.Rag;
 
-public interface IMedicalRecordVectorStore : IScoped
+public interface IMedicalRecordSearchService : IScoped
 {
-    Task UpsertAsync(
-        MedicalRecordVectorDocument document,
-        float[] embedding,
-        CancellationToken cancellationToken);
-
     Task<IReadOnlyList<MedicalRecordSearchResult>> SearchAsync(
-        float[] embedding,
+        string query,
         Guid patientProfileId,
         int limit,
         CancellationToken cancellationToken);

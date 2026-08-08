@@ -1,5 +1,8 @@
+using Hakeem.Application.Common.ResponseModel;
 using Hakeem.Application.Features.MedicalRecords.Queries.GetMedicalRecordById;
 using Hakeem.Application.Features.MedicalRecords.Queries.GetMedicalRecords;
+using Hakeem.Application.Features.MedicalRecords.Queries.SearchMedicalRecords;
+using Hakeem.Application.Interfaces.Rag;
 using Hakeem.Application.Resources;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -32,7 +35,24 @@ namespace Hakeem.Api.Controllers
             return SuccessResponse(result);
         }
 
+        [HttpPost("search")]
+        [ProducesResponseType(
+            typeof(GenericResponseModel<IReadOnlyList<MedicalRecordSearchResult>>),
+            StatusCodes.Status200OK)]
+        public async Task<IActionResult> SearchMedicalRecords(
+            [FromBody] SearchMedicalRecordsRequest request,
+            CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(
+                new SearchMedicalRecordsQuery(request.Query, request.Limit),
+                cancellationToken);
+
+            return SuccessResponse(result);
+        }
+
     }
 
 }
+
+public sealed record SearchMedicalRecordsRequest(string Query, int Limit = 10);
 

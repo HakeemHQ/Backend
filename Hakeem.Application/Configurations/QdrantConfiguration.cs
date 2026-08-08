@@ -28,6 +28,10 @@ public sealed class QdrantConfiguration
         "fields"
     ];
 
+    public string PatientProfileIdPayloadField { get; set; } = "patient_profile_id";
+
+    public int DefaultSearchLimit { get; set; } = 10;
+
     public QdrantConnectionSettings GetConnectionSettings()
     {
         var host = Host.Trim();
