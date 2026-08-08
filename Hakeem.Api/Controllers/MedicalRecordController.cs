@@ -36,15 +36,15 @@ namespace Hakeem.Api.Controllers
         }
 
         [HttpPost("search")]
-        [ProducesResponseType(
-            typeof(GenericResponseModel<IReadOnlyList<MedicalRecordSearchResult>>),
-            StatusCodes.Status200OK)]
         public async Task<IActionResult> SearchMedicalRecords(
             [FromBody] SearchMedicalRecordsRequest request,
             CancellationToken cancellationToken)
         {
             var result = await _mediator.Send(
-                new SearchMedicalRecordsQuery(request.Query, request.Limit),
+                new SearchMedicalRecordsQuery(
+                    request.Query,
+                    request.PatientProfileId,
+                    request.Limit),
                 cancellationToken);
 
             return SuccessResponse(result);
@@ -54,5 +54,8 @@ namespace Hakeem.Api.Controllers
 
 }
 
-public sealed record SearchMedicalRecordsRequest(string Query, int Limit = 10);
+public sealed record SearchMedicalRecordsRequest(
+    string Query,
+    Guid PatientProfileId,
+    int Limit = 10);
 

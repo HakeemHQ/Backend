@@ -5,5 +5,6 @@ namespace Hakeem.Application.Features.MedicalRecords.Queries.SearchMedicalRecord
 
 public sealed record SearchMedicalRecordsQuery(
     string Query,
+    Guid PatientProfileId,
     int Limit = 10)
     : IRequest<IReadOnlyList<MedicalRecordSearchResult>>;

@@ -23,6 +23,11 @@ public sealed class SearchMedicalRecordsQueryHandler(
             throw new ValidationException("Query is required.");
         }
 
+        if (request.PatientProfileId == Guid.Empty)
+        {
+            throw new ValidationException("PatientProfileId is required.");
+        }
+
         var patient = await patientProfileRepository.GetByUserIdAsync(
             currentUserContext.UserId,
             cancellationToken);
@@ -32,9 +37,14 @@ public sealed class SearchMedicalRecordsQueryHandler(
             throw new UnAuthorizedException(ErrorCodes.AuthUnauthorized);
         }
 
+        if (patient.Id != request.PatientProfileId)
+        {
+            throw new NotFoundException(ErrorCodes.DocumentPatientProfileNotFound);
+        }
+
         return await medicalRecordSearchService.SearchAsync(
             request.Query,
-            patient.Id,
+            request.PatientProfileId,
             request.Limit,
             cancellationToken);
     }
