@@ -22,6 +22,7 @@ public static class DependencyInjection
         var assembly = Hakeem.Application.AssemblyReference.Assembly;
 
         AddGeminiChat(services, configuration);
+        AddMedicalIntelligenceAgent(services, configuration);
         AddMedicalCvPreviewLinks(services, configuration);
 
         services.RegisterServicesWithLifetime(assembly);
@@ -50,6 +51,25 @@ public static class DependencyInjection
         services.AddScoped<IMapper, ServiceMapper>();
 
         return services;
+    }
+
+    private static void AddMedicalIntelligenceAgent(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddOptions<MedicalIntelligenceAgentConfiguration>()
+            .Bind(configuration.GetSection(
+                MedicalIntelligenceAgentConfiguration.SectionName))
+            .Validate(
+                options => options.SearchLimit is > 0 and <= 100,
+                "MedicalIntelligenceAgent SearchLimit must be between 1 and 100.")
+            .Validate(
+                options => options.FocusedCvMinimumScore is >= 0 and <= 1,
+                "MedicalIntelligenceAgent FocusedCvMinimumScore must be between 0 and 1.")
+            .Validate(
+                options => options.FocusedCvRelatedEvidenceMinimumScore is >= 0 and <= 1,
+                "MedicalIntelligenceAgent FocusedCvRelatedEvidenceMinimumScore must be between 0 and 1.")
+            .ValidateOnStart();
     }
 
     private static void AddGeminiChat(

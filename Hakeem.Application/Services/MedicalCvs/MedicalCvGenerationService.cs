@@ -19,7 +19,6 @@ public sealed class MedicalCvGenerationService(
     IPatientProfileRepository patientProfileRepository,
     IMedicalRecordsRepository medicalRecordsRepository,
     IMedicalCvRepository medicalCvRepository,
-    IFocusedMedicalEvidenceProvider focusedMedicalEvidenceProvider,
     IMedicalCvContentGenerator contentGenerator,
     IMedicalCvPdfGenerator pdfGenerator,
     IMedicalCvFileStorage fileStorage,
@@ -129,19 +128,47 @@ public sealed class MedicalCvGenerationService(
     public Task<MedicalCvGenerationResult> GenerateFocusedAsync(
         Guid patientId,
         string focus,
+        string title,
+        IReadOnlyList<MedicalCvEvidenceItem> evidence,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(focus);
+        ArgumentException.ThrowIfNullOrWhiteSpace(title);
+        ArgumentNullException.ThrowIfNull(evidence);
+
+        if (focus.Trim().Length > 200)
+        {
+            throw new ArgumentException(
+                "The focused medical CV focus cannot exceed 200 characters.",
+                nameof(focus));
+        }
+
+        if (title.Trim().Length > 200)
+        {
+            throw new ArgumentException(
+                "The focused medical CV title cannot exceed 200 characters.",
+                nameof(title));
+        }
+
+        if (evidence.Count == 0)
+        {
+            throw new UnprocessableEntityException(
+                ErrorCodes.MedicalCvNoConfirmedInformation);
+        }
 
         return GenerateFocusedInternalAsync(
             patientId,
             focus.Trim(),
+            title.Trim(),
+            evidence,
             cancellationToken);
     }
 
     private async Task<MedicalCvGenerationResult> GenerateFocusedInternalAsync(
         Guid patientId,
         string focus,
+        string title,
+        IReadOnlyList<MedicalCvEvidenceItem> evidence,
         CancellationToken cancellationToken)
     {
         if (patientId == Guid.Empty)
@@ -160,25 +187,13 @@ public sealed class MedicalCvGenerationService(
             throw new NotFoundException(ErrorCodes.MedicalCvPatientNotFound);
         }
 
-        var searchResponse = await focusedMedicalEvidenceProvider.SearchAsync(
+        var medicalCv = await medicalCvRepository.GetByLogicalIdentityAsync(
             patientId,
+            MedicalCvScopeType.Focused,
             focus,
             cancellationToken);
 
-        if (!string.IsNullOrWhiteSpace(searchResponse.GlobalErrorCode))
-        {
-            throw new InvalidOperationException(
-                $"Focused medical evidence retrieval failed with code '{searchResponse.GlobalErrorCode}'.");
-        }
-
-        var evidence = searchResponse.Data
-            .Select(item => new MedicalCvEvidenceItem(
-                item.PointId,
-                item.Score,
-                item.Content,
-                item.FieldName,
-                item.Value))
-            .ToArray();
+        var effectiveTitle = medicalCv?.Title ?? title;
 
         var patientInformation = new MedicalCvPatientInformation(
             patient.FullName,
@@ -192,13 +207,8 @@ public sealed class MedicalCvGenerationService(
                 patientInformation,
                 MedicalCvScopeType.Focused,
                 focus,
-                evidence),
-            cancellationToken);
-
-        var medicalCv = await medicalCvRepository.GetByLogicalIdentityAsync(
-            patientId,
-            MedicalCvScopeType.Focused,
-            focus,
+                evidence,
+                effectiveTitle),
             cancellationToken);
 
         if (medicalCv is null)
@@ -207,7 +217,7 @@ public sealed class MedicalCvGenerationService(
             {
                 Id = Guid.NewGuid(),
                 PatientId = patientId,
-                Title = $"{focus} Medical CV - {patient.FullName}",
+                Title = title,
                 ScopeType = MedicalCvScopeType.Focused,
                 Focus = focus
             };

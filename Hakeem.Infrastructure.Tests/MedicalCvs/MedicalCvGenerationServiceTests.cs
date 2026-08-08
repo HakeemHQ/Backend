@@ -41,14 +41,12 @@ public sealed class MedicalCvGenerationServiceTests
         var recordsRepository = new FakeMedicalRecordsRepository([confirmedRecord]);
         var cvRepository = new FakeMedicalCvRepository();
         var contentGenerator = new FakeContentGenerator();
-        var evidenceProvider = new FakeFocusedEvidenceProvider();
         var unitOfWork = new FakeUnitOfWork();
         var outboxRepository = new FakeOutboxEventRepository();
         var service = CreateService(
             patient,
             recordsRepository,
             cvRepository,
-            evidenceProvider,
             contentGenerator,
             unitOfWork,
             outboxRepository);
@@ -58,7 +56,6 @@ public sealed class MedicalCvGenerationServiceTests
             "Mazen Medical CV");
 
         Assert.Equal(1, recordsRepository.GetAllConfirmedCallCount);
-        Assert.Equal(0, evidenceProvider.CallCount);
         Assert.Equal(0, contentGenerator.CallCount);
         Assert.NotNull(cvRepository.AddedMedicalCv);
         Assert.Equal("Mazen Medical CV", cvRepository.AddedMedicalCv.Title);
@@ -96,25 +93,24 @@ public sealed class MedicalCvGenerationServiceTests
         var recordsRepository = new FakeMedicalRecordsRepository([]);
         var cvRepository = new FakeMedicalCvRepository(existingCv, nextVersion: 4);
         var contentGenerator = new FakeContentGenerator();
-        var evidenceProvider = new FakeFocusedEvidenceProvider();
         var service = CreateService(
             patient,
             recordsRepository,
             cvRepository,
-            evidenceProvider,
             contentGenerator,
             new FakeUnitOfWork());
 
         var result = await service.GenerateFocusedAsync(
             patient.Id,
-            "  Diabetes  ");
+            "  Diabetes  ",
+            "Ignored Replacement Title",
+            CreateEvidence());
 
         Assert.Equal(0, recordsRepository.GetAllConfirmedCallCount);
-        Assert.Equal(1, evidenceProvider.CallCount);
-        Assert.Equal("Diabetes", evidenceProvider.Focus);
         Assert.NotNull(contentGenerator.Request);
         Assert.Equal(MedicalCvScopeType.Focused, contentGenerator.Request.ScopeType);
         Assert.Equal("Diabetes", contentGenerator.Request.Focus);
+        Assert.Equal("Existing CV", contentGenerator.Request.Title);
         Assert.Single(contentGenerator.Request.Evidence);
         Assert.Null(cvRepository.AddedMedicalCv);
         Assert.NotNull(cvRepository.AddedVersion);
@@ -141,7 +137,6 @@ public sealed class MedicalCvGenerationServiceTests
                 }
             ]),
             cvRepository,
-            new FakeFocusedEvidenceProvider(),
             new FakeContentGenerator(),
             new FakeUnitOfWork());
 
@@ -153,13 +148,19 @@ public sealed class MedicalCvGenerationServiceTests
             "Ignored Replacement Title");
         var diabetesVersion1 = await service.GenerateFocusedAsync(
             patient.Id,
-            "Diabetes");
+            "Diabetes",
+            "Diabetes Medical CV",
+            CreateEvidence());
         var diabetesVersion2 = await service.GenerateFocusedAsync(
             patient.Id,
-            "Diabetes");
+            "Diabetes",
+            "Ignored Replacement Title",
+            CreateEvidence());
         var cardiologyVersion1 = await service.GenerateFocusedAsync(
             patient.Id,
-            "Cardiology");
+            "Cardiology",
+            "Cardiology Medical CV",
+            CreateEvidence());
 
         Assert.Equal(fullVersion1.MedicalCvId, fullVersion2.MedicalCvId);
         Assert.Equal("Initial Full CV", fullVersion2.Title);
@@ -209,7 +210,6 @@ public sealed class MedicalCvGenerationServiceTests
                 }
             ]),
             new FakeMedicalCvRepository(),
-            new FakeFocusedEvidenceProvider(),
             contentGenerator,
             new FakeUnitOfWork());
 
@@ -226,7 +226,6 @@ public sealed class MedicalCvGenerationServiceTests
         PatientProfile patient,
         FakeMedicalRecordsRepository recordsRepository,
         FakeMedicalCvRepository cvRepository,
-        FakeFocusedEvidenceProvider evidenceProvider,
         FakeContentGenerator contentGenerator,
         FakeUnitOfWork unitOfWork,
         FakeOutboxEventRepository? outboxEventRepository = null)
@@ -235,7 +234,6 @@ public sealed class MedicalCvGenerationServiceTests
             new FakePatientProfileRepository(patient),
             recordsRepository,
             cvRepository,
-            evidenceProvider,
             contentGenerator,
             new FakePdfGenerator(),
             new FakeFileStorage(),
@@ -243,6 +241,16 @@ public sealed class MedicalCvGenerationServiceTests
             unitOfWork,
             NullLogger<MedicalCvGenerationService>.Instance);
     }
+
+    private static IReadOnlyList<MedicalCvEvidenceItem> CreateEvidence() =>
+    [
+        new MedicalCvEvidenceItem(
+            Guid.NewGuid(),
+            0.92,
+            "Confirmed focused medical evidence",
+            "Condition",
+            "2026-08-06T00:00:00.0000000Z")
+    ];
 
     private static PatientProfile CreatePatient()
     {
@@ -305,6 +313,17 @@ public sealed class MedicalCvGenerationServiceTests
             GetAllConfirmedCallCount++;
             return Task.FromResult(records);
         }
+
+        public Task<IReadOnlyList<MedicalRecord>>
+            GetConfirmedByRecordTypeAsync(
+                Guid patientProfileId,
+                string recordType,
+                CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<MedicalRecord>>(
+                records.Where(record => string.Equals(
+                    record.RecordType,
+                    recordType,
+                    StringComparison.OrdinalIgnoreCase)).ToArray());
 
         public Task<PaginatedResult<MedicalRecord>> GetMedicalRecordsAsync(
             Guid patientProfileId,
@@ -404,33 +423,6 @@ public sealed class MedicalCvGenerationServiceTests
         {
             AddedVersion = version;
             _versions.Add(version);
-        }
-    }
-
-    private sealed class FakeFocusedEvidenceProvider
-        : IFocusedMedicalEvidenceProvider
-    {
-        public int CallCount { get; private set; }
-        public string? Focus { get; private set; }
-
-        public Task<FocusedMedicalEvidenceResponse> SearchAsync(
-            Guid patientId,
-            string focus,
-            CancellationToken cancellationToken = default)
-        {
-            CallCount++;
-            Focus = focus;
-
-            return Task.FromResult(new FocusedMedicalEvidenceResponse(
-                string.Empty,
-                [
-                    new FocusedMedicalEvidence(
-                        Guid.NewGuid(),
-                        0.92,
-                        "Confirmed diabetes evidence",
-                        "ConditionName",
-                        "Diabetes")
-                ]));
         }
     }
 

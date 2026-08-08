@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Hakeem.Application.Configurations;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
@@ -8,14 +10,13 @@ using Hakeem.Infrastructure.Tests.AI.Agents.Fakes;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel.Connectors.Google;
-using System.Text.Json.Nodes;
 
 namespace Hakeem.Infrastructure.Tests.MedicalCvs;
 
 public sealed class GeminiMedicalCvContentGeneratorTests
 {
     [Fact]
-    public async Task GenerateAsync_UsesDedicatedMedicalCvOutputLimit()
+    public async Task GenerateAsync_UsesDedicatedLimitAndCountAgnosticSchema()
     {
         var chatService = new FakeChatCompletionService(
             ValidSingleRecordResponse());
@@ -36,8 +37,46 @@ public sealed class GeminiMedicalCvContentGeneratorTests
         var schema = Assert.IsType<JsonObject>(settings.ResponseSchema);
         var properties = Assert.IsType<JsonObject>(schema["properties"]);
         var records = Assert.IsType<JsonObject>(properties["records"]);
-        Assert.Equal(1, records["minItems"]!.GetValue<int>());
-        Assert.Equal(1, records["maxItems"]!.GetValue<int>());
+        Assert.Null(records["minItems"]);
+        Assert.Null(records["maxItems"]);
+        var items = Assert.IsType<JsonObject>(records["items"]);
+        var itemProperties = Assert.IsType<JsonObject>(items["properties"]);
+        var recordIndex = Assert.IsType<JsonObject>(
+            itemProperties["recordIndex"]);
+        Assert.Null(recordIndex["minimum"]);
+        Assert.Null(recordIndex["maximum"]);
+    }
+
+    [Fact]
+    public async Task GenerateAsync_WithManyRecords_UsesStableSchemaAndValidatesResponse()
+    {
+        const int recordCount = 22;
+        var chatService = new FakeChatCompletionService(
+            ValidResponse(recordCount));
+        var generator = new GeminiMedicalCvContentGenerator(
+            chatService,
+            Options.Create(new GeminiChatConfiguration
+            {
+                MedicalCvMaxTokens = 16_384
+            }),
+            NullLogger<GeminiMedicalCvContentGenerator>.Instance);
+
+        var content = await generator.GenerateAsync(
+            CreateRequest(
+                Enumerable.Range(0, recordCount)
+                    .Select(index => $"Confirmed record {index}")
+                    .ToArray()));
+
+        Assert.Equal(recordCount, content.Sections.Sum(
+            section => section.Entries.Count));
+
+        var settings = Assert.IsType<GeminiPromptExecutionSettings>(
+            chatService.ReceivedExecutionSettings);
+        var schema = Assert.IsType<JsonObject>(settings.ResponseSchema);
+        var properties = Assert.IsType<JsonObject>(schema["properties"]);
+        var records = Assert.IsType<JsonObject>(properties["records"]);
+        Assert.Null(records["minItems"]);
+        Assert.Null(records["maxItems"]);
     }
 
     [Fact]
@@ -233,4 +272,18 @@ public sealed class GeminiMedicalCvContentGeneratorTests
             }
             """;
     }
+
+    private static string ValidResponse(int recordCount) =>
+        JsonSerializer.Serialize(new
+        {
+            summary = "Confirmed medical history",
+            records = Enumerable.Range(0, recordCount).Select(index => new
+            {
+                recordIndex = index,
+                section = "Visits",
+                title = $"Confirmed record {index}",
+                date = (string?)null,
+                details = Array.Empty<string>()
+            })
+        });
 }

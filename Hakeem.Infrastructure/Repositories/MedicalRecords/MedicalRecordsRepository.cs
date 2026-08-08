@@ -114,6 +114,23 @@ namespace Hakeem.Infrastructure.Repositories.MedicalRecords
                 .OrderByDescending(record => record.ClinicalDate)
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<IReadOnlyList<MedicalRecord>>
+            GetConfirmedByRecordTypeAsync(
+                Guid patientProfileId,
+                string recordType,
+                CancellationToken cancellationToken)
+        {
+            return await _context.MedicalRecords
+                .AsNoTracking()
+                .Include(record => record.Fields)
+                .Where(record =>
+                    record.PatientProfileId == patientProfileId &&
+                    record.Status == "Confirmed" &&
+                    record.RecordType == recordType)
+                .OrderByDescending(record => record.ClinicalDate)
+                .ToListAsync(cancellationToken);
+        }
     }
 }
 

@@ -39,6 +39,9 @@ public static class DependencyInjection
             IDocumentProcessingAgent,
             DocumentProcessingAgent>();
         services.AddScoped<
+            IMedicalIntelligenceAgent,
+            MedicalIntelligenceAgent>();
+        services.AddScoped<
             IDocumentProcessingWorkflow,
             DocumentProcessingWorkflow>();
         AddHuggingFaceEmbedding(services, configuration);

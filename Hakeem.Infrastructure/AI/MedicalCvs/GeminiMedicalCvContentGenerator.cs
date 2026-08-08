@@ -51,7 +51,7 @@ public sealed class GeminiMedicalCvContentGenerator(
             MaxTokens = _maxTokens,
             Temperature = 0,
             ResponseMimeType = "application/json",
-            ResponseSchema = BuildResponseSchema(request.Evidence.Count)
+            ResponseSchema = BuildResponseSchema()
         };
 
         Microsoft.SemanticKernel.ChatMessageContent response;
@@ -245,7 +245,7 @@ public sealed class GeminiMedicalCvContentGenerator(
         };
     }
 
-    private static JsonObject BuildResponseSchema(int evidenceCount)
+    private static JsonObject BuildResponseSchema()
     {
         return new JsonObject
         {
@@ -262,8 +262,6 @@ public sealed class GeminiMedicalCvContentGenerator(
                 {
                     ["type"] = "array",
                     ["description"] = "Exactly one compact organized item for each input record.",
-                    ["minItems"] = evidenceCount,
-                    ["maxItems"] = evidenceCount,
                     ["items"] = new JsonObject
                     {
                         ["type"] = "object",
@@ -273,8 +271,6 @@ public sealed class GeminiMedicalCvContentGenerator(
                             ["recordIndex"] = new JsonObject
                             {
                                 ["type"] = "integer",
-                                ["minimum"] = 0,
-                                ["maximum"] = Math.Max(0, evidenceCount - 1),
                                 ["description"] = "The unchanged zero-based index from the input record."
                             },
                             ["section"] = new JsonObject

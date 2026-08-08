@@ -12,5 +12,7 @@ public interface IMedicalCvGenerationService
     Task<MedicalCvGenerationResult> GenerateFocusedAsync(
         Guid patientId,
         string focus,
+        string title,
+        IReadOnlyList<MedicalCvEvidenceItem> evidence,
         CancellationToken cancellationToken = default);
 }
