@@ -48,14 +48,12 @@ public sealed class MedicalCvPreviewLinkService(
 
     public bool TryValidate(
         string token,
-        Guid medicalCvId,
         Guid medicalCvVersionId,
         out MedicalCvPreviewAccess access)
     {
         access = null!;
 
         if (string.IsNullOrWhiteSpace(token) ||
-            medicalCvId == Guid.Empty ||
             medicalCvVersionId == Guid.Empty)
         {
             return false;
@@ -69,7 +67,6 @@ public sealed class MedicalCvPreviewLinkService(
 
             if (parsedAccess is null ||
                 parsedAccess.PatientId == Guid.Empty ||
-                parsedAccess.MedicalCvId != medicalCvId ||
                 parsedAccess.MedicalCvVersionId != medicalCvVersionId)
             {
                 return false;

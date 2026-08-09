@@ -163,7 +163,6 @@ public sealed class MedicalCvGenerationProcessorTests
             throw new NotSupportedException();
 
         public Task<MedicalCvVersion?> GetVersionForPatientAsync(
-            Guid medicalCvId,
             Guid medicalCvVersionId,
             Guid patientId,
             CancellationToken cancellationToken) =>

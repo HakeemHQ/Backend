@@ -11,7 +11,6 @@ public interface IMedicalCvPreviewLinkService : ISingleton
 
     bool TryValidate(
         string token,
-        Guid medicalCvId,
         Guid medicalCvVersionId,
         out MedicalCvPreviewAccess access);
 }

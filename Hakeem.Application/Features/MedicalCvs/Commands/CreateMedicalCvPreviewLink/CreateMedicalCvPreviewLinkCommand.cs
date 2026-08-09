@@ -2,9 +2,7 @@ using MediatR;
 
 namespace Hakeem.Application.Features.MedicalCvs.Commands.CreateMedicalCvPreviewLink;
 
-public sealed record CreateMedicalCvPreviewLinkCommand(
-    Guid MedicalCvId,
-    Guid MedicalCvVersionId)
+public sealed record CreateMedicalCvPreviewLinkCommand(Guid MedicalCvVersionId)
     : IRequest<CreateMedicalCvPreviewLinkResponse>;
 
 public sealed record CreateMedicalCvPreviewLinkResponse(

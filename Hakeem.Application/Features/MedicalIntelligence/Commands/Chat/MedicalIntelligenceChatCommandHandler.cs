@@ -59,8 +59,7 @@ public sealed class MedicalIntelligenceChatCommandHandler(
                 cv.MedicalCvId,
                 cv.MedicalCvVersionId);
             var previewPath =
-                $"medical-cvs/{cv.MedicalCvId}/versions/" +
-                $"{cv.MedicalCvVersionId}/preview?token=" +
+                $"medical-cv-versions/{cv.MedicalCvVersionId}/preview?token=" +
                 Uri.EscapeDataString(previewLink.Token);
 
             generatedCv = new GeneratedFocusedMedicalCvResponse(

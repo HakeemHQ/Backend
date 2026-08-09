@@ -30,7 +30,6 @@ public sealed class GetMedicalCvPreviewQueryHandlerTests
 
         var result = await handler.Handle(
             new GetMedicalCvPreviewQuery(
-                medicalCvId,
                 version.Id,
                 "valid-token"),
             CancellationToken.None);
@@ -50,7 +49,6 @@ public sealed class GetMedicalCvPreviewQueryHandlerTests
         var exception = await Assert.ThrowsAsync<UnAuthorizedException>(() =>
             handler.Handle(
                 new GetMedicalCvPreviewQuery(
-                    Guid.NewGuid(),
                     Guid.NewGuid(),
                     "invalid-token"),
                 CancellationToken.None));
@@ -73,13 +71,12 @@ public sealed class GetMedicalCvPreviewQueryHandlerTests
 
         public bool TryValidate(
             string token,
-            Guid medicalCvId,
             Guid medicalCvVersionId,
             out MedicalCvPreviewAccess access)
         {
             access = new MedicalCvPreviewAccess(
                 patientId,
-                medicalCvId,
+                Guid.NewGuid(),
                 medicalCvVersionId);
             return isValid;
         }
@@ -91,13 +88,11 @@ public sealed class GetMedicalCvPreviewQueryHandlerTests
         : IMedicalCvRepository
     {
         public Task<MedicalCvVersion?> GetVersionForPatientAsync(
-            Guid medicalCvId,
             Guid medicalCvVersionId,
             Guid patientId,
             CancellationToken cancellationToken)
         {
             var matches = version is not null &&
-                          version.MedicalCvId == medicalCvId &&
                           version.Id == medicalCvVersionId &&
                           patientId == ownerPatientId;
             return Task.FromResult(matches ? version : null);

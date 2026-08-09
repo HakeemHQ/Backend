@@ -96,7 +96,7 @@ public sealed class MedicalIntelligenceChatCommandTests
         Assert.Equal(versionId, result.GeneratedCv.MedicalCvVersionId);
         Assert.Equal("Draft", result.GeneratedCv.Status);
         Assert.Equal(
-            $"https://api.test/medical-cvs/{medicalCvId}/versions/{versionId}/preview?token=token%2B%2F%3D",
+            $"https://api.test/medical-cv-versions/{versionId}/preview?token=token%2B%2F%3D",
             result.GeneratedCv.PreviewUrl);
         Assert.Equal(previewService.ExpiresAt, result.GeneratedCv.PreviewExpiresAt);
         Assert.Equal(patient.Id, previewService.PatientId);
@@ -245,7 +245,6 @@ public sealed class MedicalIntelligenceChatCommandTests
 
         public bool TryValidate(
             string token,
-            Guid medicalCvId,
             Guid medicalCvVersionId,
             out MedicalCvPreviewAccess access) =>
             throw new NotSupportedException();

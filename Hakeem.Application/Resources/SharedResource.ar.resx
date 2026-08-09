@@ -276,4 +276,7 @@
   <data name="MedicalCv.TitleTooLong" xml:space="preserve">
     <value>يجب ألا يتجاوز عنوان السيرة الطبية 200 حرف.</value>
   </data>
+  <data name="MedicalCv.VersionNotDraft" xml:space="preserve">
+    <value>يمكن اعتماد نسخة السيرة الطبية عندما تكون في حالة مسودة فقط.</value>
+  </data>
 </root>

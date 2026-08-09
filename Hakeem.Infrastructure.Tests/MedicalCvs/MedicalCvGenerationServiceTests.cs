@@ -391,16 +391,14 @@ public sealed class MedicalCvGenerationServiceTests
         }
 
         public Task<MedicalCvVersion?> GetVersionForPatientAsync(
-            Guid medicalCvId,
             Guid medicalCvVersionId,
             Guid patientId,
             CancellationToken cancellationToken)
         {
             var version = _versions.SingleOrDefault(item =>
-                item.Id == medicalCvVersionId &&
-                item.MedicalCvId == medicalCvId);
+                item.Id == medicalCvVersionId);
             var belongsToPatient = _medicalCvs.Any(cv =>
-                cv.Id == medicalCvId &&
+                cv.Id == version?.MedicalCvId &&
                 cv.PatientId == patientId);
 
             return Task.FromResult(

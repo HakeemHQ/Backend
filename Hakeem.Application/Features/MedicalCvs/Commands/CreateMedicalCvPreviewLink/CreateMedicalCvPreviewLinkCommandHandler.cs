@@ -33,7 +33,6 @@ public sealed class CreateMedicalCvPreviewLinkCommandHandler(
         }
 
         var version = await medicalCvRepository.GetVersionForPatientAsync(
-            request.MedicalCvId,
             request.MedicalCvVersionId,
             patient.Id,
             cancellationToken);
@@ -45,11 +44,10 @@ public sealed class CreateMedicalCvPreviewLinkCommandHandler(
 
         var previewLink = previewLinkService.Create(
             patient.Id,
-            request.MedicalCvId,
+            version.MedicalCvId,
             request.MedicalCvVersionId);
         var previewPath =
-            $"medical-cvs/{request.MedicalCvId}/versions/" +
-            $"{request.MedicalCvVersionId}/preview?token=" +
+            $"medical-cv-versions/{request.MedicalCvVersionId}/preview?token=" +
             Uri.EscapeDataString(previewLink.Token);
 
         return new CreateMedicalCvPreviewLinkResponse(

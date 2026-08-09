@@ -1,23 +1,25 @@
 using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
-using Hakeem.Application.Interfaces.MedicalCvs;
 using Hakeem.Application.Repositories.MedicalCvs;
 using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Domain.Enums.MedicalCvs;
+using Hakeem.Domain.Interfaces;
 using MediatR;
 
-namespace Hakeem.Application.Features.MedicalCvs.Queries.GetMedicalCvPdf;
+namespace Hakeem.Application.Features.MedicalCvs.Commands.ApproveMedicalCvVersion;
 
-public sealed class GetMedicalCvPdfQueryHandler(
+public sealed class ApproveMedicalCvVersionCommandHandler(
     ICurrentUserContext currentUserContext,
     IPatientProfileRepository patientProfileRepository,
     IMedicalCvRepository medicalCvRepository,
-    IMedicalCvFileStorage fileStorage)
-    : IRequestHandler<GetMedicalCvPdfQuery, GetMedicalCvPdfResult>
+    IUnitOfWork unitOfWork)
+    : IRequestHandler<
+        ApproveMedicalCvVersionCommand,
+        ApproveMedicalCvVersionResponse>
 {
-    public async Task<GetMedicalCvPdfResult> Handle(
-        GetMedicalCvPdfQuery request,
+    public async Task<ApproveMedicalCvVersionResponse> Handle(
+        ApproveMedicalCvVersionCommand request,
         CancellationToken cancellationToken)
     {
         var patient = await patientProfileRepository.GetByUserIdAsync(
@@ -39,26 +41,20 @@ public sealed class GetMedicalCvPdfQueryHandler(
             throw new NotFoundException(ErrorCodes.MedicalCvNotFound);
         }
 
-        if (version.Status is MedicalCvVersionStatus.Queued or MedicalCvVersionStatus.Processing)
+        if (version.Status != MedicalCvVersionStatus.Draft)
         {
-            throw new ConflictException(ErrorCodes.MedicalCvNotReady);
+            throw new ConflictException(ErrorCodes.MedicalCvVersionNotDraft);
         }
 
-        if (version.Status == MedicalCvVersionStatus.Failed)
-        {
-            throw new ServiceUnavailableException(
-                ErrorCodes.MedicalCvGenerationFailed);
-        }
+        var approvedAt = DateTime.UtcNow;
+        version.Status = MedicalCvVersionStatus.Approved;
+        version.ApprovedAt = approvedAt;
+        await unitOfWork.SaveChanges(cancellationToken);
 
-        if (string.IsNullOrWhiteSpace(version.PdfFileKey))
-        {
-            throw new ConflictException(ErrorCodes.MedicalCvNotReady);
-        }
-
-        var content = await fileStorage.OpenReadAsync(
-            version.PdfFileKey,
-            cancellationToken);
-
-        return new GetMedicalCvPdfResult(content);
+        return new ApproveMedicalCvVersionResponse(
+            version.Id,
+            version.VersionNumber,
+            version.Status,
+            approvedAt);
     }
 }

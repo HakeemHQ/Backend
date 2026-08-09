@@ -104,6 +104,7 @@ public static class ErrorCodes
     public const string MedicalCvPreviewInvalidOrExpired = "MedicalCv.PreviewInvalidOrExpired";
     public const string MedicalCvTitleRequired = "MedicalCv.TitleRequired";
     public const string MedicalCvTitleTooLong = "MedicalCv.TitleTooLong";
+    public const string MedicalCvVersionNotDraft = "MedicalCv.VersionNotDraft";
 
     // ---- JSON -------------------------------------------------
     public const string InvalidJson = "Invalid.Json";

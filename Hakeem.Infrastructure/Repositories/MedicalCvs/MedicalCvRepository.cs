@@ -114,18 +114,15 @@ public sealed class MedicalCvRepository(ApplicationDbContext context)
     }
 
     public Task<MedicalCvVersion?> GetVersionForPatientAsync(
-        Guid medicalCvId,
         Guid medicalCvVersionId,
         Guid patientId,
         CancellationToken cancellationToken)
     {
         return context.MedicalCvVersions
-            .AsNoTracking()
             .Include(version => version.MedicalCv)
             .SingleOrDefaultAsync(
                 version =>
                     version.Id == medicalCvVersionId &&
-                    version.MedicalCvId == medicalCvId &&
                     version.MedicalCv.PatientId == patientId,
                 cancellationToken);
     }

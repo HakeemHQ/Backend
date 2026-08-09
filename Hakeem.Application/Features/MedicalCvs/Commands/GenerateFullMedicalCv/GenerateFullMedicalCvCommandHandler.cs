@@ -40,8 +40,7 @@ public sealed class GenerateFullMedicalCvCommandHandler(
             result.MedicalCvId,
             result.MedicalCvVersionId);
         var previewPath =
-            $"medical-cvs/{result.MedicalCvId}/versions/" +
-            $"{result.MedicalCvVersionId}/preview?token=" +
+            $"medical-cv-versions/{result.MedicalCvVersionId}/preview?token=" +
             Uri.EscapeDataString(previewLink.Token);
         var pdfUrl = fileUrlResolver.ToAbsoluteUrl(previewPath);
 

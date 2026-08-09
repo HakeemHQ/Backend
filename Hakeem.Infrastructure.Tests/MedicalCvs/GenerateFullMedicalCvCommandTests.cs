@@ -71,8 +71,8 @@ public sealed class GenerateFullMedicalCvCommandTests
         Assert.Equal("Queued", response.LatestVersion.Status);
         Assert.Equal(generatedAt, response.LatestVersion.CreatedAt);
         Assert.Equal(
-            $"https://hakeem.example/medical-cvs/{response.MedicalCvId}/" +
-            $"versions/{response.LatestVersion.MedicalCvVersionId}/preview" +
+            $"https://hakeem.example/medical-cv-versions/" +
+            $"{response.LatestVersion.MedicalCvVersionId}/preview" +
             "?token=preview-token",
             response.LatestVersion.PdfUrl);
         Assert.Equal(
@@ -171,7 +171,6 @@ public sealed class GenerateFullMedicalCvCommandTests
 
         public bool TryValidate(
             string token,
-            Guid medicalCvId,
             Guid medicalCvVersionId,
             out MedicalCvPreviewAccess access) =>
             throw new NotSupportedException();

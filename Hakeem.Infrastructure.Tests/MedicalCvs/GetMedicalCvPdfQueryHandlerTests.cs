@@ -34,7 +34,7 @@ public sealed class GetMedicalCvPdfQueryHandlerTests
             storage);
 
         var result = await handler.Handle(
-            new GetMedicalCvPdfQuery(medicalCvId, versionId),
+            new GetMedicalCvPdfQuery(versionId),
             CancellationToken.None);
 
         Assert.NotNull(result.Content);
@@ -56,7 +56,7 @@ public sealed class GetMedicalCvPdfQueryHandlerTests
 
         var exception = await Assert.ThrowsAsync<NotFoundException>(() =>
             handler.Handle(
-                new GetMedicalCvPdfQuery(Guid.NewGuid(), Guid.NewGuid()),
+                new GetMedicalCvPdfQuery(Guid.NewGuid()),
                 CancellationToken.None));
 
         Assert.Equal(ErrorCodes.MedicalCvNotFound, exception.ErrorCode);
@@ -84,7 +84,7 @@ public sealed class GetMedicalCvPdfQueryHandlerTests
 
         var exception = await Assert.ThrowsAsync<ConflictException>(() =>
             handler.Handle(
-                new GetMedicalCvPdfQuery(medicalCvId, version.Id),
+                new GetMedicalCvPdfQuery(version.Id),
                 CancellationToken.None));
 
         Assert.Equal(ErrorCodes.MedicalCvNotReady, exception.ErrorCode);
@@ -138,13 +138,11 @@ public sealed class GetMedicalCvPdfQueryHandlerTests
             throw new NotSupportedException();
 
         public Task<MedicalCvVersion?> GetVersionForPatientAsync(
-            Guid medicalCvId,
             Guid medicalCvVersionId,
             Guid patientId,
             CancellationToken cancellationToken)
         {
             var matches = version is not null &&
-                          version.MedicalCvId == medicalCvId &&
                           version.Id == medicalCvVersionId &&
                           patientId == ownerPatientId;
 

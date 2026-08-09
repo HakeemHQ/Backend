@@ -20,7 +20,6 @@ public sealed class GetMedicalCvPreviewQueryHandler(
     {
         if (!previewLinkService.TryValidate(
                 request.Token,
-                request.MedicalCvId,
                 request.MedicalCvVersionId,
                 out var access))
         {
@@ -29,7 +28,6 @@ public sealed class GetMedicalCvPreviewQueryHandler(
         }
 
         var version = await medicalCvRepository.GetVersionForPatientAsync(
-            request.MedicalCvId,
             request.MedicalCvVersionId,
             access.PatientId,
             cancellationToken);

@@ -16,7 +16,6 @@ public interface IMedicalCvRepository
         CancellationToken cancellationToken);
 
     Task<MedicalCvVersion?> GetVersionForPatientAsync(
-        Guid medicalCvId,
         Guid medicalCvVersionId,
         Guid patientId,
         CancellationToken cancellationToken);

@@ -18,7 +18,6 @@ public sealed class MedicalCvPreviewLinkServiceTests
         var link = service.Create(patientId, medicalCvId, versionId);
         var isValid = service.TryValidate(
             link.Token,
-            medicalCvId,
             versionId,
             out var access);
 
@@ -44,7 +43,6 @@ public sealed class MedicalCvPreviewLinkServiceTests
         var isValid = service.TryValidate(
             link.Token + "tampered",
             Guid.NewGuid(),
-            Guid.NewGuid(),
             out _);
 
         Assert.False(isValid);
@@ -63,7 +61,6 @@ public sealed class MedicalCvPreviewLinkServiceTests
 
         var isValid = service.TryValidate(
             link.Token,
-            medicalCvId,
             versionId,
             out _);
 
