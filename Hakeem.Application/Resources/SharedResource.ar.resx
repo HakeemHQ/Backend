@@ -279,4 +279,35 @@
   <data name="MedicalCv.VersionNotDraft" xml:space="preserve">
     <value>يمكن اعتماد نسخة السيرة الطبية عندما تكون في حالة مسودة فقط.</value>
   </data>
+  <data name="MedicalCv.Focused.CreatedResponse" xml:space="preserve">
+    <value>تم إنشاء {0} بنجاح كإصدار رقم {1} ({2}). رابط المعاينة مرفق في الاستجابة.</value>
+  </data>
+  <data name="MedicalCv.Focused.NoEvidence" xml:space="preserve">
+    <value>لم يتم العثور على سجلات طبية مؤكدة ومرتبطة بهذا الموضوع بدرجة كافية.</value>
+  </data>
+  <data name="MedicalCv.Focused.Created" xml:space="preserve">
+    <value>تم إنشاء السيرة الطبية المركزة بنجاح.</value>
+  </data>
+  <data name="MedicalCv.Focused.DefaultTitle" xml:space="preserve">
+    <value>سيرة طبية: {0}</value>
+  </data>
+  <data name="MedicalCv.Status.Queued" xml:space="preserve"><value>قيد الانتظار</value></data>
+  <data name="MedicalCv.Status.Processing" xml:space="preserve"><value>قيد المعالجة</value></data>
+  <data name="MedicalCv.Status.Draft" xml:space="preserve"><value>مسودة</value></data>
+  <data name="MedicalCv.Status.Approved" xml:space="preserve"><value>معتمدة</value></data>
+  <data name="MedicalCv.Status.Failed" xml:space="preserve"><value>فشل</value></data>
+  <data name="MedicalCv.Pdf.Scope.Full" xml:space="preserve"><value>السيرة الطبية الكاملة</value></data>
+  <data name="MedicalCv.Pdf.Scope.Focused" xml:space="preserve"><value>سيرة طبية مركزة: {0}</value></data>
+  <data name="MedicalCv.Pdf.ClinicalSummary" xml:space="preserve"><value>الملخص الطبي</value></data>
+  <data name="MedicalCv.Pdf.NoConfirmedEntries" xml:space="preserve"><value>لا توجد بيانات مؤكدة متاحة.</value></data>
+  <data name="MedicalCv.Pdf.PatientInformation" xml:space="preserve"><value>بيانات المريض</value></data>
+  <data name="MedicalCv.Pdf.Name" xml:space="preserve"><value>الاسم</value></data>
+  <data name="MedicalCv.Pdf.BirthDate" xml:space="preserve"><value>تاريخ الميلاد</value></data>
+  <data name="MedicalCv.Pdf.Gender" xml:space="preserve"><value>النوع</value></data>
+  <data name="MedicalCv.Pdf.Phone" xml:space="preserve"><value>الهاتف</value></data>
+  <data name="MedicalCv.Pdf.Email" xml:space="preserve"><value>البريد الإلكتروني</value></data>
+  <data name="MedicalCv.Pdf.GeneratedBy" xml:space="preserve"><value>تم الإنشاء بواسطة حكيم</value></data>
+  <data name="MedicalCv.Pdf.Page" xml:space="preserve"><value>صفحة</value></data>
+  <data name="MedicalCv.Pdf.Of" xml:space="preserve"><value>من</value></data>
+  <data name="MedicalCv.Pdf.NotAvailable" xml:space="preserve"><value>غير متاح</value></data>
 </root>

@@ -79,6 +79,50 @@ public sealed class GenerateFullMedicalCvCommandTests
             previewExpiresAt,
             response.LatestVersion.PreviewExpiresAt);
         Assert.Equal("Mazen Medical CV", generationService.Title);
+        Assert.Equal("en", generationService.Language);
+    }
+
+    [Fact]
+    public async Task Handler_UsesArabicRequestCultureForGeneration()
+    {
+        var originalCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = new CultureInfo("ar");
+            var userId = Guid.NewGuid();
+            var patient = new PatientProfile
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId
+            };
+            var generationService = new FakeGenerationService(
+                new MedicalCvGenerationResult(
+                    Guid.NewGuid(),
+                    Guid.NewGuid(),
+                    "السيرة الطبية",
+                    1,
+                    MedicalCvScopeType.Full,
+                    null,
+                    string.Empty,
+                    MedicalCvVersionStatus.Queued,
+                    DateTime.UtcNow));
+            var handler = new GenerateFullMedicalCvCommandHandler(
+                new FakeCurrentUserContext(userId),
+                new FakePatientProfileRepository(patient),
+                generationService,
+                new FakePreviewLinkService(DateTimeOffset.UtcNow.AddMinutes(15)),
+                new FakeFileUrlResolver("https://hakeem.example"));
+
+            await handler.Handle(
+                new GenerateFullMedicalCvCommand("السيرة الطبية"),
+                CancellationToken.None);
+
+            Assert.Equal("ar", generationService.Language);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = originalCulture;
+        }
     }
 
     [Fact]
@@ -131,13 +175,16 @@ public sealed class GenerateFullMedicalCvCommandTests
     {
         public MedicalCvGenerationResult Result { get; } = result;
         public string? Title { get; private set; }
+        public string? Language { get; private set; }
 
         public Task<MedicalCvGenerationResult> GenerateFullAsync(
             Guid patientId,
             string title,
+            string language,
             CancellationToken cancellationToken = default)
         {
             Title = title;
+            Language = language;
             return Task.FromResult(Result);
         }
 
@@ -146,6 +193,7 @@ public sealed class GenerateFullMedicalCvCommandTests
             string focus,
             string title,
             IReadOnlyList<MedicalCvEvidenceItem> evidence,
+            string language,
             CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
     }

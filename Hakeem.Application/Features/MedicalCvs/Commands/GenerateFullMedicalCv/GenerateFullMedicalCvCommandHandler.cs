@@ -1,6 +1,8 @@
+using System.Globalization;
 using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
+using Hakeem.Application.Features.MedicalCvs.DTOs;
 using Hakeem.Application.Interfaces.Files;
 using Hakeem.Application.Interfaces.MedicalCvs;
 using Hakeem.Application.Repositories.PatientProfiles;
@@ -34,6 +36,8 @@ public sealed class GenerateFullMedicalCvCommandHandler(
         var result = await generationService.GenerateFullAsync(
             patient.Id,
             request.Title,
+            MedicalCvLanguages.Normalize(
+                CultureInfo.CurrentUICulture.TwoLetterISOLanguageName),
             cancellationToken);
         var previewLink = previewLinkService.Create(
             patient.Id,

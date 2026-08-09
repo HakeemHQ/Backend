@@ -20,6 +20,7 @@ public sealed class MedicalCvGenerationProcessor(
 {
     public async Task ProcessAsync(
         Guid medicalCvVersionId,
+        string language,
         CancellationToken cancellationToken)
     {
         if (medicalCvVersionId == Guid.Empty)
@@ -54,6 +55,7 @@ public sealed class MedicalCvGenerationProcessor(
         await unitOfWork.SaveChanges(cancellationToken);
 
         string? savedFileKey = null;
+        var outputLanguage = MedicalCvLanguages.Normalize(language);
 
         try
         {
@@ -87,7 +89,8 @@ public sealed class MedicalCvGenerationProcessor(
                     MedicalCvScopeType.Full,
                     Focus: null,
                     evidence,
-                    version.MedicalCv.Title),
+                    version.MedicalCv.Title,
+                    outputLanguage),
                 cancellationToken);
 
             var pdfBytes = pdfGenerator.Generate(
@@ -96,7 +99,8 @@ public sealed class MedicalCvGenerationProcessor(
                     MedicalCvScopeType.Full,
                     Focus: null,
                     DateTime.UtcNow,
-                    content));
+                    content,
+                    outputLanguage));
 
             savedFileKey = await fileStorage.SaveAsync(
                 pdfBytes,

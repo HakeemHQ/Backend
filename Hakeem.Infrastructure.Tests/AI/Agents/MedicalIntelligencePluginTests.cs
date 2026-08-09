@@ -84,6 +84,7 @@ public sealed class MedicalIntelligencePluginTests
         var result = await plugin.GenerateFocusedMedicalCvAsync(
             "  Diabetes  ",
             "  Diabetes Medical CV  ",
+            "en",
             CancellationToken.None);
 
         Assert.True(result.Success);
@@ -103,11 +104,13 @@ public sealed class MedicalIntelligencePluginTests
         Assert.Equal(patientId, generationService.PatientId);
         Assert.Equal("Diabetes", generationService.Focus);
         Assert.Equal("Diabetes Medical CV", generationService.Title);
+        Assert.Equal("en", generationService.Language);
         Assert.Equal(3, generationService.Evidence!.Count);
         Assert.Contains(
             generationService.Evidence,
             item => item.PointId == diagnosis.MedicalRecordId &&
-                    item.FieldName == "Diagnosis");
+                    item.FieldName == "Diagnosis" &&
+                    item.Value == "2026-08-06");
         Assert.Contains(
             generationService.Evidence,
             item => item.PointId == medication.MedicalRecordId &&
@@ -162,10 +165,14 @@ public sealed class MedicalIntelligencePluginTests
         var result = await plugin.GenerateFocusedMedicalCvAsync(
             "Diabetes",
             "Diabetes Medical CV",
+            "ar",
             CancellationToken.None);
 
         Assert.False(result.Success);
         Assert.Null(result.MedicalCv);
+        Assert.Equal(
+            "لم يتم العثور على سجلات طبية مؤكدة ومرتبطة بهذا الموضوع بدرجة كافية.",
+            result.Message);
         Assert.Equal(0, generationService.CallCount);
     }
 
@@ -326,11 +333,13 @@ public sealed class MedicalIntelligencePluginTests
         public Guid PatientId { get; private set; }
         public string? Focus { get; private set; }
         public string? Title { get; private set; }
+        public string? Language { get; private set; }
         public IReadOnlyList<MedicalCvEvidenceItem>? Evidence { get; private set; }
 
         public Task<MedicalCvGenerationResult> GenerateFullAsync(
             Guid patientId,
             string title,
+            string language,
             CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
@@ -339,12 +348,14 @@ public sealed class MedicalIntelligencePluginTests
             string focus,
             string title,
             IReadOnlyList<MedicalCvEvidenceItem> evidence,
+            string language,
             CancellationToken cancellationToken = default)
         {
             CallCount++;
             PatientId = patientId;
             Focus = focus;
             Title = title;
+            Language = language;
             Evidence = evidence;
 
             return Task.FromResult(new MedicalCvGenerationResult(

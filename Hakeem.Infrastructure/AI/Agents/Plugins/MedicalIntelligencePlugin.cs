@@ -6,6 +6,7 @@ using Hakeem.Application.Interfaces.Agents;
 using Hakeem.Application.Interfaces.MedicalCvs;
 using Hakeem.Application.Interfaces.Rag;
 using Hakeem.Application.Repositories.MedicalRecords;
+using Hakeem.Application.Resources;
 using Hakeem.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -35,6 +36,8 @@ public sealed class MedicalIntelligencePlugin(
     public string? LastFocusedMedicalCvFocus { get; private set; }
 
     public string? LastFocusedMedicalCvTitle { get; private set; }
+
+    public string? LastFocusedMedicalCvLanguage { get; private set; }
 
     [KernelFunction("search_patient_medical_records")]
     [Description(
@@ -92,6 +95,9 @@ public sealed class MedicalIntelligencePlugin(
         [Description(
             "The patient-facing CV title, usually '<Focus> Medical CV'.")]
         string title,
+        [Description(
+            "The requested patient-facing output language as ISO code 'ar' or 'en'.")]
+        string language,
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(focus);
@@ -99,8 +105,10 @@ public sealed class MedicalIntelligencePlugin(
 
         var normalizedFocus = focus.Trim();
         var normalizedTitle = title.Trim();
+        var normalizedLanguage = MedicalCvLanguages.Normalize(language);
         LastFocusedMedicalCvFocus = normalizedFocus;
         LastFocusedMedicalCvTitle = normalizedTitle;
+        LastFocusedMedicalCvLanguage = normalizedLanguage;
         var evidence = await RetrieveFocusedEvidenceAsync(
             normalizedFocus,
             cancellationToken);
@@ -109,7 +117,9 @@ public sealed class MedicalIntelligencePlugin(
         {
             LastFocusedMedicalCvResult = new FocusedMedicalCvToolResult(
                 false,
-                "No sufficiently relevant confirmed medical records were found for this focus.",
+                MedicalCvResourceText.Get(
+                    "MedicalCv.Focused.NoEvidence",
+                    normalizedLanguage),
                 null);
 
             logger.LogInformation(
@@ -125,6 +135,7 @@ public sealed class MedicalIntelligencePlugin(
             normalizedFocus,
             normalizedTitle,
             evidence,
+            normalizedLanguage,
             cancellationToken);
 
         var actionResult = new FocusedMedicalCvActionResult(
@@ -138,7 +149,9 @@ public sealed class MedicalIntelligencePlugin(
 
         LastFocusedMedicalCvResult = new FocusedMedicalCvToolResult(
             true,
-            "The focused medical CV was created successfully.",
+            MedicalCvResourceText.Get(
+                "MedicalCv.Focused.Created",
+                normalizedLanguage),
             actionResult);
 
         return LastFocusedMedicalCvResult;
@@ -257,7 +270,7 @@ public sealed class MedicalIntelligencePlugin(
             result.DisplayName,
             result.Fields) ?? string.Empty;
         var clinicalDate = result.ClinicalDate?.ToString(
-            "O",
+            "yyyy-MM-dd",
             CultureInfo.InvariantCulture);
 
         return new MedicalCvEvidenceItem(
@@ -285,7 +298,7 @@ public sealed class MedicalIntelligencePlugin(
             content,
             record.RecordType,
             record.ClinicalDate.ToString(
-                "O",
+                "yyyy-MM-dd",
                 CultureInfo.InvariantCulture));
     }
 

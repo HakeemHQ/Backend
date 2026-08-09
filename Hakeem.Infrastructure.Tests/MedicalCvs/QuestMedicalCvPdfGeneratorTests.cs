@@ -59,4 +59,46 @@ public sealed class QuestMedicalCvPdfGeneratorTests
             File.WriteAllBytes(previewPath, pdfBytes);
         }
     }
+
+    [Fact]
+    public void Generate_ArabicDocument_CreatesValidRightToLeftPdf()
+    {
+        var generator = new QuestMedicalCvPdfGenerator();
+        var document = new MedicalCvPdfDocument(
+            new MedicalCvPatientInformation(
+                "منى حسن",
+                new DateTime(1988, 6, 24),
+                "أنثى",
+                "mona@example.com",
+                "+201001234567"),
+            MedicalCvScopeType.Full,
+            null,
+            new DateTime(2026, 8, 7, 12, 30, 0, DateTimeKind.Utc),
+            new MedicalCvContent
+            {
+                Title = "السيرة الطبية",
+                Summary = "ملخص طبي مبني على السجلات المؤكدة.",
+                Sections =
+                [
+                    new MedicalCvSection
+                    {
+                        Heading = "التشخيصات",
+                        Entries =
+                        [
+                            new MedicalCvEntry
+                            {
+                                Title = "السكري",
+                                Details = ["الحالة: مؤكدة"]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "ar");
+
+        var pdfBytes = generator.Generate(document);
+
+        Assert.True(pdfBytes.Length > 1_000);
+        Assert.Equal("%PDF-"u8.ToArray(), pdfBytes[..5]);
+    }
 }

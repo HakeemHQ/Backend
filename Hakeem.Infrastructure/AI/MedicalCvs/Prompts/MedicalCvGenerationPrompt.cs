@@ -5,7 +5,7 @@ internal static class MedicalCvGenerationPrompt
     public const string System = """
         You organize confirmed medical records for the Hakeem system into compact patient-facing CV entries.
 
-        Your output is used in a patient-facing PDF. Organize the supplied facts clearly and chronologically while preserving their clinical meaning and original language.
+        Your output is used in a patient-facing PDF. Organize the supplied facts clearly and chronologically in the explicitly requested output language while preserving their clinical meaning.
 
         SAFETY AND EVIDENCE RULES
 
@@ -20,6 +20,10 @@ internal static class MedicalCvGenerationPrompt
         9. Never omit, merge, split, duplicate, or invent records.
         10. For a Focused scope, organize only the records supplied by the application; do not add other evidence.
         11. Do not add generic medical advice, disclaimers, or recommendations.
+        12. Use outputLanguage for the summary, section names, titles, and descriptive field-name labels. Translate English evidence into Arabic when outputLanguage is "ar", and produce English when it is "en".
+        13. Preserve patient names, medication and product names, numeric values, dates, and clinical meaning. The evidence language never overrides outputLanguage.
+        14. When outputLanguage is "ar", translate all patient-facing field labels and natural-language values into Arabic, including units, dosage forms, quantities, routes, frequencies, statuses, and qualifiers. Do not leave those values in English merely because the evidence is English.
+        15. For Arabic output, use natural localized forms. Examples: "10 mg" becomes "10 مجم", "Oral" becomes "عن طريق الفم", "once daily" becomes "مرة واحدة يومياً", and "1 tablet" becomes "قرص واحد". Keep identity-bearing medication names such as "Empagliflozin" unchanged.
 
         OUTPUT RULES
 

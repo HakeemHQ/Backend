@@ -2,10 +2,13 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Hakeem.Application.Configurations;
+using Hakeem.Application.Features.MedicalCvs.DTOs;
 using Hakeem.Application.Interfaces.Agents;
 using Hakeem.Application.Interfaces.MedicalCvs;
 using Hakeem.Application.Interfaces.Rag;
 using Hakeem.Application.Repositories.MedicalRecords;
+using Hakeem.Application.Resources;
+using Hakeem.Domain.Enums.MedicalCvs;
 using Hakeem.Infrastructure.AI.Agents.Plugins;
 using Hakeem.Infrastructure.AI.Agents.Prompts;
 using Microsoft.Extensions.DependencyInjection;
@@ -174,6 +177,10 @@ public sealed class MedicalIntelligenceAgent(
                 !string.Equals(
                     plugin.LastFocusedMedicalCvTitle,
                     route.Title,
+                    StringComparison.Ordinal) ||
+                !string.Equals(
+                    plugin.LastFocusedMedicalCvLanguage,
+                    route.Language,
                     StringComparison.Ordinal))
             {
                 throw new InvalidDataException(
@@ -191,7 +198,8 @@ public sealed class MedicalIntelligenceAgent(
         var responseMessage = route.Intent ==
                               MedicalIntelligenceIntent.FocusedCvAction
             ? BuildFocusedCvResponseMessage(
-                (FocusedMedicalCvToolResult)toolResult)
+                (FocusedMedicalCvToolResult)toolResult,
+                route.Language)
             : await GenerateGroundedResponseAsync(
                 originalMessage,
                 toolResult,
@@ -205,7 +213,8 @@ public sealed class MedicalIntelligenceAgent(
     }
 
     private static string BuildFocusedCvResponseMessage(
-        FocusedMedicalCvToolResult result)
+        FocusedMedicalCvToolResult result,
+        string? language)
     {
         if (!result.Success)
         {
@@ -216,9 +225,29 @@ public sealed class MedicalIntelligenceAgent(
             ?? throw new InvalidDataException(
                 "The focused-medical-CV tool reported success without CV metadata.");
 
-        return $"{cv.Title} was created successfully as version " +
-               $"{cv.VersionNumber} ({cv.Status}). The preview link is " +
-               "included in the response.";
+        return MedicalCvResourceText.Format(
+            "MedicalCv.Focused.CreatedResponse",
+            language,
+            cv.Title,
+            cv.VersionNumber,
+            LocalizeStatus(cv.Status, language));
+    }
+
+    private static string LocalizeStatus(
+        MedicalCvVersionStatus status,
+        string? language)
+    {
+        var key = status switch
+        {
+            MedicalCvVersionStatus.Queued => "MedicalCv.Status.Queued",
+            MedicalCvVersionStatus.Processing => "MedicalCv.Status.Processing",
+            MedicalCvVersionStatus.Draft => "MedicalCv.Status.Draft",
+            MedicalCvVersionStatus.Approved => "MedicalCv.Status.Approved",
+            MedicalCvVersionStatus.Failed => "MedicalCv.Status.Failed",
+            _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
+        };
+
+        return MedicalCvResourceText.Get(key, language);
     }
 
     private async Task<MedicalIntelligenceRoute> RouteAsync(
@@ -370,7 +399,8 @@ public sealed class MedicalIntelligenceAgent(
             MedicalIntelligenceIntent.FocusedCvAction => new
             {
                 focus = route.Focus,
-                title = route.Title
+                title = route.Title,
+                language = route.Language
             },
             _ => throw new InvalidOperationException(
                 "An unsupported route cannot produce tool arguments.")
@@ -411,6 +441,7 @@ public sealed class MedicalIntelligenceAgent(
                 intent,
                 decision.Query.Trim(),
                 null,
+                null,
                 null);
         }
 
@@ -422,22 +453,36 @@ public sealed class MedicalIntelligenceAgent(
                     MedicalIntelligenceIntent.NeedsClarification,
                     null,
                     null,
+                    null,
                     null);
+            }
+
+            var language = decision.Language?.Trim().ToLowerInvariant();
+            if (language is not (MedicalCvLanguages.Arabic or
+                MedicalCvLanguages.English))
+            {
+                throw new InvalidDataException(
+                    "The focused-CV route did not include a supported output language.");
             }
 
             var focus = decision.Focus.Trim();
             var title = string.IsNullOrWhiteSpace(decision.Title)
-                ? $"{focus} Medical CV"
+                ? MedicalCvResourceText.Format(
+                    "MedicalCv.Focused.DefaultTitle",
+                    language,
+                    focus)
                 : decision.Title.Trim();
             return new MedicalIntelligenceRoute(
                 intent,
                 null,
                 focus,
-                title);
+                title,
+                language);
         }
 
         return new MedicalIntelligenceRoute(
             intent,
+            null,
             null,
             null,
             null);
@@ -482,6 +527,11 @@ public sealed class MedicalIntelligenceAgent(
             ["title"] = new JsonObject
             {
                 ["type"] = new JsonArray { "string", "null" }
+            },
+            ["language"] = new JsonObject
+            {
+                ["type"] = new JsonArray { "string", "null" },
+                ["enum"] = new JsonArray { "ar", "en", null }
             }
         },
         ["required"] = new JsonArray
@@ -489,7 +539,8 @@ public sealed class MedicalIntelligenceAgent(
             "intent",
             "query",
             "focus",
-            "title"
+            "title",
+            "language"
         }
     };
 
@@ -499,13 +550,15 @@ public sealed class MedicalIntelligenceAgent(
         public string? Query { get; init; }
         public string? Focus { get; init; }
         public string? Title { get; init; }
+        public string? Language { get; init; }
     }
 
     private sealed record MedicalIntelligenceRoute(
         MedicalIntelligenceIntent Intent,
         string? Query,
         string? Focus,
-        string? Title);
+        string? Title,
+        string? Language);
 
     private enum MedicalIntelligenceIntent
     {

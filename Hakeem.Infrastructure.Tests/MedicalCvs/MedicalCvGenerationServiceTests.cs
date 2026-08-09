@@ -53,7 +53,8 @@ public sealed class MedicalCvGenerationServiceTests
 
         var result = await service.GenerateFullAsync(
             patient.Id,
-            "Mazen Medical CV");
+            "Mazen Medical CV",
+            "ar");
 
         Assert.Equal(1, recordsRepository.GetAllConfirmedCallCount);
         Assert.Equal(0, contentGenerator.CallCount);
@@ -71,6 +72,7 @@ public sealed class MedicalCvGenerationServiceTests
         var queuedEvent = Assert.IsType<CreateMedicalCvRequest>(
             outboxRepository.AddedEvent);
         Assert.Equal(result.MedicalCvVersionId, queuedEvent.MedicalCvVersionId);
+        Assert.Equal("ar", queuedEvent.Language);
         Assert.Equal(
             $"medical-cv-generation:{result.MedicalCvVersionId}",
             outboxRepository.IdempotencyKey);
@@ -79,7 +81,7 @@ public sealed class MedicalCvGenerationServiceTests
     }
 
     [Fact]
-    public async Task GenerateFocusedAsync_UsesOnlyFocusedEvidenceAndKeepsFocus()
+    public async Task GenerateFocusedAsync_UsesOnlyFocusedEvidenceAndUpdatesRequestedTitle()
     {
         var patient = CreatePatient();
         var existingCv = new MedicalCv
@@ -104,19 +106,22 @@ public sealed class MedicalCvGenerationServiceTests
             patient.Id,
             "  Diabetes  ",
             "Ignored Replacement Title",
-            CreateEvidence());
+            CreateEvidence(),
+            "en");
 
         Assert.Equal(0, recordsRepository.GetAllConfirmedCallCount);
         Assert.NotNull(contentGenerator.Request);
         Assert.Equal(MedicalCvScopeType.Focused, contentGenerator.Request.ScopeType);
         Assert.Equal("Diabetes", contentGenerator.Request.Focus);
-        Assert.Equal("Existing CV", contentGenerator.Request.Title);
+        Assert.Equal("Ignored Replacement Title", contentGenerator.Request.Title);
+        Assert.Equal("Ignored Replacement Title", existingCv.Title);
         Assert.Single(contentGenerator.Request.Evidence);
         Assert.Null(cvRepository.AddedMedicalCv);
         Assert.NotNull(cvRepository.AddedVersion);
         Assert.Empty(cvRepository.AddedVersion.SummarizedRecords);
         Assert.Equal(4, result.VersionNumber);
         Assert.Equal("Diabetes", result.Focus);
+        Assert.Equal("Ignored Replacement Title", result.Title);
     }
 
     [Fact]
@@ -142,25 +147,30 @@ public sealed class MedicalCvGenerationServiceTests
 
         var fullVersion1 = await service.GenerateFullAsync(
             patient.Id,
-            "Initial Full CV");
+            "Initial Full CV",
+            "en");
         var fullVersion2 = await service.GenerateFullAsync(
             patient.Id,
-            "Ignored Replacement Title");
+            "Ignored Replacement Title",
+            "en");
         var diabetesVersion1 = await service.GenerateFocusedAsync(
             patient.Id,
             "Diabetes",
             "Diabetes Medical CV",
-            CreateEvidence());
+            CreateEvidence(),
+            "en");
         var diabetesVersion2 = await service.GenerateFocusedAsync(
             patient.Id,
             "Diabetes",
             "Ignored Replacement Title",
-            CreateEvidence());
+            CreateEvidence(),
+            "en");
         var cardiologyVersion1 = await service.GenerateFocusedAsync(
             patient.Id,
             "Cardiology",
             "Cardiology Medical CV",
-            CreateEvidence());
+            CreateEvidence(),
+            "en");
 
         Assert.Equal(fullVersion1.MedicalCvId, fullVersion2.MedicalCvId);
         Assert.Equal("Initial Full CV", fullVersion2.Title);
@@ -214,7 +224,7 @@ public sealed class MedicalCvGenerationServiceTests
             new FakeUnitOfWork());
 
         var exception = await Assert.ThrowsAsync<UnprocessableEntityException>(
-            () => service.GenerateFullAsync(patient.Id, "Medical CV"));
+            () => service.GenerateFullAsync(patient.Id, "Medical CV", "en"));
 
         Assert.Equal(
             ErrorCodes.MedicalCvNoConfirmedInformation,

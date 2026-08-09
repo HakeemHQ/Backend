@@ -1,5 +1,6 @@
 using Hakeem.Application.Features.MedicalCvs.DTOs;
 using Hakeem.Application.Interfaces.MedicalCvs;
+using Hakeem.Application.Resources;
 using Hakeem.Domain.Enums.MedicalCvs;
 using Hakeem.Domain.Interfaces.ServiceLifetime;
 using QuestPDF.Fluent;
@@ -30,6 +31,10 @@ public sealed class QuestMedicalCvPdfGenerator : IMedicalCvPdfGenerator, ISingle
             {
                 page.Size(PageSizes.A4);
                 page.Margin(36);
+                if (IsArabic(document))
+                {
+                    page.ContentFromRightToLeft();
+                }
                 page.DefaultTextStyle(style => style
                     .FontFamily("Arial")
                     .FontSize(10)
@@ -40,7 +45,8 @@ public sealed class QuestMedicalCvPdfGenerator : IMedicalCvPdfGenerator, ISingle
                     ComposeContent(content, document));
                 page.Footer().Element(footer => ComposeFooter(
                     footer,
-                    document.GeneratedAtUtc));
+                    document.GeneratedAtUtc,
+                    IsArabic(document)));
             });
         }).GeneratePdf();
     }
@@ -58,8 +64,13 @@ public sealed class QuestMedicalCvPdfGenerator : IMedicalCvPdfGenerator, ISingle
                 .FontColor(PrimaryColor);
 
             var scopeLabel = document.ScopeType == MedicalCvScopeType.Full
-                ? "Complete Medical CV"
-                : $"Focused Medical CV: {document.Focus}";
+                ? MedicalCvResourceText.Get(
+                    "MedicalCv.Pdf.Scope.Full",
+                    document.Language)
+                : MedicalCvResourceText.Format(
+                    "MedicalCv.Pdf.Scope.Focused",
+                    document.Language,
+                    document.Focus);
 
             column.Item().Text(scopeLabel)
                 .FontSize(11)
@@ -75,17 +86,21 @@ public sealed class QuestMedicalCvPdfGenerator : IMedicalCvPdfGenerator, ISingle
     {
         container.Column(column =>
         {
+            var isArabic = IsArabic(document);
             column.Spacing(10);
             column.Item().Element(patient => ComposePatientInformation(
                 patient,
-                document.Patient));
+                document.Patient,
+                isArabic));
 
             column.Item()
                 .Background(LightBackground)
                 .Padding(12)
                 .Column(summary =>
                 {
-                    summary.Item().Text("Clinical Summary")
+                    summary.Item().Text(MedicalCvResourceText.Get(
+                            "MedicalCv.Pdf.ClinicalSummary",
+                            document.Language))
                         .FontSize(13)
                         .SemiBold()
                         .FontColor(PrimaryColor);
@@ -101,7 +116,9 @@ public sealed class QuestMedicalCvPdfGenerator : IMedicalCvPdfGenerator, ISingle
 
                 if (section.Entries.Count == 0)
                 {
-                    column.Item().Text("No confirmed entries available.")
+                    column.Item().Text(MedicalCvResourceText.Get(
+                            "MedicalCv.Pdf.NoConfirmedEntries",
+                            document.Language))
                         .Italic()
                         .FontColor(MutedText);
                     continue;
@@ -109,10 +126,12 @@ public sealed class QuestMedicalCvPdfGenerator : IMedicalCvPdfGenerator, ISingle
 
                 foreach (var entry in section.Entries)
                 {
-                    column.Item()
-                        .BorderLeft(3)
+                    var entryContainer = IsArabic(document)
+                        ? column.Item().BorderRight(3).PaddingRight(10)
+                        : column.Item().BorderLeft(3).PaddingLeft(10);
+
+                    entryContainer
                         .BorderColor(PrimaryColor)
-                        .PaddingLeft(10)
                         .PaddingVertical(5)
                         .Column(entryColumn =>
                         {
@@ -144,7 +163,8 @@ public sealed class QuestMedicalCvPdfGenerator : IMedicalCvPdfGenerator, ISingle
 
     private static void ComposePatientInformation(
         IContainer container,
-        MedicalCvPatientInformation patient)
+        MedicalCvPatientInformation patient,
+        bool isArabic)
     {
         container
             .Border(1)
@@ -152,7 +172,9 @@ public sealed class QuestMedicalCvPdfGenerator : IMedicalCvPdfGenerator, ISingle
             .Padding(12)
             .Column(column =>
             {
-                column.Item().Text("Patient Information")
+                column.Item().Text(Resource(
+                        "MedicalCv.Pdf.PatientInformation",
+                        isArabic))
                     .FontSize(13)
                     .SemiBold()
                     .FontColor(PrimaryColor);
@@ -166,13 +188,25 @@ public sealed class QuestMedicalCvPdfGenerator : IMedicalCvPdfGenerator, ISingle
                         columns.RelativeColumn();
                     });
 
-                    AddPatientRow(table, "Name", patient.FullName, "Birth date",
-                        patient.BirthDate.ToString("yyyy-MM-dd"));
-                    AddPatientRow(table, "Gender", patient.Gender, "Phone",
-                        patient.PhoneNumber);
-                    table.Cell().PaddingVertical(3).Text("Email").SemiBold();
+                    AddPatientRow(
+                        table,
+                        Resource("MedicalCv.Pdf.Name", isArabic),
+                        patient.FullName,
+                        Resource("MedicalCv.Pdf.BirthDate", isArabic),
+                        patient.BirthDate.ToString("yyyy-MM-dd"),
+                        isArabic);
+                    AddPatientRow(
+                        table,
+                        Resource("MedicalCv.Pdf.Gender", isArabic),
+                        patient.Gender,
+                        Resource("MedicalCv.Pdf.Phone", isArabic),
+                        patient.PhoneNumber,
+                        isArabic);
+                    table.Cell().PaddingVertical(3)
+                        .Text(Resource("MedicalCv.Pdf.Email", isArabic))
+                        .SemiBold();
                     table.Cell().ColumnSpan(3).PaddingVertical(3)
-                        .Text(ValueOrUnavailable(patient.Email));
+                        .Text(ValueOrUnavailable(patient.Email, isArabic));
                 });
             });
     }
@@ -182,17 +216,21 @@ public sealed class QuestMedicalCvPdfGenerator : IMedicalCvPdfGenerator, ISingle
         string firstLabel,
         string firstValue,
         string secondLabel,
-        string secondValue)
+        string secondValue,
+        bool isArabic)
     {
         table.Cell().PaddingVertical(3).Text(firstLabel).SemiBold();
-        table.Cell().PaddingVertical(3).Text(ValueOrUnavailable(firstValue));
+        table.Cell().PaddingVertical(3)
+            .Text(ValueOrUnavailable(firstValue, isArabic));
         table.Cell().PaddingVertical(3).Text(secondLabel).SemiBold();
-        table.Cell().PaddingVertical(3).Text(ValueOrUnavailable(secondValue));
+        table.Cell().PaddingVertical(3)
+            .Text(ValueOrUnavailable(secondValue, isArabic));
     }
 
     private static void ComposeFooter(
         IContainer container,
-        DateTime generatedAtUtc)
+        DateTime generatedAtUtc,
+        bool isArabic)
     {
         container.Row(row =>
         {
@@ -202,7 +240,9 @@ public sealed class QuestMedicalCvPdfGenerator : IMedicalCvPdfGenerator, ISingle
                     .FontColor(MutedText))
                 .Text(text =>
                 {
-                    text.Span("Generated by Hakeem | ");
+                    text.Span(Resource(
+                        "MedicalCv.Pdf.GeneratedBy",
+                        isArabic) + " | ");
                     text.Span(generatedAtUtc.ToString("yyyy-MM-dd HH:mm 'UTC'"));
                 });
 
@@ -212,16 +252,29 @@ public sealed class QuestMedicalCvPdfGenerator : IMedicalCvPdfGenerator, ISingle
                     .FontColor(MutedText))
                 .Text(text =>
                 {
-                    text.Span("Page ");
+                    text.Span(Resource("MedicalCv.Pdf.Page", isArabic) + " ");
                     text.CurrentPageNumber();
-                    text.Span(" of ");
+                    text.Span(" " + Resource("MedicalCv.Pdf.Of", isArabic) + " ");
                     text.TotalPages();
                 });
         });
     }
 
-    private static string ValueOrUnavailable(string value)
+    private static string ValueOrUnavailable(string value, bool isArabic)
     {
-        return string.IsNullOrWhiteSpace(value) ? "Not available" : value;
+        return string.IsNullOrWhiteSpace(value)
+            ? Resource("MedicalCv.Pdf.NotAvailable", isArabic)
+            : value;
     }
+
+    private static string Resource(string key, bool isArabic) =>
+        MedicalCvResourceText.Get(
+            key,
+            isArabic
+                ? MedicalCvLanguages.Arabic
+                : MedicalCvLanguages.English);
+
+    private static bool IsArabic(MedicalCvPdfDocument document) =>
+        MedicalCvLanguages.Normalize(document.Language) ==
+        MedicalCvLanguages.Arabic;
 }

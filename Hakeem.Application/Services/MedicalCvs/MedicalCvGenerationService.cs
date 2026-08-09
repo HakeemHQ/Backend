@@ -30,6 +30,7 @@ public sealed class MedicalCvGenerationService(
     public async Task<MedicalCvGenerationResult> GenerateFullAsync(
         Guid patientId,
         string title,
+        string language,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
@@ -101,7 +102,8 @@ public sealed class MedicalCvGenerationService(
         outboxEventRepository.Add(
             new CreateMedicalCvRequest
             {
-                MedicalCvVersionId = version.Id
+                MedicalCvVersionId = version.Id,
+                Language = MedicalCvLanguages.Normalize(language)
             },
             $"medical-cv-generation:{version.Id}");
 
@@ -130,6 +132,7 @@ public sealed class MedicalCvGenerationService(
         string focus,
         string title,
         IReadOnlyList<MedicalCvEvidenceItem> evidence,
+        string language,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(focus);
@@ -161,6 +164,7 @@ public sealed class MedicalCvGenerationService(
             focus.Trim(),
             title.Trim(),
             evidence,
+            MedicalCvLanguages.Normalize(language),
             cancellationToken);
     }
 
@@ -169,6 +173,7 @@ public sealed class MedicalCvGenerationService(
         string focus,
         string title,
         IReadOnlyList<MedicalCvEvidenceItem> evidence,
+        string language,
         CancellationToken cancellationToken)
     {
         if (patientId == Guid.Empty)
@@ -193,7 +198,10 @@ public sealed class MedicalCvGenerationService(
             focus,
             cancellationToken);
 
-        var effectiveTitle = medicalCv?.Title ?? title;
+        if (medicalCv is not null)
+        {
+            medicalCv.Title = title;
+        }
 
         var patientInformation = new MedicalCvPatientInformation(
             patient.FullName,
@@ -208,7 +216,8 @@ public sealed class MedicalCvGenerationService(
                 MedicalCvScopeType.Focused,
                 focus,
                 evidence,
-                effectiveTitle),
+                title,
+                language),
             cancellationToken);
 
         if (medicalCv is null)
@@ -236,7 +245,8 @@ public sealed class MedicalCvGenerationService(
                 MedicalCvScopeType.Focused,
                 focus,
                 generatedAtUtc,
-                content));
+                content,
+                language));
         var fileKey = await fileStorage.SaveAsync(
             pdfBytes,
             medicalCv.Id,

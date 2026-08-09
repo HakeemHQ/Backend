@@ -135,6 +135,32 @@ public sealed class GeminiMedicalCvContentGeneratorTests
     }
 
     [Fact]
+    public async Task GenerateAsync_ArabicRequest_PassesOutputLanguageIndependentlyOfEvidenceLanguage()
+    {
+        var chatService = new FakeChatCompletionService(
+            ValidSingleRecordResponse());
+        var generator = new GeminiMedicalCvContentGenerator(
+            chatService,
+            Options.Create(new GeminiChatConfiguration()),
+            NullLogger<GeminiMedicalCvContentGenerator>.Instance);
+        var request = CreateRequest() with { Language = "ar" };
+
+        await generator.GenerateAsync(request);
+
+        var userMessage = Assert.Single(
+            chatService.ReceivedHistory!,
+            message => message.Role == Microsoft.SemanticKernel.ChatCompletion.AuthorRole.User);
+        Assert.Contains("\"outputLanguage\":\"ar\"", userMessage.Content);
+        Assert.Contains("Confirmed record", userMessage.Content);
+        var systemMessage = Assert.Single(
+            chatService.ReceivedHistory!,
+            message => message.Role == Microsoft.SemanticKernel.ChatCompletion.AuthorRole.System);
+        Assert.Contains("\"10 mg\" becomes \"10 مجم\"", systemMessage.Content);
+        Assert.Contains("\"Oral\" becomes \"عن طريق الفم\"", systemMessage.Content);
+        Assert.Contains("\"1 tablet\" becomes \"قرص واحد\"", systemMessage.Content);
+    }
+
+    [Fact]
     public async Task GenerateAsync_OrganizesMedicationAndAllergyDisplayNames()
     {
         var generator = new GeminiMedicalCvContentGenerator(

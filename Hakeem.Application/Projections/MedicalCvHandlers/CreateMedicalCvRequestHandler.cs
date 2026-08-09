@@ -14,6 +14,7 @@ public sealed class CreateMedicalCvRequestHandler(
     {
         return processor.ProcessAsync(
             @event.MedicalCvVersionId,
+            @event.Language,
             cancellationToken);
     }
 }

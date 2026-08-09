@@ -29,7 +29,8 @@ public sealed class MedicalIntelligenceAgentTests
               "intent": "patient_record_question",
               "query": "current diabetes medications with dose and frequency",
               "focus": null,
-              "title": null
+              "title": null,
+              "language": null
             }
             """,
             new Dictionary<string, object?>
@@ -83,13 +84,15 @@ public sealed class MedicalIntelligenceAgentTests
               "intent": "focused_cv_action",
               "query": null,
               "focus": "Diabetes",
-              "title": "Diabetes Medical CV"
+              "title": "Diabetes Medical CV",
+              "language": "en"
             }
             """,
             new Dictionary<string, object?>
             {
                 ["focus"] = "Diabetes",
-                ["title"] = "Diabetes Medical CV"
+                ["title"] = "Diabetes Medical CV",
+                ["language"] = "en"
             },
             "Diabetes Medical CV, version 1, was created as Draft.");
         var agent = CreateAgent(
@@ -114,6 +117,7 @@ public sealed class MedicalIntelligenceAgentTests
         Assert.Equal("Diabetes Medical CV", result.FocusedMedicalCv.Title);
         Assert.Equal("Diabetes", generationService.Focus);
         Assert.Equal("Diabetes Medical CV", generationService.Title);
+        Assert.Equal("en", generationService.Language);
         Assert.Equal(1, chatService.NonToolCallCount);
         Assert.Equal(
             "Diabetes Medical CV was created successfully as version 1 " +
@@ -126,6 +130,49 @@ public sealed class MedicalIntelligenceAgentTests
     }
 
     [Fact]
+    public async Task RespondAsync_ArabicFocusedCvRequest_PropagatesArabicWithoutTranslatingFocus()
+    {
+        var patientId = Guid.NewGuid();
+        var generationService = new FakeMedicalCvGenerationService();
+        var searchService = new FakeMedicalRecordSearchService(patientId);
+        var chatService = new RoutingToolChatCompletionService(
+            """
+            {
+              "intent": "focused_cv_action",
+              "query": null,
+              "focus": "Diabetes",
+              "title": "سيرة طبية لمرض السكري",
+              "language": "ar"
+            }
+            """,
+            new Dictionary<string, object?>
+            {
+                ["focus"] = "Diabetes",
+                ["title"] = "سيرة طبية لمرض السكري",
+                ["language"] = "ar"
+            },
+            "unused");
+        var agent = CreateAgent(searchService, generationService, chatService);
+
+        var result = await agent.RespondAsync(
+            patientId,
+            "أنشئ Medical CV لمرض السكري",
+            CancellationToken.None);
+
+        Assert.Equal("ar", generationService.Language);
+        Assert.Equal("Diabetes", generationService.Focus);
+        Assert.Equal("سيرة طبية لمرض السكري", result.FocusedMedicalCv!.Title);
+        Assert.Equal(
+            "تم إنشاء سيرة طبية لمرض السكري بنجاح كإصدار رقم 1 " +
+            "(مسودة). رابط المعاينة مرفق في الاستجابة.",
+            result.Message);
+        Assert.Contains("Diabetes", searchService.Queries);
+        Assert.Contains(
+            "medications and treatments used for Diabetes",
+            searchService.Queries);
+    }
+
+    [Fact]
     public async Task RespondAsync_OutOfScope_RefusesWithoutToolCall()
     {
         var patientId = Guid.NewGuid();
@@ -135,7 +182,8 @@ public sealed class MedicalIntelligenceAgentTests
               "intent": "out_of_scope",
               "query": null,
               "focus": null,
-              "title": null
+              "title": null,
+              "language": null
             }
             """,
             new Dictionary<string, object?>(),
@@ -168,7 +216,8 @@ public sealed class MedicalIntelligenceAgentTests
               "intent": "focused_cv_action",
               "query": null,
               "focus": null,
-              "title": null
+              "title": null,
+              "language": null
             }
             """,
             new Dictionary<string, object?>(),
@@ -373,10 +422,12 @@ public sealed class MedicalIntelligenceAgentTests
     {
         public string? Focus { get; private set; }
         public string? Title { get; private set; }
+        public string? Language { get; private set; }
 
         public Task<MedicalCvGenerationResult> GenerateFullAsync(
             Guid patientId,
             string title,
+            string language,
             CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
@@ -385,10 +436,12 @@ public sealed class MedicalIntelligenceAgentTests
             string focus,
             string title,
             IReadOnlyList<MedicalCvEvidenceItem> evidence,
+            string language,
             CancellationToken cancellationToken = default)
         {
             Focus = focus;
             Title = title;
+            Language = language;
 
             return Task.FromResult(new MedicalCvGenerationResult(
                 Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),

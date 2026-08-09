@@ -26,7 +26,7 @@ public sealed class MedicalCvGenerationProcessorTests
             storage,
             unitOfWork);
 
-        await processor.ProcessAsync(version.Id, CancellationToken.None);
+        await processor.ProcessAsync(version.Id, "ar", CancellationToken.None);
 
         Assert.Equal(MedicalCvVersionStatus.Draft, version.Status);
         Assert.Equal(
@@ -35,6 +35,7 @@ public sealed class MedicalCvGenerationProcessorTests
         Assert.Equal(1, contentGenerator.CallCount);
         Assert.NotNull(contentGenerator.Request);
         Assert.Equal("Test Medical CV", contentGenerator.Request.Title);
+        Assert.Equal("ar", contentGenerator.Request.Language);
         Assert.Equal(
             "Confirmed diagnosis, Diabetes",
             Assert.Single(contentGenerator.Request.Evidence).Content);
@@ -56,7 +57,7 @@ public sealed class MedicalCvGenerationProcessorTests
             unitOfWork);
 
         await Assert.ThrowsAsync<ServiceUnavailableException>(() =>
-            processor.ProcessAsync(version.Id, CancellationToken.None));
+            processor.ProcessAsync(version.Id, "en", CancellationToken.None));
 
         Assert.Equal(MedicalCvVersionStatus.Failed, version.Status);
         Assert.Empty(version.PdfFileKey);
@@ -79,7 +80,7 @@ public sealed class MedicalCvGenerationProcessorTests
             storage,
             unitOfWork);
 
-        await processor.ProcessAsync(version.Id, CancellationToken.None);
+        await processor.ProcessAsync(version.Id, "en", CancellationToken.None);
 
         Assert.Equal(0, contentGenerator.CallCount);
         Assert.Equal(0, storage.SaveCallCount);

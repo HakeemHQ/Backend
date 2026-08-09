@@ -21,7 +21,8 @@ public sealed record MedicalCvContentRequest(
     MedicalCvScopeType ScopeType,
     string? Focus,
     IReadOnlyList<MedicalCvEvidenceItem> Evidence,
-    string? Title = null);
+    string? Title = null,
+    string Language = MedicalCvLanguages.English);
 
 public sealed class MedicalCvContent
 {
@@ -48,7 +49,19 @@ public sealed record MedicalCvPdfDocument(
     MedicalCvScopeType ScopeType,
     string? Focus,
     DateTime GeneratedAtUtc,
-    MedicalCvContent Content);
+    MedicalCvContent Content,
+    string Language = MedicalCvLanguages.English);
+
+public static class MedicalCvLanguages
+{
+    public const string English = "en";
+    public const string Arabic = "ar";
+
+    public static string Normalize(string? language) =>
+        string.Equals(language?.Trim(), Arabic, StringComparison.OrdinalIgnoreCase)
+            ? Arabic
+            : English;
+}
 
 public sealed record MedicalCvGenerationResult(
     Guid MedicalCvId,
