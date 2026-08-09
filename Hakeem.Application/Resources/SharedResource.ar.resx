@@ -310,4 +310,10 @@
   <data name="MedicalCv.Pdf.Page" xml:space="preserve"><value>صفحة</value></data>
   <data name="MedicalCv.Pdf.Of" xml:space="preserve"><value>من</value></data>
   <data name="MedicalCv.Pdf.NotAvailable" xml:space="preserve"><value>غير متاح</value></data>
+  <data name="MedicalIntelligence.OutOfScope" xml:space="preserve">
+    <value>يمكنني فقط الإجابة عن الأسئلة باستخدام سجلاتك الطبية أو إنشاء سيرة طبية مركزة من تلك السجلات.</value>
+  </data>
+  <data name="MedicalIntelligence.Clarification" xml:space="preserve">
+    <value>يرجى توضيح المعلومات التي تريدها من سجلاتك الطبية، أو تحديد موضوع السيرة الطبية المركزة.</value>
+  </data>
 </root>

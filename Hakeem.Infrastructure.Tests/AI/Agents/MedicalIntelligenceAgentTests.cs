@@ -30,7 +30,7 @@ public sealed class MedicalIntelligenceAgentTests
               "query": "current diabetes medications with dose and frequency",
               "focus": null,
               "title": null,
-              "language": null
+              "language": "en"
             }
             """,
             new Dictionary<string, object?>
@@ -183,7 +183,7 @@ public sealed class MedicalIntelligenceAgentTests
               "query": null,
               "focus": null,
               "title": null,
-              "language": null
+              "language": "en"
             }
             """,
             new Dictionary<string, object?>(),
@@ -207,6 +207,40 @@ public sealed class MedicalIntelligenceAgentTests
     }
 
     [Fact]
+    public async Task RespondAsync_ArabicOutOfScope_ReturnsLocalizedResponse()
+    {
+        var patientId = Guid.NewGuid();
+        var chatService = new RoutingToolChatCompletionService(
+            """
+            {
+              "intent": "out_of_scope",
+              "query": null,
+              "focus": null,
+              "title": null,
+              "language": "ar"
+            }
+            """,
+            new Dictionary<string, object?>(),
+            "unused");
+        var agent = CreateAgent(
+            new FakeMedicalRecordSearchService(patientId),
+            new FakeMedicalCvGenerationService(),
+            chatService);
+
+        var result = await agent.RespondAsync(
+            patientId,
+            "هل يجب أن أضاعف جرعة الدواء؟",
+            CancellationToken.None);
+
+        Assert.Equal(
+            "يمكنني فقط الإجابة عن الأسئلة باستخدام سجلاتك الطبية أو " +
+            "إنشاء سيرة طبية مركزة من تلك السجلات.",
+            result.Message);
+        Assert.Equal(MedicalIntelligenceCapability.None, result.Capability);
+        Assert.Equal(0, chatService.ToolCallCount);
+    }
+
+    [Fact]
     public async Task RespondAsync_MissingFocusedCvFocus_AsksForClarification()
     {
         var patientId = Guid.NewGuid();
@@ -217,7 +251,7 @@ public sealed class MedicalIntelligenceAgentTests
               "query": null,
               "focus": null,
               "title": null,
-              "language": null
+              "language": "en"
             }
             """,
             new Dictionary<string, object?>(),

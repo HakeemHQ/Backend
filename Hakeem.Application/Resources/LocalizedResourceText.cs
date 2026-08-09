@@ -3,7 +3,7 @@ using Hakeem.Application.Features.MedicalCvs.DTOs;
 
 namespace Hakeem.Application.Resources;
 
-public static class MedicalCvResourceText
+public static class LocalizedResourceText
 {
     public static string Get(string key, string? language)
     {
@@ -12,7 +12,7 @@ public static class MedicalCvResourceText
 
         return SharedResource.ResourceManager.GetString(key, culture)
             ?? throw new InvalidOperationException(
-                $"Medical CV resource key '{key}' was not found.");
+                $"Localized resource key '{key}' was not found.");
     }
 
     public static string Format(

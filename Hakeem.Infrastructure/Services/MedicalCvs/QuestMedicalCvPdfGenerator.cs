@@ -64,10 +64,10 @@ public sealed class QuestMedicalCvPdfGenerator : IMedicalCvPdfGenerator, ISingle
                 .FontColor(PrimaryColor);
 
             var scopeLabel = document.ScopeType == MedicalCvScopeType.Full
-                ? MedicalCvResourceText.Get(
+                ? LocalizedResourceText.Get(
                     "MedicalCv.Pdf.Scope.Full",
                     document.Language)
-                : MedicalCvResourceText.Format(
+                : LocalizedResourceText.Format(
                     "MedicalCv.Pdf.Scope.Focused",
                     document.Language,
                     document.Focus);
@@ -98,7 +98,7 @@ public sealed class QuestMedicalCvPdfGenerator : IMedicalCvPdfGenerator, ISingle
                 .Padding(12)
                 .Column(summary =>
                 {
-                    summary.Item().Text(MedicalCvResourceText.Get(
+                    summary.Item().Text(LocalizedResourceText.Get(
                             "MedicalCv.Pdf.ClinicalSummary",
                             document.Language))
                         .FontSize(13)
@@ -116,7 +116,7 @@ public sealed class QuestMedicalCvPdfGenerator : IMedicalCvPdfGenerator, ISingle
 
                 if (section.Entries.Count == 0)
                 {
-                    column.Item().Text(MedicalCvResourceText.Get(
+                    column.Item().Text(LocalizedResourceText.Get(
                             "MedicalCv.Pdf.NoConfirmedEntries",
                             document.Language))
                         .Italic()
@@ -268,7 +268,7 @@ public sealed class QuestMedicalCvPdfGenerator : IMedicalCvPdfGenerator, ISingle
     }
 
     private static string Resource(string key, bool isArabic) =>
-        MedicalCvResourceText.Get(
+        LocalizedResourceText.Get(
             key,
             isArabic
                 ? MedicalCvLanguages.Arabic

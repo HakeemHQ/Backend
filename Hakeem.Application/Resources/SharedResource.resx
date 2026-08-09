@@ -314,4 +314,10 @@
   <data name="MedicalCv.Pdf.Page" xml:space="preserve"><value>Page</value></data>
   <data name="MedicalCv.Pdf.Of" xml:space="preserve"><value>of</value></data>
   <data name="MedicalCv.Pdf.NotAvailable" xml:space="preserve"><value>Not available</value></data>
+  <data name="MedicalIntelligence.OutOfScope" xml:space="preserve">
+    <value>I can only answer questions using your medical records or create a focused medical CV from those records.</value>
+  </data>
+  <data name="MedicalIntelligence.Clarification" xml:space="preserve">
+    <value>Please clarify which information you want from your medical records, or the specific topic the focused medical CV should cover.</value>
+  </data>
 </root>

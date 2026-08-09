@@ -117,7 +117,7 @@ public sealed class MedicalIntelligencePlugin(
         {
             LastFocusedMedicalCvResult = new FocusedMedicalCvToolResult(
                 false,
-                MedicalCvResourceText.Get(
+                LocalizedResourceText.Get(
                     "MedicalCv.Focused.NoEvidence",
                     normalizedLanguage),
                 null);
@@ -149,7 +149,7 @@ public sealed class MedicalIntelligencePlugin(
 
         LastFocusedMedicalCvResult = new FocusedMedicalCvToolResult(
             true,
-            MedicalCvResourceText.Get(
+            LocalizedResourceText.Get(
                 "MedicalCv.Focused.Created",
                 normalizedLanguage),
             actionResult);

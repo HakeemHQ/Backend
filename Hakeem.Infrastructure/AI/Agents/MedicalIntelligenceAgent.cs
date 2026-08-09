@@ -75,7 +75,9 @@ public sealed class MedicalIntelligenceAgent(
             if (route.Intent == MedicalIntelligenceIntent.OutOfScope)
             {
                 return new MedicalIntelligenceResponse(
-                    MedicalIntelligenceAgentPrompt.OutOfScopeResponse,
+                    LocalizedResourceText.Get(
+                        "MedicalIntelligence.OutOfScope",
+                        route.Language),
                     MedicalIntelligenceCapability.None,
                     []);
             }
@@ -83,7 +85,9 @@ public sealed class MedicalIntelligenceAgent(
             if (route.Intent == MedicalIntelligenceIntent.NeedsClarification)
             {
                 return new MedicalIntelligenceResponse(
-                    MedicalIntelligenceAgentPrompt.ClarificationResponse,
+                    LocalizedResourceText.Get(
+                        "MedicalIntelligence.Clarification",
+                        route.Language),
                     MedicalIntelligenceCapability.None,
                     []);
             }
@@ -225,7 +229,7 @@ public sealed class MedicalIntelligenceAgent(
             ?? throw new InvalidDataException(
                 "The focused-medical-CV tool reported success without CV metadata.");
 
-        return MedicalCvResourceText.Format(
+        return LocalizedResourceText.Format(
             "MedicalCv.Focused.CreatedResponse",
             language,
             cv.Title,
@@ -247,7 +251,7 @@ public sealed class MedicalIntelligenceAgent(
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
 
-        return MedicalCvResourceText.Get(key, language);
+        return LocalizedResourceText.Get(key, language);
     }
 
     private async Task<MedicalIntelligenceRoute> RouteAsync(
@@ -429,6 +433,14 @@ public sealed class MedicalIntelligenceAgent(
                 "The medical-intelligence router returned an unknown intent.")
         };
 
+        var language = decision.Language?.Trim().ToLowerInvariant();
+        if (language is not (MedicalCvLanguages.Arabic or
+            MedicalCvLanguages.English))
+        {
+            throw new InvalidDataException(
+                "The medical-intelligence route did not include a supported language.");
+        }
+
         if (intent == MedicalIntelligenceIntent.PatientRecordQuestion)
         {
             if (string.IsNullOrWhiteSpace(decision.Query))
@@ -442,7 +454,7 @@ public sealed class MedicalIntelligenceAgent(
                 decision.Query.Trim(),
                 null,
                 null,
-                null);
+                language);
         }
 
         if (intent == MedicalIntelligenceIntent.FocusedCvAction)
@@ -454,20 +466,12 @@ public sealed class MedicalIntelligenceAgent(
                     null,
                     null,
                     null,
-                    null);
-            }
-
-            var language = decision.Language?.Trim().ToLowerInvariant();
-            if (language is not (MedicalCvLanguages.Arabic or
-                MedicalCvLanguages.English))
-            {
-                throw new InvalidDataException(
-                    "The focused-CV route did not include a supported output language.");
+                    language);
             }
 
             var focus = decision.Focus.Trim();
             var title = string.IsNullOrWhiteSpace(decision.Title)
-                ? MedicalCvResourceText.Format(
+                ? LocalizedResourceText.Format(
                     "MedicalCv.Focused.DefaultTitle",
                     language,
                     focus)
@@ -485,7 +489,7 @@ public sealed class MedicalIntelligenceAgent(
             null,
             null,
             null,
-            null);
+            language);
     }
 
     private static string ExtractJsonPayload(string content)
@@ -530,8 +534,8 @@ public sealed class MedicalIntelligenceAgent(
             },
             ["language"] = new JsonObject
             {
-                ["type"] = new JsonArray { "string", "null" },
-                ["enum"] = new JsonArray { "ar", "en", null }
+                ["type"] = "string",
+                ["enum"] = new JsonArray { "ar", "en" }
             }
         },
         ["required"] = new JsonArray
