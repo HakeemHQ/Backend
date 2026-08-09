@@ -11,7 +11,7 @@ public sealed class DocumentExtractionValidatorTests
     public void Validate_ValidResult_ReturnsNoErrors()
     {
         var result = new DocumentExtractionResult(
-            "Prescription",
+            MedicalDocumentType.Prescription,
             [
                 new ExtractedItemResult(
                     "Medication",
@@ -37,7 +37,7 @@ public sealed class DocumentExtractionValidatorTests
     public void Validate_InvalidResult_ReturnsAllDetectedErrors()
     {
         var result = new DocumentExtractionResult(
-            "UnsupportedDocument",
+            MedicalDocumentType.Other,
             [
                 new ExtractedItemResult(
                     "UnsupportedItem",
@@ -56,6 +56,54 @@ public sealed class DocumentExtractionValidatorTests
         var validation = _validator.Validate(result);
 
         Assert.False(validation.IsValid);
-        Assert.True(validation.Errors.Count >= 7);
+        Assert.True(validation.Errors.Count >= 6);
+    }
+
+    [Fact]
+    public void Validate_MultipleLabRowsAsSeparateItems_ReturnsNoErrors()
+    {
+        var result = new DocumentExtractionResult(
+            MedicalDocumentType.LabReport,
+            [
+                CreateLabResult(1, "Cholesterol", "198", "mg/dL"),
+                CreateLabResult(2, "LDL Cholesterol", "135", "mg/dL")
+            ]);
+
+        var validation = _validator.Validate(result);
+
+        Assert.True(validation.IsValid);
+        Assert.Empty(validation.Errors);
+    }
+
+    private static ExtractedItemResult CreateLabResult(
+        int sequenceNumber,
+        string testName,
+        string value,
+        string unit)
+    {
+        return new ExtractedItemResult(
+            "LabResult",
+            sequenceNumber,
+            1,
+            [
+                new ExtractedFieldResult(
+                    "LabTestName",
+                    testName,
+                    0.99m,
+                    testName,
+                    []),
+                new ExtractedFieldResult(
+                    "LabValue",
+                    value,
+                    0.99m,
+                    value,
+                    []),
+                new ExtractedFieldResult(
+                    "Unit",
+                    unit,
+                    0.99m,
+                    unit,
+                    [])
+            ]);
     }
 }

@@ -44,4 +44,39 @@ public class OutboxEventDispatcher
         var method = handlerType.GetMethod(nameof(IOutboxEventHandler<OutboxEventBase>.HandleAsync))!;
         await (Task)method.Invoke(handler, [@event, cancellationToken])!;
     }
+
+    public async Task DispatchFailureAsync(
+        string eventTypeName,
+        string payload,
+        CancellationToken cancellationToken)
+    {
+        var eventType = OutboxEventTypeRegistry.Resolve(eventTypeName);
+        if (eventType is null)
+        {
+            return;
+        }
+
+        var @event = JsonSerializer.Deserialize(payload, eventType)
+            as OutboxEventBase;
+        if (@event is null)
+        {
+            throw new InvalidOperationException(
+                $"Failed to deserialize payload for event type '{eventTypeName}'.");
+        }
+
+        var handlerType = typeof(IOutboxEventFailureHandler<>)
+            .MakeGenericType(eventType);
+        var handler = _serviceProvider.GetService(handlerType);
+        if (handler is null)
+        {
+            return;
+        }
+
+        var method = handlerType.GetMethod(
+            nameof(IOutboxEventFailureHandler<OutboxEventBase>
+                .HandleFailureAsync))!;
+        await (Task)method.Invoke(
+            handler,
+            [@event, cancellationToken])!;
+    }
 }

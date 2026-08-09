@@ -43,6 +43,10 @@ public static class DependencyInjection
             .AddClasses(classes => classes
                 .AssignableTo(typeof(IOutboxEventHandler<>)))
             .AsImplementedInterfaces()
+            .WithScopedLifetime()
+            .AddClasses(classes => classes
+                .AssignableTo(typeof(IOutboxEventFailureHandler<>)))
+            .AsImplementedInterfaces()
             .WithScopedLifetime());
 
         var config = TypeAdapterConfig.GlobalSettings;

@@ -46,7 +46,7 @@ public sealed class UploadDocumentCommandHandler(
         {
             Id = documentId,
             PatientProfileId = patientProfile.Id,
-            DocumentType = request.DocumentType.Trim(),
+            DocumentType = MedicalDocument.UnclassifiedDocumentType,
             Title = request.Title.Trim(),
             DocumentDate = request.DocumentDate.ToDateTime(TimeOnly.MinValue),
             FilePath = filePath

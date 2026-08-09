@@ -6,6 +6,8 @@ namespace Hakeem.Domain.Entities;
 
 public class MedicalDocument : BaseEntity
 {
+    public const string UnclassifiedDocumentType = "Unclassified";
+
     public Guid PatientProfileId { get; set; }
     public string DocumentType { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;

@@ -20,6 +20,7 @@ public sealed class DocumentExtractionPlugin(
 
     public bool HasReadDocumentOcr => _numberedOcrPages is not null;
     public DocumentExtractionResult? AcceptedResult { get; private set; }
+    public IReadOnlyList<string> LastValidationErrors { get; private set; } = [];
 
     [KernelFunction("read_document_ocr")]
     [Description(
@@ -65,16 +66,18 @@ public sealed class DocumentExtractionPlugin(
 
         if (!validationResult.IsValid)
         {
+            LastValidationErrors = validationResult.Errors;
             logger.LogWarning(
-                "Extraction validation failed for document {DocumentId} with {ErrorCount} errors.",
+                "Extraction validation failed for document {DocumentId}: {ValidationErrors}",
                 documentId,
-                validationResult.Errors.Count);
+                string.Join(" | ", validationResult.Errors));
 
             return new DocumentExtractionSubmission(
                 false,
                 validationResult.Errors);
         }
 
+        LastValidationErrors = [];
         AcceptedResult = result;
         return new DocumentExtractionSubmission(true, []);
     }

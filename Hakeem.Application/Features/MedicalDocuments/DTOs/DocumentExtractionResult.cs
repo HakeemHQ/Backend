@@ -4,7 +4,7 @@ namespace Hakeem.Application.Features.MedicalDocuments.DTOs;
 
 public sealed record DocumentExtractionResult(
     [property: JsonPropertyName("documentType")]
-    string DocumentType,
+    MedicalDocumentType DocumentType,
 
     [property: JsonPropertyName("items")]
     IReadOnlyList<ExtractedItemResult> Items);
@@ -37,3 +37,15 @@ public sealed record ExtractedFieldResult(
 
     [property: JsonPropertyName("issues")]
     IReadOnlyList<string> Issues);
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum MedicalDocumentType
+{
+    Prescription,
+    LabReport,
+    DischargeSummary,
+    MedicalVisit,
+    RadiologyReport,
+    ClinicalNote,
+    Other
+}

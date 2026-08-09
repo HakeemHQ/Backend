@@ -132,7 +132,10 @@ public sealed class DocumentProcessingAgent(
 
         var acceptedResult = plugin.AcceptedResult
             ?? throw new InvalidDataException(
-                "The extraction agent finished without submitting a valid result.");
+                plugin.LastValidationErrors.Count == 0
+                    ? "The extraction agent finished without submitting a valid result."
+                    : "The extraction agent finished without submitting a valid result: " +
+                      string.Join(" | ", plugin.LastValidationErrors));
 
         logger.LogInformation(
             "Bounded extraction agent completed for document {DocumentId} with {ItemCount} items.",

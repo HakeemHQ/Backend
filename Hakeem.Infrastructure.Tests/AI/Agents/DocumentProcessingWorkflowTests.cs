@@ -1,5 +1,6 @@
 using System.Net;
 using Hakeem.Application.Configurations;
+using Hakeem.Application.Features.MedicalDocuments.DTOs;
 using Hakeem.Application.Interfaces.Ocr;
 using Hakeem.Infrastructure.AI.Agents;
 using Hakeem.Infrastructure.Tests.AI.Agents.Fakes;
@@ -66,7 +67,7 @@ public sealed class DocumentProcessingWorkflowTests
             Guid.NewGuid(),
             CancellationToken.None);
 
-        Assert.Equal("Prescription", result.DocumentType);
+        Assert.Equal(MedicalDocumentType.Prescription, result.DocumentType);
         var item = Assert.Single(result.Items);
         Assert.Equal("Medication", item.ItemType);
         Assert.Equal(2, item.Fields.Count);

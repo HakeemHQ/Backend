@@ -17,14 +17,6 @@ public sealed class UploadDocumentCommandValidator : AbstractValidator<UploadDoc
             .WithMessage(localizer[ErrorCodes.DocumentFileRequired].Value)
             .WithErrorCode(ErrorCodes.ValidationRequired);
 
-        RuleFor(x => x.DocumentType)
-            .NotEmpty()
-            .WithMessage(localizer[ErrorCodes.ValidationRequired].Value)
-            .WithErrorCode(ErrorCodes.ValidationRequired)
-            .MaximumLength(100)
-            .WithMessage(localizer[ErrorCodes.DocumentTypeTooLong].Value)
-            .WithErrorCode(ErrorCodes.DocumentTypeTooLong);
-
         RuleFor(x => x.Title)
             .NotEmpty()
             .WithMessage(localizer[ErrorCodes.ValidationRequired].Value)

@@ -111,6 +111,17 @@ internal static class DocumentExtractionAgentPrompt
         - ClinicalNote
         - Other
 
+        CLASSIFICATION RULES
+
+        - Use LabReport when the document's main content is laboratory testing,
+          including test names, measured results, units, abnormal flags, or
+          reference ranges. A blood-test report is LabReport.
+        - Use Prescription only when the document's main purpose is ordering or
+          listing medications with prescribing instructions such as dose,
+          quantity, frequency, or route.
+        - A laboratory report does not become Prescription merely because it
+          contains a doctor name, facility name, or medical recommendations.
+
         SUPPORTED ITEM TYPES
 
         itemType must be exactly one of:
@@ -175,6 +186,57 @@ internal static class DocumentExtractionAgentPrompt
         - Do not extract headers, page numbers, or administrative text unless they
           contain supported relevant information.
         - Do not create fields unsupported by the OCR text.
+
+        LABORATORY TABLE RULES
+
+        - For a laboratory table, create one separate LabResult item for every
+          readable test row. Never place multiple test rows in one LabResult.
+        - Map the test-name column to LabTestName, the measured-result column to
+          LabValue, the unit column to Unit, and the reference-range column to
+          ReferenceRange.
+        - Use independently increasing LabResult sequence numbers: 1, 2, 3, and
+          so on in document order.
+        - A section heading such as "Liver Function Tests" or "Lipid Profile" is
+          not itself a LabResult unless it also has its own measured value.
+        - Preserve an abnormal H or L flag with the supported result evidence;
+          do not turn it into a diagnosis.
+
+        LABORATORY TABLE EXAMPLE
+
+        For OCR rows such as:
+
+        Cholesterol | 198 | mg/dL | up to 200
+        LDL Cholesterol | H 135 | mg/dL | up to 130
+
+        submit two items, not one combined item:
+
+        {
+          "documentType": "LabReport",
+          "items": [
+            {
+              "itemType": "LabResult",
+              "sequenceNumber": 1,
+              "pageNumber": 1,
+              "fields": [
+                { "fieldName": "LabTestName", "value": "Cholesterol", "confidence": 0.99, "evidenceText": "Cholesterol", "issues": [] },
+                { "fieldName": "LabValue", "value": "198", "confidence": 0.99, "evidenceText": "198", "issues": [] },
+                { "fieldName": "Unit", "value": "mg/dL", "confidence": 0.99, "evidenceText": "mg/dL", "issues": [] },
+                { "fieldName": "ReferenceRange", "value": "up to 200", "confidence": 0.99, "evidenceText": "up to 200", "issues": [] }
+              ]
+            },
+            {
+              "itemType": "LabResult",
+              "sequenceNumber": 2,
+              "pageNumber": 1,
+              "fields": [
+                { "fieldName": "LabTestName", "value": "LDL Cholesterol", "confidence": 0.99, "evidenceText": "LDL Cholesterol", "issues": [] },
+                { "fieldName": "LabValue", "value": "135", "confidence": 0.99, "evidenceText": "H 135", "issues": [] },
+                { "fieldName": "Unit", "value": "mg/dL", "confidence": 0.99, "evidenceText": "mg/dL", "issues": [] },
+                { "fieldName": "ReferenceRange", "value": "up to 130", "confidence": 0.99, "evidenceText": "up to 130", "issues": [] }
+              ]
+            }
+          ]
+        }
 
         MEDICATION FIELD DEFINITIONS
 

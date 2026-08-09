@@ -155,7 +155,7 @@ public sealed class DocumentProcessingAgentTests
         string fieldName)
     {
         return new DocumentExtractionResult(
-            "Prescription",
+            MedicalDocumentType.Prescription,
             [
                 new ExtractedItemResult(
                     "Medication",

@@ -31,7 +31,7 @@ public sealed class DocumentExtractionPluginTests
             new OcrPageResult(1, "Readable text", 0.9m));
         await plugin.ReadDocumentOcrAsync(CancellationToken.None);
         var invalid = new DocumentExtractionResult(
-            "UnsupportedType",
+            MedicalDocumentType.Other,
             []);
 
         var submission = plugin.SubmitExtraction(invalid);
@@ -47,7 +47,22 @@ public sealed class DocumentExtractionPluginTests
         var plugin = CreatePlugin(
             new OcrPageResult(1, "Readable text", 0.9m));
         await plugin.ReadDocumentOcrAsync(CancellationToken.None);
-        var valid = new DocumentExtractionResult("Other", []);
+        var valid = new DocumentExtractionResult(
+            MedicalDocumentType.Other,
+            [
+                new ExtractedItemResult(
+                    "PatientInformation",
+                    1,
+                    1,
+                    [
+                        new ExtractedFieldResult(
+                            "PatientName",
+                            "Example",
+                            0.9m,
+                            "Example",
+                            [])
+                    ])
+            ]);
 
         var submission = plugin.SubmitExtraction(valid);
 

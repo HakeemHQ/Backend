@@ -17,17 +17,16 @@ public sealed class DocumentExtractionValidator
             return new DocumentExtractionValidationResult(errors);
         }
 
-        if (!DocumentExtractionSchema.DocumentTypes.Contains(
-                result.DocumentType))
-        {
-            errors.Add(
-                $"Document type '{result.DocumentType}' is not allowed.");
-        }
-
         if (result.Items is null)
         {
             errors.Add("The extraction items array cannot be null.");
             return new DocumentExtractionValidationResult(errors);
+        }
+
+        if (result.Items.Count == 0)
+        {
+            errors.Add(
+                "The extraction must contain at least one supported medical item.");
         }
 
         var itemIdentities = new HashSet<(string, int)>();

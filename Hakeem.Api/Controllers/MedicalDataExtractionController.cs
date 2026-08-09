@@ -2,6 +2,7 @@ using Hakeem.Application.Common.ResponseModel;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Features.MedicalDataExtraction.DTOs;
 using Hakeem.Application.Features.MedicalDataExtraction.Queries.GetExtractedFields;
+using Hakeem.Application.Features.PatientReviewAndConfirmation.Commands;
 using Hakeem.Application.Resources;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -46,5 +47,29 @@ public sealed class MedicalDataExtractionController : ApiControllerBase
         return SuccessResponse(
             result,
             ErrorCodes.DocumentExtractedFieldsRetrieved);
+    }
+
+    [HttpPut("{documentId:guid}/extracted-items/confirm-all")]
+    [ProducesResponseType(
+        typeof(GenericResponseModel<ConfirmAllExtractedItemsResult>),
+        StatusCodes.Status200OK)]
+    [ProducesResponseType(
+        typeof(GenericResponseModel<object>),
+        StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(
+        typeof(GenericResponseModel<object>),
+        StatusCodes.Status404NotFound)]
+    [ProducesResponseType(
+        typeof(GenericResponseModel<object>),
+        StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ConfirmAllExtractedItems(
+        Guid documentId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new ConfirmAllExtractedItemsCommand(documentId),
+            cancellationToken);
+
+        return SuccessResponse(result);
     }
 }

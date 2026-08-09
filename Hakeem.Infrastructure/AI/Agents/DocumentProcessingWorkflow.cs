@@ -187,12 +187,6 @@ public sealed class DocumentProcessingWorkflow(
                 "The extraction response was empty.");
         }
 
-        if (string.IsNullOrWhiteSpace(result.DocumentType))
-        {
-            throw new InvalidDataException(
-                "The extraction response is missing documentType.");
-        }
-
         if (result.Items is null)
         {
             throw new InvalidDataException(

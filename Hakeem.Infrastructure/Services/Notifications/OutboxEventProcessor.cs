@@ -170,6 +170,20 @@ public class OutboxEventProcessor : BackgroundService
             if (outboxEvent.RetryCount >= outboxEvent.MaxRetries)
             {
                 outboxEvent.Status = OutboxEventStatus.Failed;
+                try
+                {
+                    await dispatcher.DispatchFailureAsync(
+                        outboxEvent.EventType,
+                        outboxEvent.Payload,
+                        cancellationToken);
+                }
+                catch (Exception failureHandlerException)
+                {
+                    _logger.LogError(
+                        failureHandlerException,
+                        "Terminal failure handler failed for outbox event {EventId}.",
+                        outboxEvent.Id);
+                }
                 _logger.LogWarning(
                     "Outbox event {EventId} marked as Failed after {RetryCount} attempts.",
                     outboxEvent.Id, outboxEvent.RetryCount);

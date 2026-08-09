@@ -102,7 +102,7 @@ public sealed class DocumentExtractionProcessor(
                 extractedItems);
 
             medicalDocument.DocumentType =
-                extractionResult.DocumentType;
+                extractionResult.DocumentType.ToString();
             medicalDocument.CompleteExtraction();
 
             await unitOfWork.SaveChanges(cancellationToken);

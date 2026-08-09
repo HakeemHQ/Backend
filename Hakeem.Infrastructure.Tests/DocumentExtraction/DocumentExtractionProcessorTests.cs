@@ -68,7 +68,7 @@ public sealed class DocumentExtractionProcessorTests
         var repository = new FakeMedicalDocumentRepository(
             document);
         var result = new DocumentExtractionResult(
-            "Prescription",
+            MedicalDocumentType.Prescription,
             [
                 CreateValidItem(),
                 new ExtractedItemResult(
@@ -178,7 +178,7 @@ public sealed class DocumentExtractionProcessorTests
     private static DocumentExtractionResult CreateValidResult()
     {
         return new DocumentExtractionResult(
-            "Prescription",
+            MedicalDocumentType.Prescription,
             [CreateValidItem()]);
     }
 
