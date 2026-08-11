@@ -132,4 +132,67 @@ public sealed class PatientAccessRequestRepository(ApplicationDbContext dbContex
                     .SetProperty(request => request.UpdatedAt, rejectedAt),
                 cancellationToken);
     }
+
+    public async Task<IReadOnlyList<PatientAccessRequest>> GetCodeCandidatesAsync(
+        Guid doctorProfileId,
+        Guid patientProfileId,
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.PatientAccessRequests
+            .AsNoTracking()
+            .Where(request =>
+                request.DoctorProfileId == doctorProfileId &&
+                request.PatientProfileId == patientProfileId &&
+                request.CodeHash != null &&
+                (request.Status == PatientAccessRequestStatus.Approved ||
+                 request.Status == PatientAccessRequestStatus.Redeemed))
+            .OrderByDescending(request => request.ApprovedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<int> ExpireStaleActiveAccessAsync(
+        Guid doctorProfileId,
+        Guid patientProfileId,
+        DateTime utcNow,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.DoctorPatientAccesses
+            .Where(access =>
+                access.DoctorProfileId == doctorProfileId &&
+                access.PatientProfileId == patientProfileId &&
+                access.Status == DoctorPatientAccessStatus.Active &&
+                access.ExpiresAt <= utcNow)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(access => access.Status, DoctorPatientAccessStatus.Expired)
+                    .SetProperty(access => access.UpdatedAt, utcNow),
+                cancellationToken);
+    }
+
+    public Task<int> RedeemApprovedAsync(
+        Guid requestId,
+        Guid doctorProfileId,
+        Guid patientProfileId,
+        DateTime redeemedAt,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.PatientAccessRequests
+            .Where(request =>
+                request.Id == requestId &&
+                request.DoctorProfileId == doctorProfileId &&
+                request.PatientProfileId == patientProfileId &&
+                request.Status == PatientAccessRequestStatus.Approved &&
+                request.CodeExpiresAt > redeemedAt)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(request => request.Status, PatientAccessRequestStatus.Redeemed)
+                    .SetProperty(request => request.RedeemedAt, redeemedAt)
+                    .SetProperty(request => request.UpdatedAt, redeemedAt),
+                cancellationToken);
+    }
+
+    public void AddAccess(DoctorPatientAccess access)
+    {
+        dbContext.DoctorPatientAccesses.Add(access);
+    }
 }

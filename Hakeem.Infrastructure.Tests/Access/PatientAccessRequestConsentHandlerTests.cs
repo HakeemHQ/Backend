@@ -1,4 +1,5 @@
 using Hakeem.Application.Common.Interfaces;
+using Hakeem.Application.Configurations;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Features.PatientAccessRequests.Commands.ApprovePatientAccessRequest;
@@ -9,6 +10,7 @@ using Hakeem.Application.Repositories.PatientAccessRequests;
 using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Access;
+using Microsoft.Extensions.Options;
 
 namespace Hakeem.Infrastructure.Tests.Access;
 
@@ -60,7 +62,8 @@ public sealed class PatientAccessRequestConsentHandlerTests
             new FakePatientProfileRepository(patient),
             repository,
             new FakeAccessCodeService(),
-            new FakeCurrentUserContext(patient.UserId));
+            new FakeCurrentUserContext(patient.UserId),
+            Options.Create(new PatientAccessConfiguration()));
 
         var result = await handler.Handle(
             new ApprovePatientAccessRequestCommand(accessRequest.Id),
@@ -87,7 +90,8 @@ public sealed class PatientAccessRequestConsentHandlerTests
             new FakePatientProfileRepository(patient),
             repository,
             new FakeAccessCodeService(),
-            new FakeCurrentUserContext(patient.UserId));
+            new FakeCurrentUserContext(patient.UserId),
+            Options.Create(new PatientAccessConfiguration()));
 
         var exception = await Assert.ThrowsAsync<NotFoundException>(() =>
             handler.Handle(
@@ -109,7 +113,8 @@ public sealed class PatientAccessRequestConsentHandlerTests
             new FakePatientProfileRepository(patient),
             new FakeAccessRequestRepository(accessRequest),
             codeService,
-            new FakeCurrentUserContext(patient.UserId));
+            new FakeCurrentUserContext(patient.UserId),
+            Options.Create(new PatientAccessConfiguration()));
 
         var exception = await Assert.ThrowsAsync<ConflictException>(() =>
             handler.Handle(
@@ -133,7 +138,8 @@ public sealed class PatientAccessRequestConsentHandlerTests
             new FakePatientProfileRepository(patient),
             repository,
             new FakeAccessCodeService(),
-            new FakeCurrentUserContext(patient.UserId));
+            new FakeCurrentUserContext(patient.UserId),
+            Options.Create(new PatientAccessConfiguration()));
 
         var exception = await Assert.ThrowsAsync<ConflictException>(() =>
             handler.Handle(
@@ -325,6 +331,30 @@ public sealed class PatientAccessRequestConsentHandlerTests
             throw new NotSupportedException();
 
         public void Add(PatientAccessRequest accessRequest) =>
+            throw new NotSupportedException();
+
+        public Task<IReadOnlyList<PatientAccessRequest>> GetCodeCandidatesAsync(
+            Guid doctorProfileId,
+            Guid patientProfileId,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<int> ExpireStaleActiveAccessAsync(
+            Guid doctorProfileId,
+            Guid patientProfileId,
+            DateTime utcNow,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<int> RedeemApprovedAsync(
+            Guid requestId,
+            Guid doctorProfileId,
+            Guid patientProfileId,
+            DateTime redeemedAt,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public void AddAccess(DoctorPatientAccess access) =>
             throw new NotSupportedException();
     }
 }

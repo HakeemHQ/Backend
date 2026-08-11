@@ -371,4 +371,16 @@
   <data name="PatientAccess.RequestRejected" xml:space="preserve">
     <value>Patient access request rejected successfully.</value>
   </data>
+  <data name="PatientAccess.InvalidCode" xml:space="preserve">
+    <value>The one-time access code is invalid.</value>
+  </data>
+  <data name="PatientAccess.CodeExpired" xml:space="preserve">
+    <value>The one-time access code has expired.</value>
+  </data>
+  <data name="PatientAccess.CodeAlreadyRedeemed" xml:space="preserve">
+    <value>The one-time access code has already been redeemed.</value>
+  </data>
+  <data name="PatientAccess.SessionCreated" xml:space="preserve">
+    <value>Temporary patient access was created successfully.</value>
+  </data>
 </root>

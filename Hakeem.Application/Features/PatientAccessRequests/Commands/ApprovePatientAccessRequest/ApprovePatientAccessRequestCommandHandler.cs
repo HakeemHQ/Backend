@@ -1,4 +1,5 @@
 using Hakeem.Application.Common.Interfaces;
+using Hakeem.Application.Configurations;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Interfaces.Access;
@@ -6,6 +7,7 @@ using Hakeem.Application.Repositories.PatientAccessRequests;
 using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Domain.Enums.Access;
 using MediatR;
+using Microsoft.Extensions.Options;
 
 namespace Hakeem.Application.Features.PatientAccessRequests.Commands.ApprovePatientAccessRequest;
 
@@ -13,10 +15,12 @@ public sealed class ApprovePatientAccessRequestCommandHandler(
     IPatientProfileRepository patientProfileRepository,
     IPatientAccessRequestRepository accessRequestRepository,
     IOneTimeAccessCodeService accessCodeService,
-    ICurrentUserContext currentUserContext)
+    ICurrentUserContext currentUserContext,
+    IOptions<PatientAccessConfiguration> options)
     : IRequestHandler<ApprovePatientAccessRequestCommand, ApprovePatientAccessRequestResult>
 {
-    private static readonly TimeSpan CodeLifetime = TimeSpan.FromMinutes(6);
+    private readonly TimeSpan _codeLifetime = TimeSpan.FromMinutes(
+        options.Value.CodeLifetimeMinutes);
 
     public async Task<ApprovePatientAccessRequestResult> Handle(
         ApprovePatientAccessRequestCommand request,
@@ -48,7 +52,7 @@ public sealed class ApprovePatientAccessRequestCommandHandler(
 
         var issuedCode = accessCodeService.Generate();
         var approvedAt = DateTime.UtcNow;
-        var codeExpiresAt = approvedAt.Add(CodeLifetime);
+        var codeExpiresAt = approvedAt.Add(_codeLifetime);
         var affectedRows = await accessRequestRepository.ApprovePendingAsync(
             accessRequest.Id,
             patient.Id,

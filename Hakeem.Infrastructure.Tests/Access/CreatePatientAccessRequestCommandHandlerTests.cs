@@ -264,6 +264,30 @@ public sealed class CreatePatientAccessRequestCommandHandlerTests
             DateTime rejectedAt,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+
+        public Task<IReadOnlyList<PatientAccessRequest>> GetCodeCandidatesAsync(
+            Guid doctorProfileId,
+            Guid patientProfileId,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<int> ExpireStaleActiveAccessAsync(
+            Guid doctorProfileId,
+            Guid patientProfileId,
+            DateTime utcNow,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<int> RedeemApprovedAsync(
+            Guid requestId,
+            Guid doctorProfileId,
+            Guid patientProfileId,
+            DateTime redeemedAt,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public void AddAccess(DoctorPatientAccess access) =>
+            throw new NotSupportedException();
     }
 
     private sealed class FakeUnitOfWork : IUnitOfWork

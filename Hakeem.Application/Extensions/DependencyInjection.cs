@@ -24,6 +24,7 @@ public static class DependencyInjection
         AddGeminiChat(services, configuration);
         AddMedicalIntelligenceAgent(services, configuration);
         AddMedicalCvPreviewLinks(services, configuration);
+        AddPatientAccess(services, configuration);
 
         services.RegisterServicesWithLifetime(assembly);
         services.AddScoped<
@@ -116,6 +117,21 @@ public static class DependencyInjection
             .Validate(
                 options => options.LifetimeMinutes is > 0 and <= 60,
                 "Medical CV preview link lifetime must be between 1 and 60 minutes.")
+            .ValidateOnStart();
+    }
+
+    private static void AddPatientAccess(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddOptions<PatientAccessConfiguration>()
+            .Bind(configuration.GetSection(PatientAccessConfiguration.SectionName))
+            .Validate(
+                options => options.CodeLifetimeMinutes is > 0 and <= 60,
+                "Patient access code lifetime must be between 1 and 60 minutes.")
+            .Validate(
+                options => options.AccessLifetimeMinutes is > 0 and <= 1_440,
+                "Patient access lifetime must be between 1 and 1440 minutes.")
             .ValidateOnStart();
     }
 

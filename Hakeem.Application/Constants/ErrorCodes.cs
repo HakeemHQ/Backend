@@ -64,6 +64,10 @@ public static class ErrorCodes
     public const string PatientAccessRequestsRetrieved = "PatientAccess.RequestsRetrieved";
     public const string PatientAccessRequestApproved = "PatientAccess.RequestApproved";
     public const string PatientAccessRequestRejected = "PatientAccess.RequestRejected";
+    public const string PatientAccessInvalidCode = "PatientAccess.InvalidCode";
+    public const string PatientAccessCodeExpired = "PatientAccess.CodeExpired";
+    public const string PatientAccessCodeAlreadyRedeemed = "PatientAccess.CodeAlreadyRedeemed";
+    public const string PatientAccessSessionCreated = "PatientAccess.SessionCreated";
 
     // -- Role  --------------------------------------------
     public const string RoleNotFound = "Role.NotFound";

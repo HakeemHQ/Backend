@@ -367,4 +367,16 @@
   <data name="PatientAccess.RequestRejected" xml:space="preserve">
     <value>تم رفض طلب الوصول إلى المريض بنجاح.</value>
   </data>
+  <data name="PatientAccess.InvalidCode" xml:space="preserve">
+    <value>رمز الوصول لمرة واحدة غير صالح.</value>
+  </data>
+  <data name="PatientAccess.CodeExpired" xml:space="preserve">
+    <value>انتهت صلاحية رمز الوصول لمرة واحدة.</value>
+  </data>
+  <data name="PatientAccess.CodeAlreadyRedeemed" xml:space="preserve">
+    <value>تم استخدام رمز الوصول لمرة واحدة بالفعل.</value>
+  </data>
+  <data name="PatientAccess.SessionCreated" xml:space="preserve">
+    <value>تم إنشاء صلاحية وصول مؤقتة للمريض بنجاح.</value>
+  </data>
 </root>

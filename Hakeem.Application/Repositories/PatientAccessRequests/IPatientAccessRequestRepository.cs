@@ -45,4 +45,24 @@ public interface IPatientAccessRequestRepository : IScoped
         Guid patientProfileId,
         DateTime rejectedAt,
         CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<PatientAccessRequest>> GetCodeCandidatesAsync(
+        Guid doctorProfileId,
+        Guid patientProfileId,
+        CancellationToken cancellationToken);
+
+    Task<int> ExpireStaleActiveAccessAsync(
+        Guid doctorProfileId,
+        Guid patientProfileId,
+        DateTime utcNow,
+        CancellationToken cancellationToken);
+
+    Task<int> RedeemApprovedAsync(
+        Guid requestId,
+        Guid doctorProfileId,
+        Guid patientProfileId,
+        DateTime redeemedAt,
+        CancellationToken cancellationToken);
+
+    void AddAccess(DoctorPatientAccess access);
 }
