@@ -341,4 +341,19 @@
   <data name="PatientIdentity.Verified" xml:space="preserve">
     <value>Patient identity verified successfully.</value>
   </data>
+  <data name="PatientAccess.PatientNotFound" xml:space="preserve">
+    <value>No patient was found for the supplied patient code.</value>
+  </data>
+  <data name="PatientAccess.PatientNotVerified" xml:space="preserve">
+    <value>The patient's identity must be verified before access can be requested.</value>
+  </data>
+  <data name="PatientAccess.PendingRequestExists" xml:space="preserve">
+    <value>A pending access request already exists for this patient.</value>
+  </data>
+  <data name="PatientAccess.ActiveAccessExists" xml:space="preserve">
+    <value>You already have active access to this patient.</value>
+  </data>
+  <data name="PatientAccess.RequestCreated" xml:space="preserve">
+    <value>Patient access request created successfully.</value>
+  </data>
 </root>

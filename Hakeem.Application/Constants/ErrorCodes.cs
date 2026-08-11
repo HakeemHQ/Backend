@@ -53,6 +53,13 @@ public static class ErrorCodes
     public const string PatientIdentityAlreadyVerifiedWithDifferentNationalId = "PatientIdentity.AlreadyVerifiedWithDifferentNationalId";
     public const string PatientIdentityVerified = "PatientIdentity.Verified";
 
+    // -- Patient access  --------------------------------------------
+    public const string PatientAccessPatientNotFound = "PatientAccess.PatientNotFound";
+    public const string PatientAccessPatientNotVerified = "PatientAccess.PatientNotVerified";
+    public const string PatientAccessPendingRequestExists = "PatientAccess.PendingRequestExists";
+    public const string PatientAccessActiveAccessExists = "PatientAccess.ActiveAccessExists";
+    public const string PatientAccessRequestCreated = "PatientAccess.RequestCreated";
+
     // -- Role  --------------------------------------------
     public const string RoleNotFound = "Role.NotFound";
 

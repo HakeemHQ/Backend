@@ -337,4 +337,19 @@
   <data name="PatientIdentity.Verified" xml:space="preserve">
     <value>تم توثيق هوية المريض بنجاح.</value>
   </data>
+  <data name="PatientAccess.PatientNotFound" xml:space="preserve">
+    <value>لم يتم العثور على مريض باستخدام كود المريض المُدخل.</value>
+  </data>
+  <data name="PatientAccess.PatientNotVerified" xml:space="preserve">
+    <value>يجب توثيق هوية المريض قبل طلب الوصول.</value>
+  </data>
+  <data name="PatientAccess.PendingRequestExists" xml:space="preserve">
+    <value>يوجد طلب وصول قيد الانتظار لهذا المريض بالفعل.</value>
+  </data>
+  <data name="PatientAccess.ActiveAccessExists" xml:space="preserve">
+    <value>لديك صلاحية وصول نشطة لهذا المريض بالفعل.</value>
+  </data>
+  <data name="PatientAccess.RequestCreated" xml:space="preserve">
+    <value>تم إنشاء طلب الوصول إلى المريض بنجاح.</value>
+  </data>
 </root>

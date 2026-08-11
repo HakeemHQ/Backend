@@ -44,6 +44,14 @@ public sealed class AccessDomainModelConfigurationTests
         Assert.True(codeIndex.IsUnique);
         Assert.Equal("[CodeHash] IS NOT NULL", codeIndex.GetFilter());
 
+        var pendingRequestIndex = Assert.Single(
+            requestEntity.GetIndexes(),
+            index => index.Properties.Count == 2 &&
+                index.Properties.Any(property => property.Name == nameof(PatientAccessRequest.DoctorProfileId)) &&
+                index.Properties.Any(property => property.Name == nameof(PatientAccessRequest.PatientProfileId)));
+        Assert.True(pendingRequestIndex.IsUnique);
+        Assert.Equal("[Status] = 'Pending'", pendingRequestIndex.GetFilter());
+
         var accessEntity = context.Model.FindEntityType(typeof(DoctorPatientAccess));
         Assert.NotNull(accessEntity);
         var requestIndex = Assert.Single(

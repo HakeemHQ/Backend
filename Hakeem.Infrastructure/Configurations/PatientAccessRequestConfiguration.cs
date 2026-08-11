@@ -26,6 +26,14 @@ public sealed class PatientAccessRequestConfiguration
 
         builder.HasIndex(request => new
         {
+            request.DoctorProfileId,
+            request.PatientProfileId
+        })
+            .IsUnique()
+            .HasFilter("[Status] = 'Pending'");
+
+        builder.HasIndex(request => new
+        {
             request.PatientProfileId,
             request.Status,
             request.RequestedAt
