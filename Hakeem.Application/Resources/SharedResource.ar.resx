@@ -192,6 +192,9 @@
   <data name="Validation.InvalidGender" xml:space="preserve">
     <value>يجب أن يكون النوع ذكرًا أو أنثى.</value>
   </data>
+  <data name="Validation.InvalidNationalId" xml:space="preserve">
+    <value>يجب أن يكون الرقم القومي المصري مكونًا من 14 رقمًا وأن يطابق تاريخ الميلاد.</value>
+  </data>
   <data name="Validation.BirthDateInPast" xml:space="preserve">
     <value>يجب أن يكون تاريخ الميلاد في الماضي.</value>
   </data>

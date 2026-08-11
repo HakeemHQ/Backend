@@ -2,7 +2,9 @@ using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Repositories.Users;
 using Hakeem.Application.Interfaces.Services.Auth;
+using Hakeem.Application.Interfaces.Identity;
 using Hakeem.Domain.Entities;
+using Hakeem.Domain.Enums.Identity;
 using Hakeem.Domain.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -12,12 +14,10 @@ namespace Hakeem.Application.Features.Auth.Commands.Registration;
 public sealed class RegisterCommandHandler(
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
+    IPatientCodeGenerator patientCodeGenerator,
     IUnitOfWork unitOfWork)
     : IRequestHandler<RegisterCommand, RegisterResult>
 {
-    private const string PatientUserType = "Patient";
-    private const string ActiveStatus = "Active";
-
     public async Task<RegisterResult> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
@@ -38,15 +38,18 @@ public sealed class RegisterCommandHandler(
             Id = Guid.NewGuid(),
             UserId = userId,
             FullName = $"{firstName} {lastName}",
-            BirthDate = request.BirthDate.ToDateTime(TimeOnly.MinValue)
+            BirthDate = request.BirthDate.ToDateTime(TimeOnly.MinValue),
+            PatientCode = await patientCodeGenerator.GenerateUniqueAsync(cancellationToken),
+            NationalId = request.NationalId,
+            IdentityVerificationStatus = IdentityVerificationStatus.Pending
         };
 
         var user = new User
         {
             Id = userId,
             Email = normalizedEmail,
-            UserType = PatientUserType,
-            Status = ActiveStatus,
+            Role = ApplicationRole.Patient,
+            Status = AccountStatus.Active,
             FirstName = firstName,
             LastName = lastName,
             PhoneNumber = request.PhoneNumber.Trim(),
@@ -68,11 +71,13 @@ public sealed class RegisterCommandHandler(
         return new RegisterResult(
             user.Id,
             user.Email,
-            user.UserType,
-            user.Status,
+            user.Role.ToString(),
+            user.Status.ToString(),
             new RegisterProfileResult(
                 profile.FullName,
-                DateOnly.FromDateTime(profile.BirthDate)));
+                DateOnly.FromDateTime(profile.BirthDate),
+                profile.PatientCode,
+                profile.IdentityVerificationStatus.ToString()));
     }
 
     private static bool IsEmailUniquenessViolation(DbUpdateException exception)

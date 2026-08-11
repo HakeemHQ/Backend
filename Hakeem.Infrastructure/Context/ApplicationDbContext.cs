@@ -17,6 +17,7 @@ public class ApplicationDbContext : DbContext
     public virtual DbSet<EmailTemplate> EmailTemplates { get; set; }
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<PatientProfile> PatientProfiles { get; set; }
+    public virtual DbSet<DoctorProfile> DoctorProfiles { get; set; }
     public virtual DbSet<MedicalDocument> MedicalDocuments { get; set; }
     public virtual DbSet<ExtractedItem> ExtractedItems { get; set; }
     public virtual DbSet<ExtractedField> ExtractedFields { get; set; }

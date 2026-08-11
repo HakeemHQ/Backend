@@ -5,6 +5,7 @@ using Hakeem.Application.Repositories.Users;
 using Hakeem.Application.Interfaces.Services.Auth;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Interfaces;
+using Hakeem.Domain.Enums.Identity;
 using MediatR;
 
 namespace Hakeem.Application.Features.Auth.Commands.Login;
@@ -17,8 +18,6 @@ public sealed class LoginCommandHandler(
     IUnitOfWork unitOfWork)
     : IRequestHandler<LoginCommand, LoginResult>
 {
-    private const string ActiveStatus = "Active";
-
     public async Task<LoginResult> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
@@ -29,7 +28,7 @@ public sealed class LoginCommandHandler(
             throw new UnAuthorizedException(ErrorCodes.AuthInvalidCredentials);
         }
 
-        if (!string.Equals(user.Status, ActiveStatus, StringComparison.OrdinalIgnoreCase))
+        if (user.Status != AccountStatus.Active)
         {
             throw new UnAuthorizedException(ErrorCodes.AuthAccountInactive);
         }
@@ -56,6 +55,6 @@ public sealed class LoginCommandHandler(
             "Bearer",
             issuedTokens.AccessTokenExpiresAt,
             issuedTokens.RefreshTokenExpiresAt,
-            new LoginUserResult(user.Id, user.Email, user.UserType));
+            new LoginUserResult(user.Id, user.Email, user.Role.ToString()));
     }
 }

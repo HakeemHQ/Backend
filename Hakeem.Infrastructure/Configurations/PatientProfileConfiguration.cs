@@ -1,4 +1,5 @@
 using Hakeem.Domain.Entities;
+using Hakeem.Domain.Enums.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,6 +10,29 @@ public class PatientProfileConfiguration : IEntityTypeConfiguration<PatientProfi
     public void Configure(EntityTypeBuilder<PatientProfile> builder)
     {
         builder.HasKey(e => e.Id);
+        builder.Property(profile => profile.PatientCode)
+            .HasMaxLength(8);
+        builder.HasIndex(profile => profile.PatientCode)
+            .IsUnique();
+
+        builder.Property(profile => profile.NationalId)
+            .HasMaxLength(14);
+
+        builder.Property(profile => profile.IdentityVerificationStatus)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(IdentityVerificationStatus.Pending);
+
+        builder.Property(profile => profile.VerifiedNationalId)
+            .HasMaxLength(14);
+        builder.HasIndex(profile => profile.VerifiedNationalId)
+            .IsUnique()
+            .HasFilter("[VerifiedNationalId] IS NOT NULL");
+
+        builder.HasOne(profile => profile.VerifiedByDoctor)
+            .WithMany(doctor => doctor.VerifiedPatients)
+            .HasForeignKey(profile => profile.VerifiedByDoctorId)
+            .OnDelete(DeleteBehavior.Restrict);
         
         builder.HasMany(p => p.MedicalDocuments)
                .WithOne(d => d.PatientProfile)

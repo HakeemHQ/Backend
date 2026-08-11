@@ -61,5 +61,12 @@ public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand
             .WithMessage(localizer["Validation.Required"].Value)
             .LessThan(DateOnly.FromDateTime(DateTime.UtcNow))
             .WithMessage(localizer["Validation.BirthDateInPast"].Value);
+
+        RuleFor(x => x.NationalId)
+            .NotEmpty()
+            .WithMessage(localizer["Validation.Required"].Value)
+            .Must((command, nationalId) =>
+                EgyptianNationalId.IsStructurallyValid(nationalId, command.BirthDate))
+            .WithMessage(localizer["Validation.InvalidNationalId"].Value);
     }
 }

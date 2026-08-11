@@ -4,6 +4,7 @@ using Hakeem.Application.Repositories.Auth;
 using Hakeem.Application.Interfaces.Services.Auth;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Interfaces;
+using Hakeem.Domain.Enums.Identity;
 using MediatR;
 
 namespace Hakeem.Application.Features.Auth.Commands.Refresh;
@@ -14,8 +15,6 @@ public sealed class RefreshCommandHandler(
     IUnitOfWork unitOfWork)
     : IRequestHandler<RefreshCommand, RefreshResult>
 {
-    private const string ActiveStatus = "Active";
-
     public async Task<RefreshResult> Handle(
         RefreshCommand request,
         CancellationToken cancellationToken)
@@ -29,10 +28,7 @@ public sealed class RefreshCommandHandler(
             storedToken.IsUsed ||
             storedToken.IsRevoked ||
             storedToken.ExpiryDate <= DateTime.UtcNow ||
-            !string.Equals(
-                storedToken.User.Status,
-                ActiveStatus,
-                StringComparison.OrdinalIgnoreCase))
+            storedToken.User.Status != AccountStatus.Active)
         {
             throw new UnAuthorizedException(ErrorCodes.AuthInvalidRefreshToken);
         }

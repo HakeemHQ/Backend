@@ -1,6 +1,7 @@
 using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Repositories.PatientProfiles;
+using Hakeem.Application.Features.PatientProfile.DTOs;
 using MediatR;
 
 namespace Hakeem.Application.Features.PatientProfile.Commands.UpdateProfile;
@@ -30,11 +31,15 @@ public sealed class UpdateProfileCommandHandler(
         }
 
         return new UpdateProfileResult(
+            profile.Id,
             profile.UserId,
+            profile.PatientCode,
             profile.User.Email,
             profile.FullName,
             profile.BirthDate.ToString("yyyy-MM-dd"),
-            profile.User.Status,
+            NationalIdMasker.Mask(profile.NationalId),
+            profile.IdentityVerificationStatus.ToString(),
+            profile.User.Status.ToString(),
             profile.User.FirstName,
             profile.User.LastName,
             profile.User.PhoneNumber,

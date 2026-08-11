@@ -196,6 +196,9 @@
   <data name="Validation.InvalidGender" xml:space="preserve">
     <value>Gender must be Male or Female.</value>
   </data>
+  <data name="Validation.InvalidNationalId" xml:space="preserve">
+    <value>National ID must be a valid 14-digit Egyptian National ID matching the birth date.</value>
+  </data>
   <data name="Validation.BirthDateInPast" xml:space="preserve">
     <value>Birth date must be in the past.</value>
   </data>

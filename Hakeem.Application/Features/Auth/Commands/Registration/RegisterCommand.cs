@@ -11,6 +11,7 @@ public sealed class RegisterCommand : IRequest<RegisterResult>
     public string PhoneNumber { get; set; } = string.Empty;
     public string Gender { get; set; } = string.Empty;
     public DateOnly BirthDate { get; set; }
+    public string NationalId { get; set; } = string.Empty;
 }
 
 public sealed record RegisterResult(
@@ -22,4 +23,6 @@ public sealed record RegisterResult(
 
 public sealed record RegisterProfileResult(
     string FullName,
-    DateOnly BirthDate);
+    DateOnly BirthDate,
+    string PatientCode,
+    string IdentityVerificationStatus);

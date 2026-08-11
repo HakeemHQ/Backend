@@ -11,6 +11,13 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasKey(e => e.Id);
         builder.HasIndex(e => e.Email).IsUnique();
         builder.Property(e => e.Email).HasMaxLength(256);
+        builder.Property(e => e.Role)
+            .HasColumnName("UserType")
+            .HasConversion<string>()
+            .HasMaxLength(20);
+        builder.Property(e => e.Status)
+            .HasConversion<string>()
+            .HasMaxLength(20);
 
         builder.HasOne(u => u.PatientProfile)
                .WithOne(p => p.User)

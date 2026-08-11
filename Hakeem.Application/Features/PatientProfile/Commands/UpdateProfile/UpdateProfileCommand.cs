@@ -13,10 +13,14 @@ public sealed class UpdateProfileCommand : IRequest<UpdateProfileResult>
 }
 
 public sealed record UpdateProfileResult(
+    Guid PatientId,
     Guid UserId,
+    string PatientCode,
     string Email,
     string FullName,
     string BirthDate,
+    string NationalIdMasked,
+    string IdentityVerificationStatus,
     string Status,
     string FirstName,
     string LastName,

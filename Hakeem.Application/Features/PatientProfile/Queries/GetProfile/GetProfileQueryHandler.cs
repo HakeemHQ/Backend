@@ -25,11 +25,15 @@ public sealed class GetProfileQueryHandler(
         }
 
         return new PatientProfileResponse(
+            profile.Id,
             profile.UserId,
+            profile.PatientCode,
             profile.User.Email,
             profile.FullName,
             profile.BirthDate.ToString("yyyy-MM-dd"),
-            profile.User.Status,
+            NationalIdMasker.Mask(profile.NationalId),
+            profile.IdentityVerificationStatus.ToString(),
+            profile.User.Status.ToString(),
             profile.User.FirstName,
             profile.User.LastName,
             profile.User.PhoneNumber,

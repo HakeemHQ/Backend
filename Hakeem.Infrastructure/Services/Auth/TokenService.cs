@@ -31,10 +31,10 @@ public sealed class TokenService(IOptions<JwtConfiguration> options) : ITokenSer
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}".Trim()),
-            new Claim(ClaimTypes.Role, user.UserType),
+            new Claim(ClaimTypes.Role, user.Role.ToString()),
             new Claim("userId", user.Id.ToString()),
-            new Claim("userType", user.UserType),
-            new Claim("status", user.Status),
+            new Claim("userType", user.Role.ToString()),
+            new Claim("status", user.Status.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, jwtId)
         };
 
