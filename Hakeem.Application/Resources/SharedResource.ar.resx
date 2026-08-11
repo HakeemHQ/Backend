@@ -319,4 +319,22 @@
   <data name="MedicalIntelligence.Clarification" xml:space="preserve">
     <value>يرجى توضيح المعلومات التي تريدها من سجلاتك الطبية، أو تحديد موضوع السيرة الطبية المركزة.</value>
   </data>
+  <data name="PatientIdentity.NotFound" xml:space="preserve">
+    <value>لم يتم العثور على مريض باستخدام كود المريض المُدخل.</value>
+  </data>
+  <data name="PatientIdentity.InvalidPatientCode" xml:space="preserve">
+    <value>يجب ألا يتجاوز كود المريض 8 أحرف.</value>
+  </data>
+  <data name="PatientIdentity.NationalIdMismatch" xml:space="preserve">
+    <value>بنية الرقم القومي لا تتطابق مع بيانات هوية المريض.</value>
+  </data>
+  <data name="PatientIdentity.NationalIdAlreadyVerified" xml:space="preserve">
+    <value>تم توثيق هذا الرقم القومي لمريض آخر بالفعل.</value>
+  </data>
+  <data name="PatientIdentity.AlreadyVerifiedWithDifferentNationalId" xml:space="preserve">
+    <value>تم توثيق هذا المريض مسبقًا برقم قومي مختلف.</value>
+  </data>
+  <data name="PatientIdentity.Verified" xml:space="preserve">
+    <value>تم توثيق هوية المريض بنجاح.</value>
+  </data>
 </root>

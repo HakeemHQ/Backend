@@ -45,6 +45,14 @@ public static class ErrorCodes
     public const string UserUpdated = "User.Updated";
     public const string UserStatusUpdated = "User.StatusUpdated";
 
+    // -- Patient identity  --------------------------------------------
+    public const string PatientIdentityNotFound = "PatientIdentity.NotFound";
+    public const string PatientIdentityInvalidPatientCode = "PatientIdentity.InvalidPatientCode";
+    public const string PatientIdentityNationalIdMismatch = "PatientIdentity.NationalIdMismatch";
+    public const string PatientIdentityNationalIdAlreadyVerified = "PatientIdentity.NationalIdAlreadyVerified";
+    public const string PatientIdentityAlreadyVerifiedWithDifferentNationalId = "PatientIdentity.AlreadyVerifiedWithDifferentNationalId";
+    public const string PatientIdentityVerified = "PatientIdentity.Verified";
+
     // -- Role  --------------------------------------------
     public const string RoleNotFound = "Role.NotFound";
 

@@ -323,4 +323,22 @@
   <data name="MedicalIntelligence.Clarification" xml:space="preserve">
     <value>Please clarify which information you want from your medical records, or the specific topic the focused medical CV should cover.</value>
   </data>
+  <data name="PatientIdentity.NotFound" xml:space="preserve">
+    <value>No patient was found for the supplied patient code.</value>
+  </data>
+  <data name="PatientIdentity.InvalidPatientCode" xml:space="preserve">
+    <value>Patient code must not exceed 8 characters.</value>
+  </data>
+  <data name="PatientIdentity.NationalIdMismatch" xml:space="preserve">
+    <value>National ID structure does not match the patient's identity data.</value>
+  </data>
+  <data name="PatientIdentity.NationalIdAlreadyVerified" xml:space="preserve">
+    <value>This National ID is already verified for another patient.</value>
+  </data>
+  <data name="PatientIdentity.AlreadyVerifiedWithDifferentNationalId" xml:space="preserve">
+    <value>This patient is already verified with a different National ID.</value>
+  </data>
+  <data name="PatientIdentity.Verified" xml:space="preserve">
+    <value>Patient identity verified successfully.</value>
+  </data>
 </root>

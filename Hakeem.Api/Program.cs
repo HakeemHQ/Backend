@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Hakeem.Api.Authentication;
 using Hakeem.Api.Extensions;
+using Hakeem.Api.Validation;
 using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Common.ResponseModel;
 using Hakeem.Application.Configurations;
@@ -240,7 +241,7 @@ public class Program
             }
         }
     }
-    static BadRequestObjectResult ValidationResult(ActionContext context)
+    static IActionResult ValidationResult(ActionContext context)
     {
         var localizer = context.HttpContext.RequestServices
             .GetRequiredService<IStringLocalizer<SharedResource>>();
@@ -255,8 +256,15 @@ public class Program
                     ErrorCodes.ValidationRequired))
             .ToList();
 
-        return new BadRequestObjectResult(
-            GenericResponseModel<object>.Failure(localizer["Validation.Error"], errorList));
+        var statusCode = context.HttpContext.GetEndpoint()?
+            .Metadata.GetMetadata<ValidationStatusCodeAttribute>()?
+            .StatusCode ?? StatusCodes.Status400BadRequest;
+
+        return new ObjectResult(
+            GenericResponseModel<object>.Failure(localizer["Validation.Error"], errorList))
+        {
+            StatusCode = statusCode
+        };
     }
 
 }
