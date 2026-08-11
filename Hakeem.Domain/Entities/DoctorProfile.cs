@@ -8,4 +8,8 @@ public class DoctorProfile : BaseEntity
 
     public virtual User User { get; set; } = null!;
     public virtual ICollection<PatientProfile> VerifiedPatients { get; set; } = new List<PatientProfile>();
+    public virtual ICollection<PatientAccessRequest> PatientAccessRequests { get; set; }
+        = new List<PatientAccessRequest>();
+    public virtual ICollection<DoctorPatientAccess> PatientAccesses { get; set; }
+        = new List<DoctorPatientAccess>();
 }

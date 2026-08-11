@@ -26,4 +26,8 @@ public class PatientProfile : BaseEntity
     public virtual ICollection<Reminder> Reminders { get; set; } = new List<Reminder>();
     public virtual ICollection<ConsentRecord> ConsentRecords { get; set; } = new List<ConsentRecord>();
     public virtual ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
+    public virtual ICollection<PatientAccessRequest> DoctorAccessRequests { get; set; }
+        = new List<PatientAccessRequest>();
+    public virtual ICollection<DoctorPatientAccess> DoctorAccesses { get; set; }
+        = new List<DoctorPatientAccess>();
 }
