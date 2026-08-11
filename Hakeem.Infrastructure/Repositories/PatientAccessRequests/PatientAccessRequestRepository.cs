@@ -52,4 +52,84 @@ public sealed class PatientAccessRequestRepository(ApplicationDbContext dbContex
     {
         dbContext.PatientAccessRequests.Add(accessRequest);
     }
+
+    public async Task<IReadOnlyList<PatientAccessRequest>> GetForPatientAsync(
+        Guid patientProfileId,
+        PatientAccessRequestStatus? status,
+        CancellationToken cancellationToken)
+    {
+        var query = dbContext.PatientAccessRequests
+            .AsNoTracking()
+            .Include(request => request.Doctor)
+                .ThenInclude(doctor => doctor.User)
+            .Where(request => request.PatientProfileId == patientProfileId);
+
+        if (status.HasValue)
+        {
+            query = query.Where(request => request.Status == status.Value);
+        }
+
+        return await query
+            .OrderByDescending(request => request.RequestedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<PatientAccessRequest?> GetByIdForPatientAsync(
+        Guid requestId,
+        Guid patientProfileId,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.PatientAccessRequests
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                request =>
+                    request.Id == requestId &&
+                    request.PatientProfileId == patientProfileId,
+                cancellationToken);
+    }
+
+    public Task<int> ApprovePendingAsync(
+        Guid requestId,
+        Guid patientProfileId,
+        string codeHash,
+        DateTime approvedAt,
+        DateTime codeExpiresAt,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.PatientAccessRequests
+            .Where(request =>
+                request.Id == requestId &&
+                request.PatientProfileId == patientProfileId &&
+                request.Status == PatientAccessRequestStatus.Pending)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(
+                        request => request.Status,
+                        PatientAccessRequestStatus.Approved)
+                    .SetProperty(request => request.ApprovedAt, approvedAt)
+                    .SetProperty(request => request.CodeHash, codeHash)
+                    .SetProperty(request => request.CodeExpiresAt, codeExpiresAt)
+                    .SetProperty(request => request.UpdatedAt, approvedAt),
+                cancellationToken);
+    }
+
+    public Task<int> RejectPendingAsync(
+        Guid requestId,
+        Guid patientProfileId,
+        DateTime rejectedAt,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.PatientAccessRequests
+            .Where(request =>
+                request.Id == requestId &&
+                request.PatientProfileId == patientProfileId &&
+                request.Status == PatientAccessRequestStatus.Pending)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(
+                        request => request.Status,
+                        PatientAccessRequestStatus.Rejected)
+                    .SetProperty(request => request.UpdatedAt, rejectedAt),
+                cancellationToken);
+    }
 }

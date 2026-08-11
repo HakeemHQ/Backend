@@ -352,4 +352,19 @@
   <data name="PatientAccess.RequestCreated" xml:space="preserve">
     <value>تم إنشاء طلب الوصول إلى المريض بنجاح.</value>
   </data>
+  <data name="PatientAccess.RequestNotFound" xml:space="preserve">
+    <value>لم يتم العثور على طلب الوصول إلى المريض.</value>
+  </data>
+  <data name="PatientAccess.RequestAlreadyActedOn" xml:space="preserve">
+    <value>تم اتخاذ إجراء بشأن طلب الوصول إلى المريض بالفعل.</value>
+  </data>
+  <data name="PatientAccess.RequestsRetrieved" xml:space="preserve">
+    <value>تم استرجاع طلبات الوصول إلى المريض بنجاح.</value>
+  </data>
+  <data name="PatientAccess.RequestApproved" xml:space="preserve">
+    <value>تمت الموافقة على طلب الوصول إلى المريض بنجاح.</value>
+  </data>
+  <data name="PatientAccess.RequestRejected" xml:space="preserve">
+    <value>تم رفض طلب الوصول إلى المريض بنجاح.</value>
+  </data>
 </root>

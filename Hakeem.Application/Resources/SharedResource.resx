@@ -356,4 +356,19 @@
   <data name="PatientAccess.RequestCreated" xml:space="preserve">
     <value>Patient access request created successfully.</value>
   </data>
+  <data name="PatientAccess.RequestNotFound" xml:space="preserve">
+    <value>The patient access request was not found.</value>
+  </data>
+  <data name="PatientAccess.RequestAlreadyActedOn" xml:space="preserve">
+    <value>This patient access request has already been acted on.</value>
+  </data>
+  <data name="PatientAccess.RequestsRetrieved" xml:space="preserve">
+    <value>Patient access requests retrieved successfully.</value>
+  </data>
+  <data name="PatientAccess.RequestApproved" xml:space="preserve">
+    <value>Patient access request approved successfully.</value>
+  </data>
+  <data name="PatientAccess.RequestRejected" xml:space="preserve">
+    <value>Patient access request rejected successfully.</value>
+  </data>
 </root>

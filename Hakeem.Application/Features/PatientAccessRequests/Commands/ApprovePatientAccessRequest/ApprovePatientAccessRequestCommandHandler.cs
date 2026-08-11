@@ -1,0 +1,71 @@
+using Hakeem.Application.Common.Interfaces;
+using Hakeem.Application.Constants;
+using Hakeem.Application.Exceptions;
+using Hakeem.Application.Interfaces.Access;
+using Hakeem.Application.Repositories.PatientAccessRequests;
+using Hakeem.Application.Repositories.PatientProfiles;
+using Hakeem.Domain.Enums.Access;
+using MediatR;
+
+namespace Hakeem.Application.Features.PatientAccessRequests.Commands.ApprovePatientAccessRequest;
+
+public sealed class ApprovePatientAccessRequestCommandHandler(
+    IPatientProfileRepository patientProfileRepository,
+    IPatientAccessRequestRepository accessRequestRepository,
+    IOneTimeAccessCodeService accessCodeService,
+    ICurrentUserContext currentUserContext)
+    : IRequestHandler<ApprovePatientAccessRequestCommand, ApprovePatientAccessRequestResult>
+{
+    private static readonly TimeSpan CodeLifetime = TimeSpan.FromMinutes(6);
+
+    public async Task<ApprovePatientAccessRequestResult> Handle(
+        ApprovePatientAccessRequestCommand request,
+        CancellationToken cancellationToken)
+    {
+        var patient = await patientProfileRepository.GetByUserIdAsync(
+            currentUserContext.UserId,
+            cancellationToken);
+
+        if (patient is null)
+        {
+            throw new UnAuthorizedException(ErrorCodes.AuthUnauthorized);
+        }
+
+        var accessRequest = await accessRequestRepository.GetByIdForPatientAsync(
+            request.RequestId,
+            patient.Id,
+            cancellationToken);
+
+        if (accessRequest is null)
+        {
+            throw new NotFoundException(ErrorCodes.PatientAccessRequestNotFound);
+        }
+
+        if (accessRequest.Status != PatientAccessRequestStatus.Pending)
+        {
+            throw new ConflictException(ErrorCodes.PatientAccessRequestAlreadyActedOn);
+        }
+
+        var issuedCode = accessCodeService.Generate();
+        var approvedAt = DateTime.UtcNow;
+        var codeExpiresAt = approvedAt.Add(CodeLifetime);
+        var affectedRows = await accessRequestRepository.ApprovePendingAsync(
+            accessRequest.Id,
+            patient.Id,
+            issuedCode.CodeHash,
+            approvedAt,
+            codeExpiresAt,
+            cancellationToken);
+
+        if (affectedRows != 1)
+        {
+            throw new ConflictException(ErrorCodes.PatientAccessRequestAlreadyActedOn);
+        }
+
+        return new ApprovePatientAccessRequestResult(
+            accessRequest.Id,
+            PatientAccessRequestStatus.Approved.ToString(),
+            issuedCode.Code,
+            codeExpiresAt);
+    }
+}

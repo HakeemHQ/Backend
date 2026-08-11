@@ -236,6 +236,34 @@ public sealed class CreatePatientAccessRequestCommandHandlerTests
         {
             AddedRequest = accessRequest;
         }
+
+        public Task<IReadOnlyList<PatientAccessRequest>> GetForPatientAsync(
+            Guid patientProfileId,
+            PatientAccessRequestStatus? status,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<PatientAccessRequest?> GetByIdForPatientAsync(
+            Guid requestId,
+            Guid patientProfileId,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<int> ApprovePendingAsync(
+            Guid requestId,
+            Guid patientProfileId,
+            string codeHash,
+            DateTime approvedAt,
+            DateTime codeExpiresAt,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<int> RejectPendingAsync(
+            Guid requestId,
+            Guid patientProfileId,
+            DateTime rejectedAt,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     private sealed class FakeUnitOfWork : IUnitOfWork

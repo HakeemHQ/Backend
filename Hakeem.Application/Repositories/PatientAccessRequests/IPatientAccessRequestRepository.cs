@@ -21,4 +21,28 @@ public interface IPatientAccessRequestRepository : IScoped
         CancellationToken cancellationToken);
 
     void Add(PatientAccessRequest accessRequest);
+
+    Task<IReadOnlyList<PatientAccessRequest>> GetForPatientAsync(
+        Guid patientProfileId,
+        Hakeem.Domain.Enums.Access.PatientAccessRequestStatus? status,
+        CancellationToken cancellationToken);
+
+    Task<PatientAccessRequest?> GetByIdForPatientAsync(
+        Guid requestId,
+        Guid patientProfileId,
+        CancellationToken cancellationToken);
+
+    Task<int> ApprovePendingAsync(
+        Guid requestId,
+        Guid patientProfileId,
+        string codeHash,
+        DateTime approvedAt,
+        DateTime codeExpiresAt,
+        CancellationToken cancellationToken);
+
+    Task<int> RejectPendingAsync(
+        Guid requestId,
+        Guid patientProfileId,
+        DateTime rejectedAt,
+        CancellationToken cancellationToken);
 }

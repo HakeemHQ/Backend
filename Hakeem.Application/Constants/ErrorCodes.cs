@@ -59,6 +59,11 @@ public static class ErrorCodes
     public const string PatientAccessPendingRequestExists = "PatientAccess.PendingRequestExists";
     public const string PatientAccessActiveAccessExists = "PatientAccess.ActiveAccessExists";
     public const string PatientAccessRequestCreated = "PatientAccess.RequestCreated";
+    public const string PatientAccessRequestNotFound = "PatientAccess.RequestNotFound";
+    public const string PatientAccessRequestAlreadyActedOn = "PatientAccess.RequestAlreadyActedOn";
+    public const string PatientAccessRequestsRetrieved = "PatientAccess.RequestsRetrieved";
+    public const string PatientAccessRequestApproved = "PatientAccess.RequestApproved";
+    public const string PatientAccessRequestRejected = "PatientAccess.RequestRejected";
 
     // -- Role  --------------------------------------------
     public const string RoleNotFound = "Role.NotFound";
