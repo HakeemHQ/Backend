@@ -39,7 +39,10 @@ public sealed class PatientAccessRequestConsentHandlerTests
             new FakeCurrentUserContext(patient.UserId));
 
         var result = await handler.Handle(
-            new GetPatientAccessRequestsQuery(PatientAccessRequestStatus.Pending),
+            new GetPatientAccessRequestsQuery(
+                PatientAccessRequestStatus.Pending,
+                PageNumber: 2,
+                PageSize: 5),
             CancellationToken.None);
 
         var item = Assert.Single(result.Items);
@@ -50,6 +53,9 @@ public sealed class PatientAccessRequestConsentHandlerTests
         Assert.Equal("Pending", item.Status);
         Assert.Equal(patient.Id, repository.QueriedPatientId);
         Assert.Equal(PatientAccessRequestStatus.Pending, repository.QueriedStatus);
+        Assert.Equal(2, result.PageNumber);
+        Assert.Equal(5, result.PageSize);
+        Assert.Equal(1, result.TotalCount);
     }
 
     [Fact]
@@ -257,24 +263,35 @@ public sealed class PatientAccessRequestConsentHandlerTests
         public int RejectAffectedRows { get; init; } = 1;
         public Guid? QueriedPatientId { get; private set; }
         public PatientAccessRequestStatus? QueriedStatus { get; private set; }
+        public int? QueriedPageNumber { get; private set; }
+        public int? QueriedPageSize { get; private set; }
         public string? StoredCodeHash { get; private set; }
         public DateTime? ApprovedAt { get; private set; }
         public DateTime? CodeExpiresAt { get; private set; }
         public DateTime? RejectedAt { get; private set; }
 
-        public Task<IReadOnlyList<PatientAccessRequest>> GetForPatientAsync(
+        public Task<Hakeem.Application.Common.PaginatedResult<PatientAccessRequest>> GetForPatientAsync(
             Guid patientProfileId,
             PatientAccessRequestStatus? status,
+            int pageNumber,
+            int pageSize,
             CancellationToken cancellationToken)
         {
             QueriedPatientId = patientProfileId;
             QueriedStatus = status;
+            QueriedPageNumber = pageNumber;
+            QueriedPageSize = pageSize;
             IReadOnlyList<PatientAccessRequest> result = request is not null &&
                 request.PatientProfileId == patientProfileId &&
                 (!status.HasValue || request.Status == status.Value)
                     ? [request]
                     : [];
-            return Task.FromResult(result);
+            return Task.FromResult(
+                new Hakeem.Application.Common.PaginatedResult<PatientAccessRequest>(
+                    result,
+                    result.Count,
+                    pageNumber,
+                    pageSize));
         }
 
         public Task<PatientAccessRequest?> GetByIdForPatientAsync(

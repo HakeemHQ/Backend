@@ -1,12 +1,12 @@
+using Hakeem.Application.Common;
 using MediatR;
 
 namespace Hakeem.Application.Features.DoctorPatientAccesses.Queries.GetPatientDoctorAccesses;
 
-public sealed record GetPatientDoctorAccessesQuery
-    : IRequest<GetPatientDoctorAccessesResult>;
-
-public sealed record GetPatientDoctorAccessesResult(
-    IReadOnlyList<PatientDoctorAccessItem> Items);
+public sealed record GetPatientDoctorAccessesQuery(
+    int PageNumber = 1,
+    int PageSize = 20)
+    : IRequest<PaginatedResult<PatientDoctorAccessItem>>;
 
 public sealed record PatientDoctorAccessItem(
     Guid AccessId,

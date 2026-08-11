@@ -28,7 +28,10 @@ public sealed class DoctorPatientAccessManagementHandlerTests
             new FakeCurrentUserContext(doctor.UserId));
 
         var result = await handler.Handle(
-            new GetDoctorPatientAccessesQuery(),
+            new GetDoctorPatientAccessesQuery(
+                DoctorPatientAccessStatus.Active,
+                PageNumber: 2,
+                PageSize: 5),
             CancellationToken.None);
 
         var item = Assert.Single(result.Items);
@@ -39,6 +42,9 @@ public sealed class DoctorPatientAccessManagementHandlerTests
         Assert.Equal(access.ExpiresAt, item.ExpiresAt);
         Assert.Equal(DoctorPatientAccessStatus.Active, repository.QueriedStatus);
         Assert.Equal(doctor.Id, repository.QueriedDoctorId);
+        Assert.Equal(2, result.PageNumber);
+        Assert.Equal(5, result.PageSize);
+        Assert.Equal(1, result.TotalCount);
     }
 
     [Fact]
@@ -55,7 +61,7 @@ public sealed class DoctorPatientAccessManagementHandlerTests
             new FakeCurrentUserContext(patient.UserId));
 
         var result = await handler.Handle(
-            new GetPatientDoctorAccessesQuery(),
+            new GetPatientDoctorAccessesQuery(PageNumber: 3, PageSize: 4),
             CancellationToken.None);
 
         var item = Assert.Single(result.Items);
@@ -64,6 +70,9 @@ public sealed class DoctorPatientAccessManagementHandlerTests
         Assert.Equal("Dr. Ahmed Hassan", item.DoctorName);
         Assert.Equal("Cardiology", item.Specialty);
         Assert.Equal(patient.Id, repository.QueriedPatientId);
+        Assert.Equal(3, result.PageNumber);
+        Assert.Equal(4, result.PageSize);
+        Assert.Equal(1, result.TotalCount);
     }
 
     [Fact]
@@ -191,24 +200,38 @@ public sealed class DoctorPatientAccessManagementHandlerTests
         public Guid? RevokingPatientId { get; private set; }
         public DateTime? RevokedAt { get; private set; }
 
-        public Task<IReadOnlyList<DoctorPatientAccess>> GetForDoctorAsync(
+        public Task<Hakeem.Application.Common.PaginatedResult<DoctorPatientAccess>> GetForDoctorAsync(
             Guid doctorProfileId,
             DoctorPatientAccessStatus status,
             DateTime utcNow,
+            int pageNumber,
+            int pageSize,
             CancellationToken cancellationToken)
         {
             QueriedDoctorId = doctorProfileId;
             QueriedStatus = status;
-            return Task.FromResult(accesses);
+            return Task.FromResult(
+                new Hakeem.Application.Common.PaginatedResult<DoctorPatientAccess>(
+                    accesses,
+                    accesses.Count,
+                    pageNumber,
+                    pageSize));
         }
 
-        public Task<IReadOnlyList<DoctorPatientAccess>> GetActiveForPatientAsync(
+        public Task<Hakeem.Application.Common.PaginatedResult<DoctorPatientAccess>> GetActiveForPatientAsync(
             Guid patientProfileId,
             DateTime utcNow,
+            int pageNumber,
+            int pageSize,
             CancellationToken cancellationToken)
         {
             QueriedPatientId = patientProfileId;
-            return Task.FromResult(accesses);
+            return Task.FromResult(
+                new Hakeem.Application.Common.PaginatedResult<DoctorPatientAccess>(
+                    accesses,
+                    accesses.Count,
+                    pageNumber,
+                    pageSize));
         }
 
         public Task<int> RevokeActiveForPatientAsync(

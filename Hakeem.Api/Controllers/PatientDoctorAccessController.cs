@@ -1,3 +1,5 @@
+using Hakeem.Api.Validation;
+using Hakeem.Application.Common;
 using Hakeem.Application.Common.ResponseModel;
 using Hakeem.Application.Features.DoctorPatientAccesses.Commands.RevokeDoctorPatientAccess;
 using Hakeem.Application.Features.DoctorPatientAccesses.Queries.GetPatientDoctorAccesses;
@@ -19,13 +21,17 @@ public sealed class PatientDoctorAccessController(
     : ApiControllerBase(localizer)
 {
     [HttpGet]
-    [ProducesResponseType(typeof(GenericResponseModel<GetPatientDoctorAccessesResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GenericResponseModel<PaginatedResult<PatientDoctorAccessItem>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(GenericResponseModel<object>), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(GenericResponseModel<object>), StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> Get(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(GenericResponseModel<object>), StatusCodes.Status422UnprocessableEntity)]
+    [ValidationStatusCode(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IActionResult> Get(
+        [FromQuery] GetPatientDoctorAccessesQuery query,
+        CancellationToken cancellationToken)
     {
         var response = await mediator.Send(
-            new GetPatientDoctorAccessesQuery(),
+            query,
             cancellationToken);
         return SuccessResponse(response, "PatientAccess.PatientAccessesRetrieved");
     }

@@ -1,3 +1,4 @@
+using Hakeem.Application.Common;
 using Hakeem.Application.Repositories.DoctorPatientAccesses;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Access;
@@ -9,10 +10,12 @@ namespace Hakeem.Infrastructure.Repositories.DoctorPatientAccesses;
 public sealed class DoctorPatientAccessRepository(ApplicationDbContext dbContext)
     : IDoctorPatientAccessRepository
 {
-    public async Task<IReadOnlyList<DoctorPatientAccess>> GetForDoctorAsync(
+    public async Task<PaginatedResult<DoctorPatientAccess>> GetForDoctorAsync(
         Guid doctorProfileId,
         DoctorPatientAccessStatus status,
         DateTime utcNow,
+        int pageNumber,
+        int pageSize,
         CancellationToken cancellationToken)
     {
         var query = dbContext.DoctorPatientAccesses
@@ -34,26 +37,50 @@ public sealed class DoctorPatientAccessRepository(ApplicationDbContext dbContext
             _ => query.Where(_ => false)
         };
 
-        return await query
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
             .OrderBy(access => access.ExpiresAt)
+            .ThenBy(access => access.Id)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return new PaginatedResult<DoctorPatientAccess>(
+            items,
+            totalCount,
+            pageNumber,
+            pageSize);
     }
 
-    public async Task<IReadOnlyList<DoctorPatientAccess>> GetActiveForPatientAsync(
+    public async Task<PaginatedResult<DoctorPatientAccess>> GetActiveForPatientAsync(
         Guid patientProfileId,
         DateTime utcNow,
+        int pageNumber,
+        int pageSize,
         CancellationToken cancellationToken)
     {
-        return await dbContext.DoctorPatientAccesses
+        var query = dbContext.DoctorPatientAccesses
             .AsNoTracking()
             .Include(access => access.Doctor)
                 .ThenInclude(doctor => doctor.User)
             .Where(access =>
                 access.PatientProfileId == patientProfileId &&
                 access.Status == DoctorPatientAccessStatus.Active &&
-                access.ExpiresAt > utcNow)
+                access.ExpiresAt > utcNow);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
             .OrderBy(access => access.ExpiresAt)
+            .ThenBy(access => access.Id)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return new PaginatedResult<DoctorPatientAccess>(
+            items,
+            totalCount,
+            pageNumber,
+            pageSize);
     }
 
     public Task<int> RevokeActiveForPatientAsync(

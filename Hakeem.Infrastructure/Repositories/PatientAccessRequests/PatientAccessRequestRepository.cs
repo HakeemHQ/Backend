@@ -1,3 +1,4 @@
+using Hakeem.Application.Common;
 using Hakeem.Application.Repositories.PatientAccessRequests;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Access;
@@ -53,9 +54,11 @@ public sealed class PatientAccessRequestRepository(ApplicationDbContext dbContex
         dbContext.PatientAccessRequests.Add(accessRequest);
     }
 
-    public async Task<IReadOnlyList<PatientAccessRequest>> GetForPatientAsync(
+    public async Task<PaginatedResult<PatientAccessRequest>> GetForPatientAsync(
         Guid patientProfileId,
         PatientAccessRequestStatus? status,
+        int pageNumber,
+        int pageSize,
         CancellationToken cancellationToken)
     {
         var query = dbContext.PatientAccessRequests
@@ -69,9 +72,19 @@ public sealed class PatientAccessRequestRepository(ApplicationDbContext dbContex
             query = query.Where(request => request.Status == status.Value);
         }
 
-        return await query
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
             .OrderByDescending(request => request.RequestedAt)
+            .ThenByDescending(request => request.Id)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return new PaginatedResult<PatientAccessRequest>(
+            items,
+            totalCount,
+            pageNumber,
+            pageSize);
     }
 
     public Task<PatientAccessRequest?> GetByIdForPatientAsync(

@@ -227,9 +227,11 @@ public sealed class CreatePatientAccessSessionCommandHandlerTests
             Guid patientProfileId,
             CancellationToken cancellationToken) => throw new NotSupportedException();
         public void Add(PatientAccessRequest accessRequest) => throw new NotSupportedException();
-        public Task<IReadOnlyList<PatientAccessRequest>> GetForPatientAsync(
+        public Task<Hakeem.Application.Common.PaginatedResult<PatientAccessRequest>> GetForPatientAsync(
             Guid patientProfileId,
             PatientAccessRequestStatus? status,
+            int pageNumber,
+            int pageSize,
             CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<PatientAccessRequest?> GetByIdForPatientAsync(
             Guid requestId,

@@ -1,3 +1,4 @@
+using Hakeem.Application.Common;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Interfaces.ServiceLifetime;
 
@@ -22,9 +23,11 @@ public interface IPatientAccessRequestRepository : IScoped
 
     void Add(PatientAccessRequest accessRequest);
 
-    Task<IReadOnlyList<PatientAccessRequest>> GetForPatientAsync(
+    Task<PaginatedResult<PatientAccessRequest>> GetForPatientAsync(
         Guid patientProfileId,
         Hakeem.Domain.Enums.Access.PatientAccessRequestStatus? status,
+        int pageNumber,
+        int pageSize,
         CancellationToken cancellationToken);
 
     Task<PatientAccessRequest?> GetByIdForPatientAsync(

@@ -1,3 +1,4 @@
+using Hakeem.Application.Common;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Access;
 using Hakeem.Domain.Interfaces.ServiceLifetime;
@@ -6,15 +7,19 @@ namespace Hakeem.Application.Repositories.DoctorPatientAccesses;
 
 public interface IDoctorPatientAccessRepository : IScoped
 {
-    Task<IReadOnlyList<DoctorPatientAccess>> GetForDoctorAsync(
+    Task<PaginatedResult<DoctorPatientAccess>> GetForDoctorAsync(
         Guid doctorProfileId,
         DoctorPatientAccessStatus status,
         DateTime utcNow,
+        int pageNumber,
+        int pageSize,
         CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<DoctorPatientAccess>> GetActiveForPatientAsync(
+    Task<PaginatedResult<DoctorPatientAccess>> GetActiveForPatientAsync(
         Guid patientProfileId,
         DateTime utcNow,
+        int pageNumber,
+        int pageSize,
         CancellationToken cancellationToken);
 
     Task<int> RevokeActiveForPatientAsync(

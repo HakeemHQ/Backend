@@ -1,3 +1,4 @@
+using Hakeem.Application.Common;
 using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
@@ -11,9 +12,9 @@ public sealed class GetPatientAccessRequestsQueryHandler(
     IPatientProfileRepository patientProfileRepository,
     IPatientAccessRequestRepository accessRequestRepository,
     ICurrentUserContext currentUserContext)
-    : IRequestHandler<GetPatientAccessRequestsQuery, GetPatientAccessRequestsResult>
+    : IRequestHandler<GetPatientAccessRequestsQuery, PaginatedResult<PatientAccessRequestItem>>
 {
-    public async Task<GetPatientAccessRequestsResult> Handle(
+    public async Task<PaginatedResult<PatientAccessRequestItem>> Handle(
         GetPatientAccessRequestsQuery request,
         CancellationToken cancellationToken)
     {
@@ -29,17 +30,21 @@ public sealed class GetPatientAccessRequestsQueryHandler(
         var requests = await accessRequestRepository.GetForPatientAsync(
             patient.Id,
             request.Status,
+            request.PageNumber,
+            request.PageSize,
             cancellationToken);
 
-        return new GetPatientAccessRequestsResult(
-            requests.Select(accessRequest => new PatientAccessRequestItem(
+        return new PaginatedResult<PatientAccessRequestItem>(
+            requests.Items.Select(accessRequest => new PatientAccessRequestItem(
                     accessRequest.Id,
                     new PatientAccessRequestDoctor(
                         accessRequest.Doctor.Id,
                         $"{accessRequest.Doctor.User.FirstName} {accessRequest.Doctor.User.LastName}".Trim(),
                         accessRequest.Doctor.Specialty),
                     accessRequest.Status.ToString(),
-                    accessRequest.RequestedAt))
-                .ToList());
+                    accessRequest.RequestedAt)),
+            requests.TotalCount,
+            requests.PageNumber,
+            requests.PageSize);
     }
 }
