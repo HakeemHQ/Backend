@@ -68,6 +68,9 @@ public static class ErrorCodes
     public const string PatientAccessCodeExpired = "PatientAccess.CodeExpired";
     public const string PatientAccessCodeAlreadyRedeemed = "PatientAccess.CodeAlreadyRedeemed";
     public const string PatientAccessSessionCreated = "PatientAccess.SessionCreated";
+    public const string PatientAccessAccessNotFound = "PatientAccess.AccessNotFound";
+    public const string PatientAccessDoctorAccessesRetrieved = "PatientAccess.DoctorAccessesRetrieved";
+    public const string PatientAccessPatientAccessesRetrieved = "PatientAccess.PatientAccessesRetrieved";
 
     // -- Role  --------------------------------------------
     public const string RoleNotFound = "Role.NotFound";

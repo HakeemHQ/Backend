@@ -379,4 +379,13 @@
   <data name="PatientAccess.SessionCreated" xml:space="preserve">
     <value>تم إنشاء صلاحية وصول مؤقتة للمريض بنجاح.</value>
   </data>
+  <data name="PatientAccess.AccessNotFound" xml:space="preserve">
+    <value>لم يتم العثور على صلاحية وصول نشطة للطبيب.</value>
+  </data>
+  <data name="PatientAccess.DoctorAccessesRetrieved" xml:space="preserve">
+    <value>تم استرجاع المرضى المتاحين للطبيب بنجاح.</value>
+  </data>
+  <data name="PatientAccess.PatientAccessesRetrieved" xml:space="preserve">
+    <value>تم استرجاع الأطباء الذين لديهم صلاحية وصول نشطة بنجاح.</value>
+  </data>
 </root>

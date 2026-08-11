@@ -383,4 +383,13 @@
   <data name="PatientAccess.SessionCreated" xml:space="preserve">
     <value>Temporary patient access was created successfully.</value>
   </data>
+  <data name="PatientAccess.AccessNotFound" xml:space="preserve">
+    <value>The active Doctor access was not found.</value>
+  </data>
+  <data name="PatientAccess.DoctorAccessesRetrieved" xml:space="preserve">
+    <value>Accessible patients retrieved successfully.</value>
+  </data>
+  <data name="PatientAccess.PatientAccessesRetrieved" xml:space="preserve">
+    <value>Doctors with active access retrieved successfully.</value>
+  </data>
 </root>
