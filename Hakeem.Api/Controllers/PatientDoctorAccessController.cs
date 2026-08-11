@@ -13,7 +13,7 @@ namespace Hakeem.Api.Controllers;
 [ApiController]
 [Route("doctor-access")]
 [Authorize(Roles = nameof(ApplicationRole.Patient))]
-public sealed class DoctorAccessController(
+public sealed class PatientDoctorAccessController(
     IMediator mediator,
     IStringLocalizer<SharedResource> localizer)
     : ApiControllerBase(localizer)

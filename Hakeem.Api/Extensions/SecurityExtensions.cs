@@ -1,6 +1,9 @@
 using System.Text;
+using Hakeem.Api.Authorization;
 using Hakeem.Api.Configuration;
 using Hakeem.Application.Repositories.Auth;
+using Hakeem.Domain.Enums.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -154,7 +157,15 @@ public static class SecurityExtensions
                 .RequireAuthenticatedUser()
                 .Build();
 
+            options.AddPolicy(
+                DoctorPatientAccessPolicy.Name,
+                policy => policy
+                    .RequireAuthenticatedUser()
+                    .RequireRole(nameof(ApplicationRole.Doctor))
+                    .AddRequirements(new DoctorPatientAccessRequirement()));
+
         });
+        services.AddScoped<IAuthorizationHandler, DoctorPatientAccessHandler>();
         return services;
     }
 
