@@ -7,7 +7,6 @@ using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Identity;
 using Hakeem.Domain.Interfaces;
 using MediatR;
-using Hakeem.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;

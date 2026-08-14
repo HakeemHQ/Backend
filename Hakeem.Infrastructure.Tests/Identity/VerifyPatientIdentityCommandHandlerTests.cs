@@ -209,6 +209,16 @@ public sealed class VerifyPatientIdentityCommandHandlerTests
             Guid userId,
             CancellationToken cancellationToken) =>
             Task.FromResult<DoctorProfile?>(doctor.UserId == userId ? doctor : null);
+
+        public void Add(DoctorProfile doctorProfile) => throw new NotSupportedException();
+        public Task<bool> LicenseNumberExistsAsync(string licenseNumber, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<IReadOnlyList<DoctorProfile>> GetAllAsync(CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<DoctorProfile?> GetByIdAsync(Guid doctorId, CancellationToken cancellationToken) =>
+            Task.FromResult<DoctorProfile?>(doctor.Id == doctorId ? doctor : null);
+        public Task<DoctorProfile?> GetByIdForUpdateAsync(Guid doctorId, CancellationToken cancellationToken) =>
+            Task.FromResult<DoctorProfile?>(doctor.Id == doctorId ? doctor : null);
     }
 
     private sealed class FakePatientIdentityRepository(

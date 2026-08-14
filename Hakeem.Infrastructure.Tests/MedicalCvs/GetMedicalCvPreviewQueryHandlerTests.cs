@@ -115,6 +115,15 @@ public sealed class GetMedicalCvPreviewQueryHandlerTests
         public void Add(MedicalCv medicalCv) => throw new NotSupportedException();
         public void AddVersion(MedicalCvVersion version) =>
             throw new NotSupportedException();
+
+        public Task<IReadOnlyList<MedicalCv>> GetByPatientIdAsync(Guid patientId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<IMedicalCvRepository.MedicalCvVersionReadModel?> GetVersionByIdAsync(Guid medicalCvVersionId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<MedicalCvReadModel?> GetByIdAsync(Guid medicalCvId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<MedicalCvVersion?> GetVersionForApprovalAsync(Guid medicalCvVersionId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     private sealed class FakeFileStorage : IMedicalCvFileStorage

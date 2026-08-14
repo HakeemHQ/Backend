@@ -7,6 +7,7 @@ using Hakeem.Application.Repositories.MedicalCvs;
 using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.MedicalCvs;
+using Hakeem.Infrastructure.Tests.Fakes;
 
 namespace Hakeem.Infrastructure.Tests.MedicalCvs;
 
@@ -21,6 +22,7 @@ public sealed class GetMedicalCvByIdQueryHandlerTests
         var latestVersionId = Guid.NewGuid();
         var createdAt = new DateTime(2026, 7, 19, 13, 20, 0, DateTimeKind.Utc);
         var repository = new FakeMedicalCvReadRepository(
+            patient.Id,
             new MedicalCvDetailReadModel(
                 medicalCvId,
                 "Diabetes Medical CV",
@@ -47,6 +49,8 @@ public sealed class GetMedicalCvByIdQueryHandlerTests
         var handler = new GetMedicalCvByIdQueryHandler(
             new FakeCurrentUserContext(userId),
             new FakePatientProfileRepository(patient),
+            new NullDoctorProfileRepository(),
+            new NullDoctorPatientAccessRepository(),
             repository);
 
         var result = await handler.Handle(
@@ -68,19 +72,22 @@ public sealed class GetMedicalCvByIdQueryHandlerTests
     {
         var userId = Guid.NewGuid();
         var patient = new PatientProfile { Id = Guid.NewGuid(), UserId = userId };
-        var repository = new FakeMedicalCvReadRepository(detail: null);
+        var repository = new FakeMedicalCvReadRepository(patient.Id, detail: null);
+        var medicalCvId = Guid.NewGuid();
         var handler = new GetMedicalCvByIdQueryHandler(
             new FakeCurrentUserContext(userId),
             new FakePatientProfileRepository(patient),
+            new NullDoctorProfileRepository(),
+            new NullDoctorPatientAccessRepository(),
             repository);
 
         var exception = await Assert.ThrowsAsync<NotFoundException>(() =>
             handler.Handle(
-                new GetMedicalCvByIdQuery(Guid.NewGuid()),
+                new GetMedicalCvByIdQuery(medicalCvId),
                 CancellationToken.None));
 
         Assert.Equal(ErrorCodes.MedicalCvNotFound, exception.ErrorCode);
-        Assert.Equal(patient.Id, repository.PatientId);
+        Assert.Equal(medicalCvId, repository.MedicalCvId);
     }
 
     private sealed record FakeCurrentUserContext(Guid UserId)
@@ -111,10 +118,13 @@ public sealed class GetMedicalCvByIdQueryHandlerTests
             throw new NotSupportedException();
     }
 
-    private sealed class FakeMedicalCvReadRepository(MedicalCvDetailReadModel? detail)
+    private sealed class FakeMedicalCvReadRepository(
+        Guid ownerPatientId,
+        MedicalCvDetailReadModel? detail)
         : IMedicalCvReadRepository
     {
         public Guid? PatientId { get; private set; }
+        public Guid? MedicalCvId { get; private set; }
 
         public Task<MedicalCvDetailReadModel?> GetDetailForPatientAsync(
             Guid medicalCvId,
@@ -133,5 +143,16 @@ public sealed class GetMedicalCvByIdQueryHandlerTests
             int pageSize,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+
+        public Task<MedicalCvReadModel?> GetByIdAsync(
+            Guid medicalCvId,
+            CancellationToken cancellationToken)
+        {
+            MedicalCvId = medicalCvId;
+            return Task.FromResult<MedicalCvReadModel?>(
+                detail?.MedicalCvId == medicalCvId
+                    ? new MedicalCvReadModel(medicalCvId, ownerPatientId)
+                    : null);
+        }
     }
 }

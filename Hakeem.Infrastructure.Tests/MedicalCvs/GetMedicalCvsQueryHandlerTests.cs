@@ -129,5 +129,10 @@ public sealed class GetMedicalCvsQueryHandlerTests
             Guid patientId,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+
+        public Task<MedicalCvReadModel?> GetByIdAsync(
+            Guid medicalCvId,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }

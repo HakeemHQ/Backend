@@ -2,7 +2,6 @@ using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Interfaces.MedicalCvs;
-using Hakeem.Application.Repositories.AuditLogs;
 using Hakeem.Application.Repositories.DoctorPatientAccesses;
 using Hakeem.Application.Repositories.DoctorProfiles;
 using Hakeem.Application.Repositories.MedicalCvs;
@@ -21,7 +20,6 @@ public sealed class GetMedicalCvPdfQueryHandler(
     IDoctorProfileRepository doctorProfileRepository,
     IDoctorPatientAccessRepository doctorPatientAccessRepository,
     IMedicalCvReadRepository medicalCvReadRepository,
-    IAuditLogRepository auditLogRepository,
     IMedicalCvFileStorage fileStorage)
     : IRequestHandler<GetMedicalCvPdfQuery, GetMedicalCvPdfResult>
 {

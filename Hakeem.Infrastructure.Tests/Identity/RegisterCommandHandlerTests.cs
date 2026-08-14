@@ -93,6 +93,14 @@ public sealed class RegisterCommandHandlerTests
             Guid userId,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+
+        public Task<(IEnumerable<Hakeem.Application.Features.Admin.Users.GetUsers.DTOs.AdminUserDto> Items, int TotalCount)> GetUsersAsync(
+            string? search,
+            Hakeem.Domain.Enums.Identity.AccountStatus? status,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     private sealed class FakePatientIdentityRepository : IPatientIdentityRepository

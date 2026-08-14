@@ -7,6 +7,7 @@ using Hakeem.Application.Repositories.MedicalCvs;
 using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.MedicalCvs;
+using Hakeem.Infrastructure.Tests.Fakes;
 
 namespace Hakeem.Infrastructure.Tests.MedicalCvs;
 
@@ -31,6 +32,9 @@ public sealed class GetMedicalCvPdfQueryHandlerTests
             new FakeCurrentUserContext(userId),
             new FakePatientProfileRepository(patient),
             new FakeMedicalCvRepository(version, patient.Id),
+            new NullDoctorProfileRepository(),
+            new NullDoctorPatientAccessRepository(),
+            new FakeMedicalCvReadRepository(patient.Id, medicalCvId),
             storage);
 
         var result = await handler.Handle(
@@ -52,6 +56,9 @@ public sealed class GetMedicalCvPdfQueryHandlerTests
             new FakeCurrentUserContext(userId),
             new FakePatientProfileRepository(patient),
             new FakeMedicalCvRepository(version: null, patient.Id),
+            new NullDoctorProfileRepository(),
+            new NullDoctorPatientAccessRepository(),
+            new FakeMedicalCvReadRepository(patient.Id, medicalCvId: null),
             storage);
 
         var exception = await Assert.ThrowsAsync<NotFoundException>(() =>
@@ -80,6 +87,9 @@ public sealed class GetMedicalCvPdfQueryHandlerTests
             new FakeCurrentUserContext(userId),
             new FakePatientProfileRepository(patient),
             new FakeMedicalCvRepository(version, patient.Id),
+            new NullDoctorProfileRepository(),
+            new NullDoctorPatientAccessRepository(),
+            new FakeMedicalCvReadRepository(patient.Id, medicalCvId),
             storage);
 
         var exception = await Assert.ThrowsAsync<ConflictException>(() =>
@@ -156,6 +166,46 @@ public sealed class GetMedicalCvPdfQueryHandlerTests
 
         public void Add(MedicalCv medicalCv) => throw new NotSupportedException();
         public void AddVersion(MedicalCvVersion version) =>
+            throw new NotSupportedException();
+
+        public Task<IReadOnlyList<MedicalCv>> GetByPatientIdAsync(Guid patientId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<IMedicalCvRepository.MedicalCvVersionReadModel?> GetVersionByIdAsync(Guid medicalCvVersionId, CancellationToken cancellationToken) =>
+            Task.FromResult(version is null ? null : new IMedicalCvRepository.MedicalCvVersionReadModel(
+                version.Id,
+                version.MedicalCvId,
+                version.Status,
+                version.PdfFileKey));
+        public Task<MedicalCvReadModel?> GetByIdAsync(Guid medicalCvId, CancellationToken cancellationToken) =>
+            Task.FromResult<MedicalCvReadModel?>(version?.MedicalCvId == medicalCvId
+                ? new MedicalCvReadModel(medicalCvId, ownerPatientId)
+                : null);
+        public Task<MedicalCvVersion?> GetVersionForApprovalAsync(Guid medicalCvVersionId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+    }
+
+    private sealed class FakeMedicalCvReadRepository(Guid patientId, Guid? medicalCvId)
+        : IMedicalCvReadRepository
+    {
+        public Task<MedicalCvReadModel?> GetByIdAsync(
+            Guid requestedMedicalCvId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<MedicalCvReadModel?>(medicalCvId == requestedMedicalCvId
+                ? new MedicalCvReadModel(requestedMedicalCvId, patientId)
+                : null);
+
+        public Task<Hakeem.Application.Common.PaginatedResult<MedicalCvListReadModel>> GetForPatientAsync(
+            Guid requestedPatientId,
+            string? search,
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<MedicalCvDetailReadModel?> GetDetailForPatientAsync(
+            Guid requestedMedicalCvId,
+            Guid requestedPatientId,
+            CancellationToken cancellationToken) =>
             throw new NotSupportedException();
     }
 

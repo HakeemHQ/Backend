@@ -131,7 +131,7 @@ namespace Hakeem.Application.Features.PatientReviewAndConfirmation.Commands
                     MedicalRecordId = medicalRecord.Id,
                     FieldName = extractedField.FieldName,
                     SourceExtractedFieldId = extractedField.Id,
-                    Value = value
+                    Value = value ?? string.Empty
                 };
 
                 medicalRecord.Fields.Add(field);

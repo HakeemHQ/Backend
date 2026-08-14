@@ -161,6 +161,16 @@ public sealed class DoctorPatientAccessManagementHandlerTests
             Guid userId,
             CancellationToken cancellationToken) =>
             Task.FromResult<DoctorProfile?>(doctor.UserId == userId ? doctor : null);
+
+        public void Add(DoctorProfile doctorProfile) => throw new NotSupportedException();
+        public Task<bool> LicenseNumberExistsAsync(string licenseNumber, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<IReadOnlyList<DoctorProfile>> GetAllAsync(CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<DoctorProfile?> GetByIdAsync(Guid doctorId, CancellationToken cancellationToken) =>
+            Task.FromResult<DoctorProfile?>(doctor.Id == doctorId ? doctor : null);
+        public Task<DoctorProfile?> GetByIdForUpdateAsync(Guid doctorId, CancellationToken cancellationToken) =>
+            Task.FromResult<DoctorProfile?>(doctor.Id == doctorId ? doctor : null);
     }
 
     private sealed class FakePatientProfileRepository(PatientProfile patient)
@@ -245,5 +255,16 @@ public sealed class DoctorPatientAccessManagementHandlerTests
             RevokedAt = revokedAt;
             return Task.FromResult(RevokeAffectedRows);
         }
+
+        public Task<bool> HasActiveAccessAsync(
+            Guid doctorProfileId,
+            Guid patientProfileId,
+            DateTime utcNow,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(accesses.Any(access =>
+                access.DoctorProfileId == doctorProfileId &&
+                access.PatientProfileId == patientProfileId &&
+                access.Status == DoctorPatientAccessStatus.Active &&
+                access.ExpiresAt > utcNow));
     }
 }

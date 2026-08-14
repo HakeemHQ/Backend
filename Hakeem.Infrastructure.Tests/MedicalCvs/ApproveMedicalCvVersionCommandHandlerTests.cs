@@ -7,6 +7,7 @@ using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.MedicalCvs;
 using Hakeem.Domain.Interfaces;
+using Hakeem.Infrastructure.Tests.Fakes;
 
 namespace Hakeem.Infrastructure.Tests.MedicalCvs;
 
@@ -87,12 +88,22 @@ public sealed class ApproveMedicalCvVersionCommandHandlerTests
         Guid userId,
         PatientProfile patient,
         MedicalCvVersion? version,
-        IUnitOfWork unitOfWork) =>
-        new(
+        IUnitOfWork unitOfWork)
+    {
+        if (version is not null)
+        {
+            version.MedicalCv = new MedicalCv { PatientId = patient.Id };
+        }
+
+        return new(
             new FakeCurrentUserContext(userId),
             new FakePatientProfileRepository(patient),
+            new NullDoctorProfileRepository(),
+            new NullDoctorPatientAccessRepository(),
             new FakeMedicalCvRepository(version, patient.Id),
+            new FakeAuditLogRepository(),
             unitOfWork);
+    }
 
     private sealed record FakeCurrentUserContext(Guid UserId)
         : ICurrentUserContext;
@@ -156,6 +167,15 @@ public sealed class ApproveMedicalCvVersionCommandHandlerTests
         public void Add(MedicalCv medicalCv) => throw new NotSupportedException();
         public void AddVersion(MedicalCvVersion version) =>
             throw new NotSupportedException();
+
+        public Task<IReadOnlyList<MedicalCv>> GetByPatientIdAsync(Guid patientId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<IMedicalCvRepository.MedicalCvVersionReadModel?> GetVersionByIdAsync(Guid medicalCvVersionId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<MedicalCvReadModel?> GetByIdAsync(Guid medicalCvId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<MedicalCvVersion?> GetVersionForApprovalAsync(Guid medicalCvVersionId, CancellationToken cancellationToken) =>
+            Task.FromResult<MedicalCvVersion?>(version?.Id == medicalCvVersionId ? version : null);
     }
 
     private sealed class FakeUnitOfWork : IUnitOfWork

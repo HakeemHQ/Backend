@@ -66,9 +66,9 @@ public sealed class QdrantTestService(
             return [];
         }
 
-        var results = await qdrantClient.SearchAsync(
+        var results = await qdrantClient.QueryAsync(
             _configuration.CollectionName,
-            embedding,
+            query: embedding,
             limit: (ulong)limit,
             cancellationToken: cancellationToken);
 

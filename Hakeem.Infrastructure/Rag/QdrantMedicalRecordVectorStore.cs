@@ -82,9 +82,9 @@ public sealed class QdrantMedicalRecordVectorStore(
             }
         };
 
-        var results = await qdrantClient.SearchAsync(
+        var results = await qdrantClient.QueryAsync(
             _configuration.CollectionName,
-            embedding,
+            query: embedding,
             filter: filter,
             limit: (ulong)limit,
             cancellationToken: cancellationToken);

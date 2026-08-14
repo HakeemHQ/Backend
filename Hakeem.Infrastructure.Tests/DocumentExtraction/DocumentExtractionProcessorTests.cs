@@ -3,6 +3,7 @@ using Hakeem.Application.Services.DocumentExtraction;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Documents;
 using Hakeem.Infrastructure.Tests.DocumentExtraction.Fakes;
+using Hakeem.Infrastructure.Tests.Fakes;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hakeem.Infrastructure.Tests.DocumentExtraction;
@@ -160,6 +161,7 @@ public sealed class DocumentExtractionProcessorTests
             repository,
             agent,
             new DocumentExtractionValidator(),
+            new FakeAuditLogRepository(),
             unitOfWork,
             NullLogger<DocumentExtractionProcessor>.Instance);
     }

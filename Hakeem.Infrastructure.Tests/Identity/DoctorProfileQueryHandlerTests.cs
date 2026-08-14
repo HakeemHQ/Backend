@@ -54,5 +54,15 @@ public sealed class DoctorProfileQueryHandlerTests
             Guid userId,
             CancellationToken cancellationToken) =>
             Task.FromResult<DoctorProfile?>(profile.UserId == userId ? profile : null);
+
+        public void Add(DoctorProfile doctorProfile) => throw new NotSupportedException();
+        public Task<bool> LicenseNumberExistsAsync(string licenseNumber, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<IReadOnlyList<DoctorProfile>> GetAllAsync(CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<DoctorProfile?> GetByIdAsync(Guid doctorId, CancellationToken cancellationToken) =>
+            Task.FromResult<DoctorProfile?>(profile.Id == doctorId ? profile : null);
+        public Task<DoctorProfile?> GetByIdForUpdateAsync(Guid doctorId, CancellationToken cancellationToken) =>
+            Task.FromResult<DoctorProfile?>(profile.Id == doctorId ? profile : null);
     }
 }

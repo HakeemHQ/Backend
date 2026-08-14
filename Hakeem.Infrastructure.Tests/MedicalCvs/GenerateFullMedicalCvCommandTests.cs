@@ -8,6 +8,7 @@ using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Application.Resources;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.MedicalCvs;
+using Hakeem.Infrastructure.Tests.Fakes;
 using Microsoft.Extensions.Localization;
 
 namespace Hakeem.Infrastructure.Tests.MedicalCvs;
@@ -55,6 +56,7 @@ public sealed class GenerateFullMedicalCvCommandTests
             new FakePatientProfileRepository(patient),
             generationService,
             new FakePreviewLinkService(previewExpiresAt),
+            new FakeAuditLogRepository(),
             new FakeFileUrlResolver("https://hakeem.example"));
 
         var response = await handler.Handle(
@@ -111,6 +113,7 @@ public sealed class GenerateFullMedicalCvCommandTests
                 new FakePatientProfileRepository(patient),
                 generationService,
                 new FakePreviewLinkService(DateTimeOffset.UtcNow.AddMinutes(15)),
+                new FakeAuditLogRepository(),
                 new FakeFileUrlResolver("https://hakeem.example"));
 
             await handler.Handle(
