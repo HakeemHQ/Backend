@@ -1,5 +1,7 @@
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.MedicalCvs;
+using System;
+using static Hakeem.Application.Features.MedicalCvs.Queries.GetMedicalCvPdf.GetMedicalCvPdfQueryHandler;
 
 namespace Hakeem.Application.Repositories.MedicalCvs;
 
@@ -26,4 +28,27 @@ public interface IMedicalCvRepository
 
     void Add(MedicalCv medicalCv);
     void AddVersion(MedicalCvVersion version);
+
+    Task<IReadOnlyList<MedicalCv>> GetByPatientIdAsync(
+    Guid patientId,
+    CancellationToken cancellationToken);
+
+    Task<MedicalCvVersionReadModel?> GetVersionByIdAsync(
+    Guid medicalCvVersionId,
+    CancellationToken cancellationToken);
+
+    Task<MedicalCvReadModel?> GetByIdAsync(
+        Guid medicalCvId,
+        CancellationToken cancellationToken);
+
+    
+Task<MedicalCvVersion?> GetVersionForApprovalAsync(
+    Guid medicalCvVersionId,
+    CancellationToken cancellationToken);
+
+    public sealed record MedicalCvVersionReadModel(
+        Guid MedicalCvVersionId,
+        Guid MedicalCvId,
+        MedicalCvVersionStatus Status,
+        string? PdfFileKey);
 }

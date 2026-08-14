@@ -27,4 +27,11 @@ public interface IDoctorPatientAccessRepository : IScoped
         Guid patientProfileId,
         DateTime revokedAt,
         CancellationToken cancellationToken);
+
+    Task<bool> HasActiveAccessAsync(
+    Guid doctorProfileId,
+    Guid patientProfileId,
+    DateTime utcNow,
+    CancellationToken cancellationToken);
+
 }

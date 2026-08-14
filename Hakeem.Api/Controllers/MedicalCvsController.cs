@@ -2,6 +2,7 @@ using Hakeem.Application.Common.ResponseModel;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Features.MedicalCvs.Commands.GenerateFullMedicalCv;
 using Hakeem.Application.Features.MedicalCvs.Queries.GetMedicalCvById;
+using Hakeem.Application.Features.MedicalCvs.Queries.GetMedicalCvPdf;
 using Hakeem.Application.Features.MedicalCvs.Queries.GetMedicalCvs;
 using Hakeem.Application.Resources;
 using MediatR;
@@ -12,7 +13,7 @@ using Microsoft.Extensions.Localization;
 namespace Hakeem.Api.Controllers;
 
 [Route("medical-cvs")]
-[Authorize(Roles = "Patient")]
+[Authorize]
 public sealed class MedicalCvsController(
     IMediator mediator,
     IStringLocalizer<SharedResource> localizer)
@@ -43,6 +44,9 @@ public sealed class MedicalCvsController(
     [ProducesResponseType(
         typeof(GenericResponseModel<object>),
         StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(
+        typeof(GenericResponseModel<object>),
+        StatusCodes.Status403Forbidden)]
     [ProducesResponseType(
         typeof(GenericResponseModel<object>),
         StatusCodes.Status404NotFound)]

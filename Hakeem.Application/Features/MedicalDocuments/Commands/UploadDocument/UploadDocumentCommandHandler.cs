@@ -2,6 +2,7 @@ using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Interfaces.Files;
+using Hakeem.Application.Repositories.AuditLogs;
 using Hakeem.Application.Repositories.MedicalDocuments;
 using Hakeem.Application.Repositories.Notifications;
 using Hakeem.Application.Repositories.PatientProfiles;
@@ -16,6 +17,7 @@ namespace Hakeem.Application.Features.MedicalDocuments.Commands.UploadDocument;
 public sealed class UploadDocumentCommandHandler(
     ICurrentUserContext currentUserContext,
     IPatientProfileRepository patientProfileRepository,
+    IAuditLogRepository auditLogRepository,
     IMedicalDocumentRepository medicalDocumentRepository,
     IOutboxEventRepository outboxEventRepository,
     IDocumentFileStorage documentFileStorage,
@@ -54,6 +56,17 @@ public sealed class UploadDocumentCommandHandler(
         medicalDocument.QueueExtraction();
 
         medicalDocumentRepository.Add(medicalDocument);
+
+        auditLogRepository.Add(
+   new AuditLog
+   {
+       Id = Guid.NewGuid(),
+       ActorUserId = currentUserContext.UserId,
+       PatientProfileId = patientProfile.Id,
+       Action = "DocumentUploaded",
+       Target = $"MedicalDocument:{documentId}",
+       OccurredAt = DateTime.UtcNow
+   });
         outboxEventRepository.Add(
             new DocumentExtractionRequestedEvent
             {

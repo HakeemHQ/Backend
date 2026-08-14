@@ -12,7 +12,8 @@ using Microsoft.Extensions.Localization;
 namespace Hakeem.Api.Controllers;
 
 [Route("medical-cv-versions")]
-[Authorize(Roles = "Patient")]
+//[Authorize(Roles = "Patient")]
+[Authorize]
 public sealed class MedicalCvVersionsController(
     IMediator mediator,
     IStringLocalizer<SharedResource> localizer)

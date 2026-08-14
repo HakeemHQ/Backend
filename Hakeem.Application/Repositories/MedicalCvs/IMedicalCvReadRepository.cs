@@ -17,8 +17,16 @@ public interface IMedicalCvReadRepository : IScoped
         Guid medicalCvId,
         Guid patientId,
         CancellationToken cancellationToken);
-}
 
+    Task<MedicalCvReadModel?> GetByIdAsync(
+    Guid medicalCvId,
+    CancellationToken cancellationToken);
+
+
+}
+public sealed record MedicalCvReadModel(
+    Guid MedicalCvId,
+    Guid PatientId);
 public sealed record MedicalCvListReadModel(
     Guid MedicalCvId,
     string Title,
@@ -47,3 +55,4 @@ public sealed record MedicalCvVersionDetailReadModel(
     DateTime CreatedAt,
     DateTime? ApprovedAt,
     bool PdfAvailable);
+

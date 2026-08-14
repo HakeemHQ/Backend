@@ -1,13 +1,14 @@
-using System.Text.Json;
 using Hakeem.Application.Features.MedicalDocuments.DTOs;
 using Hakeem.Application.Interfaces.Agents;
 using Hakeem.Application.Interfaces.Processors;
 using Hakeem.Application.Interfaces.Validation;
+using Hakeem.Application.Repositories.AuditLogs;
 using Hakeem.Application.Repositories.MedicalDocuments;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Documents;
 using Hakeem.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace Hakeem.Application.Services.DocumentExtraction;
 
@@ -15,6 +16,7 @@ public sealed class DocumentExtractionProcessor(
     IMedicalDocumentRepository medicalDocumentRepository,
     IDocumentProcessingAgent documentProcessingAgent,
     IDocumentExtractionValidator extractionValidator,
+    IAuditLogRepository auditLogRepository,
     IUnitOfWork unitOfWork,
     ILogger<DocumentExtractionProcessor> logger)
     : IDocumentExtractionProcessor
@@ -57,6 +59,16 @@ public sealed class DocumentExtractionProcessor(
             ExtractionStatus.Queued)
         {
             medicalDocument.StartExtraction();
+            auditLogRepository.Add(
+    new AuditLog
+    {
+        Id = Guid.NewGuid(),
+        ActorUserId = null, // extraction is background process
+        PatientProfileId = medicalDocument.PatientProfileId,
+        Action = "DocumentExtractionStarted",
+        Target = $"MedicalDocument:{documentId}",
+        OccurredAt = DateTime.UtcNow
+    });
             await unitOfWork.SaveChanges(cancellationToken);
         }
 
@@ -101,10 +113,18 @@ public sealed class DocumentExtractionProcessor(
             medicalDocumentRepository.AddExtractedItems(
                 extractedItems);
 
-            medicalDocument.DocumentType =
-                extractionResult.DocumentType.ToString();
+            medicalDocument.DocumentType =extractionResult.DocumentType.ToString();
             medicalDocument.CompleteExtraction();
-
+            auditLogRepository.Add(
+            new AuditLog
+            {
+                Id = Guid.NewGuid(),
+                ActorUserId = null,
+                PatientProfileId = medicalDocument.PatientProfileId,
+                Action = "DocumentExtractionCompleted",
+                Target = $"MedicalDocument:{documentId}",
+                OccurredAt = DateTime.UtcNow
+            });
             await unitOfWork.SaveChanges(cancellationToken);
             await unitOfWork.CommitTransactionAsync();
 
