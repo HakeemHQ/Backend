@@ -8,8 +8,9 @@ using System.Threading.Tasks;
 namespace Hakeem.Application.Features.Admin.Doctors.DTOs
 {
     public sealed record CreateDoctorResponse(
-    Guid Id,
-    string Name,
+    Guid UserId,
+    Guid DoctorId,
+    string FullName,
     string Email,
     string Specialty,
     string LicenseNumber,

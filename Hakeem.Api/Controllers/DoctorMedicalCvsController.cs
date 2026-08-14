@@ -52,10 +52,14 @@ namespace Hakeem.Api.Controllers
         [ProducesResponseType(
     typeof(GenericResponseModel<object>),
     StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Get(Guid patientId,CancellationToken cancellationToken)
-        {
-            var response = await _mediator.Send(new GetPatientMedicalCvsQuery(patientId),cancellationToken);
-            return Ok(response);
-        }
+        public async Task<ActionResult<IReadOnlyList<DoctorMedicalCvListItem>>> 
+            GetPatientMedicalCvs(Guid patientId, 
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            CancellationToken cancellationToken = default) 
+        { 
+            var result = await _mediator.Send(
+                new GetPatientMedicalCvsQuery
+                (patientId, page, pageSize), cancellationToken); return Ok(new { items = result }); }
     }
 }

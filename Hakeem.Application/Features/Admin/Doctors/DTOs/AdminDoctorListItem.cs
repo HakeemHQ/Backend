@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 
 namespace Hakeem.Application.Features.Admin.Doctors.DTOs
 {
-    public sealed record AdminDoctorResponse(
+    public sealed record AdminDoctorListItem(
     Guid DoctorId,
-    Guid UserId,
     string FullName,
     string Email,
     string Specialty,
     string LicenseNumber,
-    AccountStatus Status,
-    DateTime CreatedAt
+    AccountStatus Status
 );
+
+    public sealed record AdminDoctorsResponse(IReadOnlyList<AdminDoctorListItem> Items);
 }

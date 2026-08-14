@@ -1,5 +1,6 @@
 using Hakeem.Application.Features.Admin.ActiveSummery.DTOs;
 using Hakeem.Application.Repositories.ActiveSummery;
+using Hakeem.Domain.Enums.Identity;
 using Hakeem.Domain.Interfaces.ServiceLifetime;
 using Hakeem.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
@@ -32,12 +33,17 @@ namespace Hakeem.Infrastructure.Repositories.ActiveSummery
                     x.OccurredAt >= fromDate &&
                     x.OccurredAt < toDate);
 
-            var activeUsers = await auditLogs
-                .Where(x => x.ActorUserId.HasValue)
+            var activePatients = await auditLogs
+                .Where (x => x.ActorUserId.HasValue)
                 .Select(x => x.ActorUserId)
                 .Distinct()
-                .CountAsync(cancellationToken);
+                .CountAsync (cancellationToken);
 
+            var activeDoctors = await _dbContext.DoctorProfiles
+     .Where(x => x.User.Status == AccountStatus.Active)
+     .Select(x => x.UserId)
+     .Distinct()
+     .CountAsync(cancellationToken);
             var documentsUploaded = await auditLogs
                 .CountAsync(
                     x => x.Action == "DocumentUploaded",
@@ -57,7 +63,8 @@ namespace Hakeem.Infrastructure.Repositories.ActiveSummery
             {
                 FromDate = DateOnly.FromDateTime(fromDate),
                 ToDate = DateOnly.FromDateTime(toDate),
-                ActiveUsers = activeUsers,
+                ActivePatients = activePatients,
+                ActiveDoctors = activeDoctors,
                 DocumentsUploaded = documentsUploaded,
                 ExtractionsCompleted = extractionsCompleted,
                 MedicalCvVersionsGenerated = medicalCvVersionsGenerated

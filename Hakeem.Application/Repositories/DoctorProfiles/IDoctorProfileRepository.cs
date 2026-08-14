@@ -1,4 +1,5 @@
 using Hakeem.Domain.Entities;
+using Hakeem.Domain.Enums.Identity;
 using Hakeem.Domain.Interfaces.ServiceLifetime;
 
 namespace Hakeem.Application.Repositories.DoctorProfiles;
@@ -20,5 +21,14 @@ public interface IDoctorProfileRepository : IScoped
 
     Task<DoctorProfile?> GetByIdForUpdateAsync(
     Guid doctorId,
+    CancellationToken cancellationToken);
+
+
+    Task<IReadOnlyList<DoctorProfile>> GetFilteredAsync(
+    string? search,
+    string? specialty,
+    AccountStatus? status,
+    int page,
+    int pageSize,
     CancellationToken cancellationToken);
 }

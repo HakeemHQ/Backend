@@ -68,14 +68,15 @@ namespace Hakeem.Application.Features.Doctor.MedicalCvs.Commands
                 cancellationToken);
 
             return new GenerateDoctorMedicalCvResponse(
-                result.MedicalCvId,
-                result.MedicalCvVersionId,
-                result.Title,
-                result.ScopeType,
-                result.Focus,
-                result.VersionNumber,
-                result.Status.ToString(),
-                result.CreatedAt);
+      result.MedicalCvId,
+      new GenerateDoctorMedicalCvVersionResponse(
+          result.MedicalCvVersionId,
+          result.VersionNumber,
+          result.Status.ToString(),
+          "Unreviewed",
+          "Doctor"
+      )
+  );
         }
     }
 }

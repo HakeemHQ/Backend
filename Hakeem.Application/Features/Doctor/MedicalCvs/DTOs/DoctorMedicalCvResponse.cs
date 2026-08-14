@@ -1,3 +1,4 @@
+using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,4 +20,16 @@ namespace Hakeem.Application.Features.Doctor.MedicalCvs.DTOs
         string Status,
         DateTime CreatedAt,
         string? PdfFileKey);
+
+
+    public sealed record DoctorMedicalCvListItem(Guid MedicalCvId, string Title, int LatestVersionNumber, string CreatedByRole, string VerificationStatus);
+
+    public sealed record GetDoctorPatientMedicalCvsQuery(
+    Guid PatientId,
+    int Page = 1,
+    int PageSize = 10
+) : IRequest<IReadOnlyList<DoctorMedicalCvListItem>>;
+
+
+    public sealed record DoctorMedicalCvsResponse(IReadOnlyList<DoctorMedicalCvListItem> Items);
 }

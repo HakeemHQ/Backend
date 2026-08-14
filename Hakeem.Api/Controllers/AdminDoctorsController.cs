@@ -31,9 +31,12 @@ namespace Hakeem.Api.Controllers
         }
 
         [HttpGet("doctors")]
-        public async Task<ActionResult<IReadOnlyList<AdminDoctorResponse>>> GetDoctors(CancellationToken cancellationToken)
+        public async Task<ActionResult<AdminDoctorsResponse>> GetDoctors(
+    [FromQuery] GetDoctorsQuery query,
+    CancellationToken cancellationToken)
         {
-            var result = await mediator.Send(new GetDoctorsQuery(),cancellationToken);
+            var result = await mediator.Send(query, cancellationToken);
+
             return Ok(result);
         }
 
@@ -50,7 +53,12 @@ namespace Hakeem.Api.Controllers
            [FromBody] UpdateDoctorStatusRequest request,CancellationToken cancellationToken)
         {
             await mediator.Send(new UpdateDoctorStatusCommand(doctorId,request.Status),cancellationToken);
-            return NoContent();
+            return Ok(new
+            {
+           doctorId= doctorId,
+           Status= request.Status
+            });
+                
         }
 
 
@@ -81,11 +89,8 @@ namespace Hakeem.Api.Controllers
         public async Task<IActionResult> GetAuditLogs([FromQuery] GetAdminAuditLogsQuery query)
         {
             var result = await mediator.Send(query);
-            return Ok(new
-            {
-                success = true,
-                data = result
-            });
+            return Ok(result);
+           
         }
 
 
@@ -94,11 +99,7 @@ namespace Hakeem.Api.Controllers
                                                              CancellationToken cancellationToken)
         {
             var result = await mediator.Send(new GetActivitySummaryQuery(fromDate, toDate),cancellationToken);
-            return Ok(new
-            {
-                success = true,
-                data = result
-            });
+            return Ok (result);
         }
         public sealed record UpdateDoctorStatusRequest(AccountStatus Status);
     }

@@ -7,12 +7,6 @@ using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Identity;
 using Hakeem.Domain.Interfaces;
 using MediatR;
-using Hakeem.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Hakeem.Application.Features.Admin.Doctors.Commands.AddDoctor
 {
@@ -80,6 +74,7 @@ namespace Hakeem.Application.Features.Admin.Doctors.Commands.AddDoctor
 
             // 8. Return response
             return new CreateDoctorResponse(
+                doctorProfile.UserId,
                 doctorProfile.Id,
                 $"{user.FirstName} {user.LastName}".Trim(),
                 user.Email,

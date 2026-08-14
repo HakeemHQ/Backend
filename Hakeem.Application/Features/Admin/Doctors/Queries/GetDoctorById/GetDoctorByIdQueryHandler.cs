@@ -28,12 +28,15 @@ namespace Hakeem.Application.Features.Admin.Doctors.Queries.GetDoctorById
             }
 
             return new AdminDoctorResponse(
-                doctor.Id,
-                $"{doctor.User.FirstName} {doctor.User.LastName}".Trim(),
-                doctor.User.Email,
-                doctor.Specialty,
-                doctor.LicenseNumber,
-                doctor.User.Status);
+                DoctorId: doctor.Id,
+                UserId: doctor.UserId,
+                FullName: $"{doctor.User.FirstName} {doctor.User.LastName}".Trim(),
+                Email: doctor.User.Email,
+                Specialty: doctor.Specialty,
+                LicenseNumber: doctor.LicenseNumber,
+                Status: doctor.User.Status,
+                CreatedAt :doctor.CreatedAt
+ );
         }
     }
 }
