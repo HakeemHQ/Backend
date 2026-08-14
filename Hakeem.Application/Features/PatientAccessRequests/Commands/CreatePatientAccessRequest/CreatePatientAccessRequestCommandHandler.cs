@@ -1,4 +1,5 @@
 using Hakeem.Application.Common.Interfaces;
+using Hakeem.Application.Configurations;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Repositories.DoctorProfiles;
@@ -11,6 +12,7 @@ using Hakeem.Domain.Enums.Identity;
 using Hakeem.Domain.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Hakeem.Application.Features.PatientAccessRequests.Commands.CreatePatientAccessRequest;
 
@@ -19,9 +21,13 @@ public sealed class CreatePatientAccessRequestCommandHandler(
     IDoctorProfileRepository doctorProfileRepository,
     IOutboxEventRepository outboxEventRepository,
     ICurrentUserContext currentUserContext,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    IOptions<PatientAccessConfiguration> options)
     : IRequestHandler<CreatePatientAccessRequestCommand, CreatePatientAccessRequestResult>
 {
+    private readonly TimeSpan _pendingRequestLifetime = TimeSpan.FromMinutes(
+        options.Value.PendingRequestLifetimeMinutes);
+
     public async Task<CreatePatientAccessRequestResult> Handle(
         CreatePatientAccessRequestCommand request,
         CancellationToken cancellationToken)
@@ -61,9 +67,18 @@ public sealed class CreatePatientAccessRequestCommandHandler(
                     ErrorCodes.PatientAccessPatientNotVerified);
             }
 
-            if (await accessRequestRepository.HasPendingRequestAsync(
+            var pendingExpiresBefore = requestedAt.Subtract(_pendingRequestLifetime);
+            await accessRequestRepository.ExpireStaleRequestsAsync(
+                patient.Id,
+                pendingExpiresBefore,
+                requestedAt,
+                cancellationToken);
+
+            if (await accessRequestRepository.HasBlockingRequestAsync(
                     doctor.Id,
                     patient.Id,
+                    pendingExpiresBefore,
+                    requestedAt,
                     cancellationToken))
             {
                 throw new ConflictException(

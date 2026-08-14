@@ -1,19 +1,25 @@
 using Hakeem.Application.Common;
 using Hakeem.Application.Common.Interfaces;
+using Hakeem.Application.Configurations;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Repositories.PatientAccessRequests;
 using Hakeem.Application.Repositories.PatientProfiles;
 using MediatR;
+using Microsoft.Extensions.Options;
 
 namespace Hakeem.Application.Features.PatientAccessRequests.Queries.GetPatientAccessRequests;
 
 public sealed class GetPatientAccessRequestsQueryHandler(
     IPatientProfileRepository patientProfileRepository,
     IPatientAccessRequestRepository accessRequestRepository,
-    ICurrentUserContext currentUserContext)
+    ICurrentUserContext currentUserContext,
+    IOptions<PatientAccessConfiguration> options)
     : IRequestHandler<GetPatientAccessRequestsQuery, PaginatedResult<PatientAccessRequestItem>>
 {
+    private readonly TimeSpan _pendingRequestLifetime = TimeSpan.FromMinutes(
+        options.Value.PendingRequestLifetimeMinutes);
+
     public async Task<PaginatedResult<PatientAccessRequestItem>> Handle(
         GetPatientAccessRequestsQuery request,
         CancellationToken cancellationToken)
@@ -26,6 +32,13 @@ public sealed class GetPatientAccessRequestsQueryHandler(
         {
             throw new UnAuthorizedException(ErrorCodes.AuthUnauthorized);
         }
+
+        var utcNow = DateTime.UtcNow;
+        await accessRequestRepository.ExpireStaleRequestsAsync(
+            patient.Id,
+            utcNow.Subtract(_pendingRequestLifetime),
+            utcNow,
+            cancellationToken);
 
         var requests = await accessRequestRepository.GetForPatientAsync(
             patient.Id,

@@ -21,16 +21,43 @@ public sealed class PatientAccessRequestRepository(ApplicationDbContext dbContex
                 cancellationToken);
     }
 
-    public Task<bool> HasPendingRequestAsync(
+    public Task<int> ExpireStaleRequestsAsync(
+        Guid patientProfileId,
+        DateTime pendingExpiresBefore,
+        DateTime utcNow,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.PatientAccessRequests
+            .Where(request =>
+                request.PatientProfileId == patientProfileId &&
+                ((request.Status == PatientAccessRequestStatus.Pending &&
+                  request.RequestedAt <= pendingExpiresBefore) ||
+                 (request.Status == PatientAccessRequestStatus.Approved &&
+                  request.CodeExpiresAt <= utcNow)))
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(
+                        request => request.Status,
+                        PatientAccessRequestStatus.Expired)
+                    .SetProperty(request => request.UpdatedAt, utcNow),
+                cancellationToken);
+    }
+
+    public Task<bool> HasBlockingRequestAsync(
         Guid doctorProfileId,
         Guid patientProfileId,
+        DateTime pendingExpiresBefore,
+        DateTime utcNow,
         CancellationToken cancellationToken)
     {
         return dbContext.PatientAccessRequests.AnyAsync(
             request =>
                 request.DoctorProfileId == doctorProfileId &&
                 request.PatientProfileId == patientProfileId &&
-                request.Status == PatientAccessRequestStatus.Pending,
+                ((request.Status == PatientAccessRequestStatus.Pending &&
+                  request.RequestedAt > pendingExpiresBefore) ||
+                 (request.Status == PatientAccessRequestStatus.Approved &&
+                  request.CodeExpiresAt > utcNow)),
             cancellationToken);
     }
 
@@ -107,13 +134,15 @@ public sealed class PatientAccessRequestRepository(ApplicationDbContext dbContex
         string codeHash,
         DateTime approvedAt,
         DateTime codeExpiresAt,
+        DateTime pendingExpiresBefore,
         CancellationToken cancellationToken)
     {
         return dbContext.PatientAccessRequests
             .Where(request =>
                 request.Id == requestId &&
                 request.PatientProfileId == patientProfileId &&
-                request.Status == PatientAccessRequestStatus.Pending)
+                request.Status == PatientAccessRequestStatus.Pending &&
+                request.RequestedAt > pendingExpiresBefore)
             .ExecuteUpdateAsync(
                 setters => setters
                     .SetProperty(
@@ -130,13 +159,15 @@ public sealed class PatientAccessRequestRepository(ApplicationDbContext dbContex
         Guid requestId,
         Guid patientProfileId,
         DateTime rejectedAt,
+        DateTime pendingExpiresBefore,
         CancellationToken cancellationToken)
     {
         return dbContext.PatientAccessRequests
             .Where(request =>
                 request.Id == requestId &&
                 request.PatientProfileId == patientProfileId &&
-                request.Status == PatientAccessRequestStatus.Pending)
+                request.Status == PatientAccessRequestStatus.Pending &&
+                request.RequestedAt > pendingExpiresBefore)
             .ExecuteUpdateAsync(
                 setters => setters
                     .SetProperty(
@@ -201,6 +232,29 @@ public sealed class PatientAccessRequestRepository(ApplicationDbContext dbContex
                     .SetProperty(request => request.Status, PatientAccessRequestStatus.Redeemed)
                     .SetProperty(request => request.RedeemedAt, redeemedAt)
                     .SetProperty(request => request.UpdatedAt, redeemedAt),
+                cancellationToken);
+    }
+
+    public Task<int> ExpireApprovedAsync(
+        Guid requestId,
+        Guid doctorProfileId,
+        Guid patientProfileId,
+        DateTime utcNow,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.PatientAccessRequests
+            .Where(request =>
+                request.Id == requestId &&
+                request.DoctorProfileId == doctorProfileId &&
+                request.PatientProfileId == patientProfileId &&
+                request.Status == PatientAccessRequestStatus.Approved &&
+                request.CodeExpiresAt <= utcNow)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(
+                        request => request.Status,
+                        PatientAccessRequestStatus.Expired)
+                    .SetProperty(request => request.UpdatedAt, utcNow),
                 cancellationToken);
     }
 

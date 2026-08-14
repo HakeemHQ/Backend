@@ -36,7 +36,8 @@ public sealed class PatientAccessRequestConsentHandlerTests
         var handler = new GetPatientAccessRequestsQueryHandler(
             new FakePatientProfileRepository(patient),
             repository,
-            new FakeCurrentUserContext(patient.UserId));
+            new FakeCurrentUserContext(patient.UserId),
+            Options.Create(new PatientAccessConfiguration()));
 
         var result = await handler.Handle(
             new GetPatientAccessRequestsQuery(
@@ -56,6 +57,59 @@ public sealed class PatientAccessRequestConsentHandlerTests
         Assert.Equal(2, result.PageNumber);
         Assert.Equal(5, result.PageSize);
         Assert.Equal(1, result.TotalCount);
+        Assert.Equal(1, repository.ExpireStaleRequestsCalls);
+    }
+
+    [Fact]
+    public async Task Get_TransitionsStalePendingRequestToExpiredBeforeQuerying()
+    {
+        var patient = CreatePatient();
+        var accessRequest = CreateAccessRequest(patient.Id);
+        accessRequest.RequestedAt = DateTime.UtcNow.AddMinutes(-31);
+        accessRequest.Doctor = new DoctorProfile
+        {
+            Id = Guid.NewGuid(),
+            User = new User()
+        };
+        var repository = new FakeAccessRequestRepository(accessRequest);
+        var handler = new GetPatientAccessRequestsQueryHandler(
+            new FakePatientProfileRepository(patient),
+            repository,
+            new FakeCurrentUserContext(patient.UserId),
+            Options.Create(new PatientAccessConfiguration()));
+
+        var result = await handler.Handle(
+            new GetPatientAccessRequestsQuery(),
+            CancellationToken.None);
+
+        var item = Assert.Single(result.Items);
+        Assert.Equal("Expired", item.Status);
+        Assert.Equal(PatientAccessRequestStatus.Expired, accessRequest.Status);
+    }
+
+    [Fact]
+    public async Task Approve_WhenPendingRequestExpired_TransitionsToExpired()
+    {
+        var patient = CreatePatient();
+        var accessRequest = CreateAccessRequest(patient.Id);
+        accessRequest.RequestedAt = DateTime.UtcNow.AddMinutes(-31);
+        var repository = new FakeAccessRequestRepository(accessRequest);
+        var codeService = new FakeAccessCodeService();
+        var handler = new ApprovePatientAccessRequestCommandHandler(
+            new FakePatientProfileRepository(patient),
+            repository,
+            codeService,
+            new FakeCurrentUserContext(patient.UserId),
+            Options.Create(new PatientAccessConfiguration()));
+
+        var exception = await Assert.ThrowsAsync<ConflictException>(() =>
+            handler.Handle(
+                new ApprovePatientAccessRequestCommand(accessRequest.Id),
+                CancellationToken.None));
+
+        Assert.Equal(ErrorCodes.PatientAccessRequestAlreadyActedOn, exception.ErrorCode);
+        Assert.Equal(PatientAccessRequestStatus.Expired, accessRequest.Status);
+        Assert.False(codeService.GenerateCalled);
     }
 
     [Fact]
@@ -164,7 +218,8 @@ public sealed class PatientAccessRequestConsentHandlerTests
         var handler = new RejectPatientAccessRequestCommandHandler(
             new FakePatientProfileRepository(patient),
             repository,
-            new FakeCurrentUserContext(patient.UserId));
+            new FakeCurrentUserContext(patient.UserId),
+            Options.Create(new PatientAccessConfiguration()));
 
         var result = await handler.Handle(
             new RejectPatientAccessRequestCommand(accessRequest.Id),
@@ -189,7 +244,8 @@ public sealed class PatientAccessRequestConsentHandlerTests
         var handler = new RejectPatientAccessRequestCommandHandler(
             new FakePatientProfileRepository(patient),
             repository,
-            new FakeCurrentUserContext(patient.UserId));
+            new FakeCurrentUserContext(patient.UserId),
+            Options.Create(new PatientAccessConfiguration()));
 
         var exception = await Assert.ThrowsAsync<ConflictException>(() =>
             handler.Handle(
@@ -269,6 +325,34 @@ public sealed class PatientAccessRequestConsentHandlerTests
         public DateTime? ApprovedAt { get; private set; }
         public DateTime? CodeExpiresAt { get; private set; }
         public DateTime? RejectedAt { get; private set; }
+        public int ExpireStaleRequestsCalls { get; private set; }
+
+        public Task<int> ExpireStaleRequestsAsync(
+            Guid patientProfileId,
+            DateTime pendingExpiresBefore,
+            DateTime utcNow,
+            CancellationToken cancellationToken)
+        {
+            ExpireStaleRequestsCalls++;
+            if (request is null || request.PatientProfileId != patientProfileId)
+            {
+                return Task.FromResult(0);
+            }
+
+            var isStalePending =
+                request.Status == PatientAccessRequestStatus.Pending &&
+                request.RequestedAt <= pendingExpiresBefore;
+            var isStaleApproved =
+                request.Status == PatientAccessRequestStatus.Approved &&
+                request.CodeExpiresAt <= utcNow;
+            if (!isStalePending && !isStaleApproved)
+            {
+                return Task.FromResult(0);
+            }
+
+            request.Status = PatientAccessRequestStatus.Expired;
+            return Task.FromResult(1);
+        }
 
         public Task<Hakeem.Application.Common.PaginatedResult<PatientAccessRequest>> GetForPatientAsync(
             Guid patientProfileId,
@@ -311,6 +395,7 @@ public sealed class PatientAccessRequestConsentHandlerTests
             string codeHash,
             DateTime approvedAt,
             DateTime codeExpiresAt,
+            DateTime pendingExpiresBefore,
             CancellationToken cancellationToken)
         {
             StoredCodeHash = codeHash;
@@ -323,6 +408,7 @@ public sealed class PatientAccessRequestConsentHandlerTests
             Guid requestId,
             Guid patientProfileId,
             DateTime rejectedAt,
+            DateTime pendingExpiresBefore,
             CancellationToken cancellationToken)
         {
             RejectedAt = rejectedAt;
@@ -334,9 +420,11 @@ public sealed class PatientAccessRequestConsentHandlerTests
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
-        public Task<bool> HasPendingRequestAsync(
+        public Task<bool> HasBlockingRequestAsync(
             Guid doctorProfileId,
             Guid patientProfileId,
+            DateTime pendingExpiresBefore,
+            DateTime utcNow,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
@@ -368,6 +456,14 @@ public sealed class PatientAccessRequestConsentHandlerTests
             Guid doctorProfileId,
             Guid patientProfileId,
             DateTime redeemedAt,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<int> ExpireApprovedAsync(
+            Guid requestId,
+            Guid doctorProfileId,
+            Guid patientProfileId,
+            DateTime utcNow,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 

@@ -10,9 +10,17 @@ public interface IPatientAccessRequestRepository : IScoped
         string patientCode,
         CancellationToken cancellationToken);
 
-    Task<bool> HasPendingRequestAsync(
+    Task<int> ExpireStaleRequestsAsync(
+        Guid patientProfileId,
+        DateTime pendingExpiresBefore,
+        DateTime utcNow,
+        CancellationToken cancellationToken);
+
+    Task<bool> HasBlockingRequestAsync(
         Guid doctorProfileId,
         Guid patientProfileId,
+        DateTime pendingExpiresBefore,
+        DateTime utcNow,
         CancellationToken cancellationToken);
 
     Task<bool> HasActiveAccessAsync(
@@ -41,12 +49,14 @@ public interface IPatientAccessRequestRepository : IScoped
         string codeHash,
         DateTime approvedAt,
         DateTime codeExpiresAt,
+        DateTime pendingExpiresBefore,
         CancellationToken cancellationToken);
 
     Task<int> RejectPendingAsync(
         Guid requestId,
         Guid patientProfileId,
         DateTime rejectedAt,
+        DateTime pendingExpiresBefore,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<PatientAccessRequest>> GetCodeCandidatesAsync(
@@ -65,6 +75,13 @@ public interface IPatientAccessRequestRepository : IScoped
         Guid doctorProfileId,
         Guid patientProfileId,
         DateTime redeemedAt,
+        CancellationToken cancellationToken);
+
+    Task<int> ExpireApprovedAsync(
+        Guid requestId,
+        Guid doctorProfileId,
+        Guid patientProfileId,
+        DateTime utcNow,
         CancellationToken cancellationToken);
 
     void AddAccess(DoctorPatientAccess access);

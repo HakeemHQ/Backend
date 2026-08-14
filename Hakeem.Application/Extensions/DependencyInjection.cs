@@ -127,6 +127,9 @@ public static class DependencyInjection
         services.AddOptions<PatientAccessConfiguration>()
             .Bind(configuration.GetSection(PatientAccessConfiguration.SectionName))
             .Validate(
+                options => options.PendingRequestLifetimeMinutes is > 0 and <= 1_440,
+                "Patient access request lifetime must be between 1 and 1440 minutes.")
+            .Validate(
                 options => options.CodeLifetimeMinutes is > 0 and <= 60,
                 "Patient access code lifetime must be between 1 and 60 minutes.")
             .Validate(

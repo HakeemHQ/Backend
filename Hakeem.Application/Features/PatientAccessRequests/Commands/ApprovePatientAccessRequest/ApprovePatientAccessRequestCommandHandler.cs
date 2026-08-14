@@ -21,6 +21,8 @@ public sealed class ApprovePatientAccessRequestCommandHandler(
 {
     private readonly TimeSpan _codeLifetime = TimeSpan.FromMinutes(
         options.Value.CodeLifetimeMinutes);
+    private readonly TimeSpan _pendingRequestLifetime = TimeSpan.FromMinutes(
+        options.Value.PendingRequestLifetimeMinutes);
 
     public async Task<ApprovePatientAccessRequestResult> Handle(
         ApprovePatientAccessRequestCommand request,
@@ -34,6 +36,14 @@ public sealed class ApprovePatientAccessRequestCommandHandler(
         {
             throw new UnAuthorizedException(ErrorCodes.AuthUnauthorized);
         }
+
+        var approvedAt = DateTime.UtcNow;
+        var pendingExpiresBefore = approvedAt.Subtract(_pendingRequestLifetime);
+        await accessRequestRepository.ExpireStaleRequestsAsync(
+            patient.Id,
+            pendingExpiresBefore,
+            approvedAt,
+            cancellationToken);
 
         var accessRequest = await accessRequestRepository.GetByIdForPatientAsync(
             request.RequestId,
@@ -51,7 +61,6 @@ public sealed class ApprovePatientAccessRequestCommandHandler(
         }
 
         var issuedCode = accessCodeService.Generate();
-        var approvedAt = DateTime.UtcNow;
         var codeExpiresAt = approvedAt.Add(_codeLifetime);
         var affectedRows = await accessRequestRepository.ApprovePendingAsync(
             accessRequest.Id,
@@ -59,6 +68,7 @@ public sealed class ApprovePatientAccessRequestCommandHandler(
             issuedCode.CodeHash,
             approvedAt,
             codeExpiresAt,
+            pendingExpiresBefore,
             cancellationToken);
 
         if (affectedRows != 1)

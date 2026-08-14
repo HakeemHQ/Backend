@@ -84,6 +84,12 @@ public sealed class CreatePatientAccessSessionCommandHandler(
         if (!matchingRequest.CodeExpiresAt.HasValue ||
             matchingRequest.CodeExpiresAt.Value <= grantedAt)
         {
+            await accessRequestRepository.ExpireApprovedAsync(
+                matchingRequest.Id,
+                doctor.Id,
+                patient.Id,
+                grantedAt,
+                cancellationToken);
             throw new UnprocessableEntityException(ErrorCodes.PatientAccessCodeExpired);
         }
 
@@ -114,6 +120,19 @@ public sealed class CreatePatientAccessSessionCommandHandler(
 
             if (affectedRows != 1)
             {
+                await unitOfWork.RollBackTransactionAsync();
+                var expiredRows = await accessRequestRepository.ExpireApprovedAsync(
+                    matchingRequest.Id,
+                    doctor.Id,
+                    patient.Id,
+                    DateTime.UtcNow,
+                    cancellationToken);
+                if (expiredRows == 1)
+                {
+                    throw new UnprocessableEntityException(
+                        ErrorCodes.PatientAccessCodeExpired);
+                }
+
                 throw new ConflictException(ErrorCodes.PatientAccessCodeAlreadyRedeemed);
             }
 

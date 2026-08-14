@@ -1,4 +1,5 @@
 using Hakeem.Application.Common.Interfaces;
+using Hakeem.Application.Configurations;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Features.PatientAccessRequests.Commands.CreatePatientAccessRequest;
@@ -11,6 +12,7 @@ using Hakeem.Domain.Enums.Access;
 using Hakeem.Domain.Enums.Identity;
 using Hakeem.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Hakeem.Infrastructure.Tests.Access;
 
@@ -111,7 +113,7 @@ public sealed class CreatePatientAccessRequestCommandHandlerTests
         var repository = new FakePatientAccessRequestRepository(
             CreatePatient(IdentityVerificationStatus.Verified))
         {
-            HasPendingRequest = true
+            HasBlockingRequest = true
         };
         var handler = CreateHandler(
             CreateDoctor(AccountStatus.Active),
@@ -124,6 +126,50 @@ public sealed class CreatePatientAccessRequestCommandHandlerTests
         Assert.Equal(ErrorCodes.PatientAccessPendingRequestExists, exception.ErrorCode);
         Assert.True(unitOfWork.RolledBack);
         Assert.Null(repository.AddedRequest);
+    }
+
+    [Fact]
+    public async Task Handle_WhenApprovedCodeIsStillValid_ReturnsConflict()
+    {
+        var unitOfWork = new FakeUnitOfWork();
+        var repository = new FakePatientAccessRequestRepository(
+            CreatePatient(IdentityVerificationStatus.Verified))
+        {
+            HasBlockingRequest = true
+        };
+        var handler = CreateHandler(
+            CreateDoctor(AccountStatus.Active),
+            repository,
+            unitOfWork);
+
+        var exception = await Assert.ThrowsAsync<ConflictException>(() =>
+            handler.Handle(CreateCommand(), CancellationToken.None));
+
+        Assert.Equal(ErrorCodes.PatientAccessPendingRequestExists, exception.ErrorCode);
+        Assert.Equal(1, repository.ExpireStaleRequestsCalls);
+        Assert.Null(repository.AddedRequest);
+    }
+
+    [Fact]
+    public async Task Handle_WhenPreviousRequestExpired_CreatesNewPendingRequest()
+    {
+        var unitOfWork = new FakeUnitOfWork();
+        var repository = new FakePatientAccessRequestRepository(
+            CreatePatient(IdentityVerificationStatus.Verified))
+        {
+            ExpireStaleRequestsAffectedRows = 1
+        };
+        var handler = CreateHandler(
+            CreateDoctor(AccountStatus.Active),
+            repository,
+            unitOfWork);
+
+        var result = await handler.Handle(CreateCommand(), CancellationToken.None);
+
+        Assert.Equal(1, repository.ExpireStaleRequestsCalls);
+        Assert.NotNull(repository.AddedRequest);
+        Assert.Equal("Pending", result.Status);
+        Assert.True(unitOfWork.Committed);
     }
 
     [Fact]
@@ -181,7 +227,11 @@ public sealed class CreatePatientAccessRequestCommandHandlerTests
             new FakeDoctorProfileRepository(doctor),
             outboxEventRepository ?? new FakeOutboxEventRepository(),
             new FakeCurrentUserContext(doctor.UserId),
-            unitOfWork);
+            unitOfWork,
+            Options.Create(new PatientAccessConfiguration
+            {
+                PendingRequestLifetimeMinutes = 30
+            }));
     }
 
     private static CreatePatientAccessRequestCommand CreateCommand() => new()
@@ -247,8 +297,10 @@ public sealed class CreatePatientAccessRequestCommandHandlerTests
     private sealed class FakePatientAccessRequestRepository(PatientProfile? patient)
         : IPatientAccessRequestRepository
     {
-        public bool HasPendingRequest { get; init; }
+        public bool HasBlockingRequest { get; init; }
         public bool HasActiveAccess { get; init; }
+        public int ExpireStaleRequestsAffectedRows { get; init; }
+        public int ExpireStaleRequestsCalls { get; private set; }
         public PatientAccessRequest? AddedRequest { get; private set; }
 
         public Task<PatientProfile?> GetPatientByCodeAsync(
@@ -256,11 +308,24 @@ public sealed class CreatePatientAccessRequestCommandHandlerTests
             CancellationToken cancellationToken) =>
             Task.FromResult(patient?.PatientCode == patientCode ? patient : null);
 
-        public Task<bool> HasPendingRequestAsync(
+        public Task<int> ExpireStaleRequestsAsync(
+            Guid patientProfileId,
+            DateTime pendingExpiresBefore,
+            DateTime utcNow,
+            CancellationToken cancellationToken)
+        {
+            ExpireStaleRequestsCalls++;
+            Assert.Equal(TimeSpan.FromMinutes(30), utcNow - pendingExpiresBefore);
+            return Task.FromResult(ExpireStaleRequestsAffectedRows);
+        }
+
+        public Task<bool> HasBlockingRequestAsync(
             Guid doctorProfileId,
             Guid patientProfileId,
+            DateTime pendingExpiresBefore,
+            DateTime utcNow,
             CancellationToken cancellationToken) =>
-            Task.FromResult(HasPendingRequest);
+            Task.FromResult(HasBlockingRequest);
 
         public Task<bool> HasActiveAccessAsync(
             Guid doctorProfileId,
@@ -294,6 +359,7 @@ public sealed class CreatePatientAccessRequestCommandHandlerTests
             string codeHash,
             DateTime approvedAt,
             DateTime codeExpiresAt,
+            DateTime pendingExpiresBefore,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
@@ -301,6 +367,7 @@ public sealed class CreatePatientAccessRequestCommandHandlerTests
             Guid requestId,
             Guid patientProfileId,
             DateTime rejectedAt,
+            DateTime pendingExpiresBefore,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
@@ -322,6 +389,14 @@ public sealed class CreatePatientAccessRequestCommandHandlerTests
             Guid doctorProfileId,
             Guid patientProfileId,
             DateTime redeemedAt,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<int> ExpireApprovedAsync(
+            Guid requestId,
+            Guid doctorProfileId,
+            Guid patientProfileId,
+            DateTime utcNow,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 

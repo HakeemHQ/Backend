@@ -1,19 +1,25 @@
 using Hakeem.Application.Common.Interfaces;
+using Hakeem.Application.Configurations;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Repositories.PatientAccessRequests;
 using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Domain.Enums.Access;
 using MediatR;
+using Microsoft.Extensions.Options;
 
 namespace Hakeem.Application.Features.PatientAccessRequests.Commands.RejectPatientAccessRequest;
 
 public sealed class RejectPatientAccessRequestCommandHandler(
     IPatientProfileRepository patientProfileRepository,
     IPatientAccessRequestRepository accessRequestRepository,
-    ICurrentUserContext currentUserContext)
+    ICurrentUserContext currentUserContext,
+    IOptions<PatientAccessConfiguration> options)
     : IRequestHandler<RejectPatientAccessRequestCommand, RejectPatientAccessRequestResult>
 {
+    private readonly TimeSpan _pendingRequestLifetime = TimeSpan.FromMinutes(
+        options.Value.PendingRequestLifetimeMinutes);
+
     public async Task<RejectPatientAccessRequestResult> Handle(
         RejectPatientAccessRequestCommand request,
         CancellationToken cancellationToken)
@@ -26,6 +32,14 @@ public sealed class RejectPatientAccessRequestCommandHandler(
         {
             throw new UnAuthorizedException(ErrorCodes.AuthUnauthorized);
         }
+
+        var rejectedAt = DateTime.UtcNow;
+        var pendingExpiresBefore = rejectedAt.Subtract(_pendingRequestLifetime);
+        await accessRequestRepository.ExpireStaleRequestsAsync(
+            patient.Id,
+            pendingExpiresBefore,
+            rejectedAt,
+            cancellationToken);
 
         var accessRequest = await accessRequestRepository.GetByIdForPatientAsync(
             request.RequestId,
@@ -45,7 +59,8 @@ public sealed class RejectPatientAccessRequestCommandHandler(
         var affectedRows = await accessRequestRepository.RejectPendingAsync(
             accessRequest.Id,
             patient.Id,
-            DateTime.UtcNow,
+            rejectedAt,
+            pendingExpiresBefore,
             cancellationToken);
 
         if (affectedRows != 1)
