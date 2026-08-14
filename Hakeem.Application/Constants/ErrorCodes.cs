@@ -35,6 +35,7 @@ public static class ErrorCodes
     public const string AuthPasswordResetSent = "Auth.PasswordResetSent";
     public const string AuthPasswordResetSuccess = "Auth.PasswordResetSuccess";
     public const string AuthRegistered = "Auth.Registered";
+    public const string AuthNationalIdAlreadyRegistered = "Auth.NationalIdAlreadyRegistered";
     public const string AuthLoggedIn = "Auth.LoggedIn";
     public const string AuthTokenRefreshed = "Auth.TokenRefreshed";
 

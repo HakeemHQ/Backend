@@ -236,6 +236,11 @@ public sealed class VerifyPatientIdentityCommandHandlerTests
             Assert.False(unitOfWork.Committed);
             return Task.FromResult(belongsToAnotherPatient);
         }
+
+        public Task<bool> VerifiedNationalIdExistsAsync(
+            string verifiedNationalId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(belongsToAnotherPatient);
     }
 
     private sealed class FakeUnitOfWork : IUnitOfWork

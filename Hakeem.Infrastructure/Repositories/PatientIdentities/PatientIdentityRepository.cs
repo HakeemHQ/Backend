@@ -28,4 +28,13 @@ public sealed class PatientIdentityRepository(ApplicationDbContext dbContext)
                 patient.VerifiedNationalId == verifiedNationalId,
             cancellationToken);
     }
+
+    public Task<bool> VerifiedNationalIdExistsAsync(
+        string verifiedNationalId,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.PatientProfiles.AnyAsync(
+            patient => patient.VerifiedNationalId == verifiedNationalId,
+            cancellationToken);
+    }
 }

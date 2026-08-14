@@ -141,6 +141,9 @@
   <data name="Auth.Registered" xml:space="preserve">
     <value>تم إنشاء الحساب بنجاح.</value>
   </data>
+  <data name="Auth.NationalIdAlreadyRegistered" xml:space="preserve">
+    <value>يوجد حساب بالفعل مرتبط بهذا الرقم القومي الموثق.</value>
+  </data>
   <data name="Auth.LoggedIn" xml:space="preserve">
     <value>تم تسجيل الدخول بنجاح.</value>
   </data>

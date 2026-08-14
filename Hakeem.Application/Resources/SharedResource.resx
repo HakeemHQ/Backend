@@ -145,6 +145,9 @@
   <data name="Auth.Registered" xml:space="preserve">
     <value>Account created successfully.</value>
   </data>
+  <data name="Auth.NationalIdAlreadyRegistered" xml:space="preserve">
+    <value>An account with this verified National ID already exists.</value>
+  </data>
   <data name="Auth.LoggedIn" xml:space="preserve">
     <value>Login successful.</value>
   </data>

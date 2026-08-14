@@ -9,6 +9,10 @@ public interface IPatientIdentityRepository : IScoped
         string patientCode,
         CancellationToken cancellationToken);
 
+    Task<bool> VerifiedNationalIdExistsAsync(
+        string verifiedNationalId,
+        CancellationToken cancellationToken);
+
     Task<bool> VerifiedNationalIdBelongsToAnotherPatientAsync(
         string verifiedNationalId,
         Guid patientId,

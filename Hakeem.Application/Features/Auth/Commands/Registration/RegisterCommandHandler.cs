@@ -3,6 +3,7 @@ using Hakeem.Application.Exceptions;
 using Hakeem.Application.Repositories.Users;
 using Hakeem.Application.Interfaces.Services.Auth;
 using Hakeem.Application.Interfaces.Identity;
+using Hakeem.Application.Repositories.PatientIdentities;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Identity;
 using Hakeem.Domain.Interfaces;
@@ -13,6 +14,7 @@ namespace Hakeem.Application.Features.Auth.Commands.Registration;
 
 public sealed class RegisterCommandHandler(
     IUserRepository userRepository,
+    IPatientIdentityRepository patientIdentityRepository,
     IPasswordHasher passwordHasher,
     IPatientCodeGenerator patientCodeGenerator,
     IUnitOfWork unitOfWork)
@@ -21,6 +23,7 @@ public sealed class RegisterCommandHandler(
     public async Task<RegisterResult> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+        var nationalId = request.NationalId.Trim();
         var firstName = request.FirstName.Trim();
         var lastName = request.LastName.Trim();
         var gender = request.Gender.Trim();
@@ -32,6 +35,14 @@ public sealed class RegisterCommandHandler(
             throw new ConflictException(ErrorCodes.UserEmailAlreadyExists);
         }
 
+        if (await patientIdentityRepository.VerifiedNationalIdExistsAsync(
+                nationalId,
+                cancellationToken))
+        {
+            throw new ConflictException(
+                ErrorCodes.AuthNationalIdAlreadyRegistered);
+        }
+
         var userId = Guid.NewGuid();
         var profile = new Hakeem.Domain.Entities.PatientProfile
         {
@@ -40,7 +51,7 @@ public sealed class RegisterCommandHandler(
             FullName = $"{firstName} {lastName}",
             BirthDate = request.BirthDate.ToDateTime(TimeOnly.MinValue),
             PatientCode = await patientCodeGenerator.GenerateUniqueAsync(cancellationToken),
-            NationalId = request.NationalId,
+            NationalId = nationalId,
             IdentityVerificationStatus = IdentityVerificationStatus.Pending
         };
 
