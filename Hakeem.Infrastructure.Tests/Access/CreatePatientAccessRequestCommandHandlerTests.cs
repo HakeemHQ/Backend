@@ -3,7 +3,9 @@ using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Features.PatientAccessRequests.Commands.CreatePatientAccessRequest;
 using Hakeem.Application.Repositories.DoctorProfiles;
+using Hakeem.Application.Repositories.Notifications;
 using Hakeem.Application.Repositories.PatientAccessRequests;
+using Hakeem.Domain.DomainEvents.Outbox;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Access;
 using Hakeem.Domain.Enums.Identity;
@@ -21,7 +23,12 @@ public sealed class CreatePatientAccessRequestCommandHandlerTests
         var patient = CreatePatient(IdentityVerificationStatus.Verified);
         var repository = new FakePatientAccessRequestRepository(patient);
         var unitOfWork = new FakeUnitOfWork();
-        var handler = CreateHandler(doctor, repository, unitOfWork);
+        var outboxRepository = new FakeOutboxEventRepository();
+        var handler = CreateHandler(
+            doctor,
+            repository,
+            unitOfWork,
+            outboxRepository);
 
         var result = await handler.Handle(CreateCommand(), CancellationToken.None);
 
@@ -38,6 +45,13 @@ public sealed class CreatePatientAccessRequestCommandHandlerTests
         Assert.Equal(repository.AddedRequest.Id, result.RequestId);
         Assert.Equal("Pending", result.Status);
         Assert.Equal(DateTimeKind.Utc, result.RequestedAt.Kind);
+        var outboxEvent = Assert.IsType<PatientAccessRequestedEvent>(
+            outboxRepository.AddedEvent);
+        Assert.Equal(repository.AddedRequest.Id, outboxEvent.RequestId);
+        Assert.Equal(patient.UserId, outboxEvent.PatientUserId);
+        Assert.Equal(
+            $"patient-access-requested:{repository.AddedRequest.Id}",
+            outboxRepository.IdempotencyKey);
     }
 
     [Fact]
@@ -159,11 +173,13 @@ public sealed class CreatePatientAccessRequestCommandHandlerTests
     private static CreatePatientAccessRequestCommandHandler CreateHandler(
         DoctorProfile doctor,
         FakePatientAccessRequestRepository repository,
-        FakeUnitOfWork unitOfWork)
+        FakeUnitOfWork unitOfWork,
+        FakeOutboxEventRepository? outboxEventRepository = null)
     {
         return new CreatePatientAccessRequestCommandHandler(
             repository,
             new FakeDoctorProfileRepository(doctor),
+            outboxEventRepository ?? new FakeOutboxEventRepository(),
             new FakeCurrentUserContext(doctor.UserId),
             unitOfWork);
     }
@@ -197,6 +213,27 @@ public sealed class CreatePatientAccessRequestCommandHandlerTests
     };
 
     private sealed record FakeCurrentUserContext(Guid UserId) : ICurrentUserContext;
+
+    private sealed class FakeOutboxEventRepository : IOutboxEventRepository
+    {
+        public OutboxEventBase? AddedEvent { get; private set; }
+        public string? IdempotencyKey { get; private set; }
+
+        public void Add<TEvent>(TEvent @event, string? idempotencyKey = null)
+            where TEvent : OutboxEventBase
+        {
+            AddedEvent = @event;
+            IdempotencyKey = idempotencyKey;
+        }
+
+        public Task<bool> ExistsByIdempotencyKeyAsync(
+            string key,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(false);
+
+        public Task SaveAsync(CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+    }
 
     private sealed class FakeDoctorProfileRepository(DoctorProfile doctor)
         : IDoctorProfileRepository

@@ -2,7 +2,9 @@ using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Repositories.DoctorProfiles;
+using Hakeem.Application.Repositories.Notifications;
 using Hakeem.Application.Repositories.PatientAccessRequests;
+using Hakeem.Domain.DomainEvents.Outbox;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Access;
 using Hakeem.Domain.Enums.Identity;
@@ -15,6 +17,7 @@ namespace Hakeem.Application.Features.PatientAccessRequests.Commands.CreatePatie
 public sealed class CreatePatientAccessRequestCommandHandler(
     IPatientAccessRequestRepository accessRequestRepository,
     IDoctorProfileRepository doctorProfileRepository,
+    IOutboxEventRepository outboxEventRepository,
     ICurrentUserContext currentUserContext,
     IUnitOfWork unitOfWork)
     : IRequestHandler<CreatePatientAccessRequestCommand, CreatePatientAccessRequestResult>
@@ -87,6 +90,15 @@ public sealed class CreatePatientAccessRequestCommandHandler(
             };
 
             accessRequestRepository.Add(accessRequest);
+            outboxEventRepository.Add(
+                new PatientAccessRequestedEvent
+                {
+                    RequestId = accessRequest.Id,
+                    PatientUserId = patient.UserId,
+                    OccurredOn = requestedAt
+                },
+                $"patient-access-requested:{accessRequest.Id}");
+
             await unitOfWork.SaveChanges(cancellationToken);
             await unitOfWork.CommitTransactionAsync();
 

@@ -388,4 +388,25 @@
   <data name="PatientAccess.PatientAccessesRetrieved" xml:space="preserve">
     <value>تم استرجاع الأطباء الذين لديهم صلاحية وصول نشطة بنجاح.</value>
   </data>
+  <data name="PushDevice.Registered" xml:space="preserve">
+    <value>تم تسجيل جهاز الإشعارات بنجاح.</value>
+  </data>
+  <data name="PushDevice.Unregistered" xml:space="preserve">
+    <value>تم إلغاء تسجيل جهاز الإشعارات بنجاح.</value>
+  </data>
+  <data name="PushDevice.InvalidExpoPushToken" xml:space="preserve">
+    <value>رمز إشعارات Expo غير صالح.</value>
+  </data>
+  <data name="PushDevice.InvalidPlatform" xml:space="preserve">
+    <value>يجب أن تكون المنصة ios أو android.</value>
+  </data>
+  <data name="PushDevice.InvalidLanguage" xml:space="preserve">
+    <value>يجب أن تكون اللغة en أو ar.</value>
+  </data>
+  <data name="PushNotification.PatientAccessRequested.Title" xml:space="preserve">
+    <value>طلب وصول من طبيب</value>
+  </data>
+  <data name="PushNotification.PatientAccessRequested.Body" xml:space="preserve">
+    <value>يرغب طبيب في الوصول مؤقتًا إلى سجلاتك في حكيم. افتح حكيم لمراجعة الطلب.</value>
+  </data>
 </root>

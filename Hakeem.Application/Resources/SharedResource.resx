@@ -392,4 +392,25 @@
   <data name="PatientAccess.PatientAccessesRetrieved" xml:space="preserve">
     <value>Doctors with active access retrieved successfully.</value>
   </data>
+  <data name="PushDevice.Registered" xml:space="preserve">
+    <value>Push notification device registered successfully.</value>
+  </data>
+  <data name="PushDevice.Unregistered" xml:space="preserve">
+    <value>Push notification device unregistered successfully.</value>
+  </data>
+  <data name="PushDevice.InvalidExpoPushToken" xml:space="preserve">
+    <value>The Expo push token is invalid.</value>
+  </data>
+  <data name="PushDevice.InvalidPlatform" xml:space="preserve">
+    <value>Platform must be ios or android.</value>
+  </data>
+  <data name="PushDevice.InvalidLanguage" xml:space="preserve">
+    <value>Language must be en or ar.</value>
+  </data>
+  <data name="PushNotification.PatientAccessRequested.Title" xml:space="preserve">
+    <value>Doctor access request</value>
+  </data>
+  <data name="PushNotification.PatientAccessRequested.Body" xml:space="preserve">
+    <value>A doctor is requesting temporary access to your Hakeem records. Open Hakeem to review the request.</value>
+  </data>
 </root>

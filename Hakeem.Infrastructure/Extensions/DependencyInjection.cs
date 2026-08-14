@@ -3,6 +3,7 @@ using Azure;
 using Azure.AI.DocumentIntelligence;
 using Hakeem.Application.Configurations;
 using Hakeem.Application.Interfaces.Agents;
+using Hakeem.Application.Interfaces.Notifications;
 using Hakeem.Application.Interfaces.Rag;
 using Hakeem.Domain.DomainEvents.Outbox;
 using Hakeem.Domain.Interfaces.ServiceLifetime;
@@ -63,6 +64,17 @@ public static class DependencyInjection
             .AddHttpClient(GeminiChatHttpClient)
             .AddHttpMessageHandler(
                 () => new GeminiRequiredToolCallHandler());
+
+        services.AddHttpClient<
+            IPushNotificationService,
+            ExpoPushNotificationService>(client =>
+            {
+                client.BaseAddress = new Uri(
+                    "https://exp.host/--/api/v2/push/");
+                client.Timeout = TimeSpan.FromSeconds(30);
+                client.DefaultRequestHeaders.Accept.ParseAdd(
+                    "application/json");
+            });
         services.AddSingleton<IChatCompletionService>(
             serviceProvider =>
             {
