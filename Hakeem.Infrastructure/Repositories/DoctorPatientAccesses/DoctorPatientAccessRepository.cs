@@ -102,4 +102,21 @@ public sealed class DoctorPatientAccessRepository(ApplicationDbContext dbContext
                     .SetProperty(access => access.UpdatedAt, revokedAt),
                 cancellationToken);
     }
+
+    public async Task<bool> HasActiveAccessAsync(
+    Guid doctorProfileId,
+    Guid patientProfileId,
+    DateTime utcNow,
+    CancellationToken cancellationToken)
+    {
+        return await dbContext.DoctorPatientAccesses
+            .AsNoTracking()
+            .AnyAsync(x =>
+                x.DoctorProfileId == doctorProfileId &&
+                x.PatientProfileId == patientProfileId &&
+                x.Status == DoctorPatientAccessStatus.Active &&
+                x.RevokedAt == null &&
+                x.ExpiresAt > utcNow,
+                cancellationToken);
+    }
 }

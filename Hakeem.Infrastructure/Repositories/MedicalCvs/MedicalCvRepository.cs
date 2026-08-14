@@ -5,6 +5,7 @@ using Hakeem.Domain.Enums.MedicalCvs;
 using Hakeem.Domain.Interfaces.ServiceLifetime;
 using Hakeem.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
+using static Hakeem.Application.Repositories.MedicalCvs.IMedicalCvRepository;
 
 namespace Hakeem.Infrastructure.Repositories.MedicalCvs;
 
@@ -150,4 +151,58 @@ public sealed class MedicalCvRepository(ApplicationDbContext context)
     {
         context.MedicalCvVersions.Add(version);
     }
+
+
+    public async Task<IReadOnlyList<MedicalCv>> GetByPatientIdAsync(
+    Guid patientId,
+    CancellationToken cancellationToken)
+    {
+        return await context.MedicalCvs
+            .AsNoTracking()
+            .Include(x => x.Versions)
+            .Where(x => x.PatientId == patientId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<MedicalCvReadModel?> GetByIdAsync(
+     Guid medicalCvId,
+     CancellationToken cancellationToken)
+    {
+        return await context.MedicalCvs
+            .AsNoTracking()
+            .Where(x => x.Id == medicalCvId)
+            .Select(x => new MedicalCvReadModel(
+                x.Id,
+                x.PatientId))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<MedicalCvVersionReadModel?> GetVersionByIdAsync(
+    Guid medicalCvVersionId,
+    CancellationToken cancellationToken)
+    {
+        return await context.MedicalCvVersions
+            .AsNoTracking()
+            .Where(x => x.Id == medicalCvVersionId)
+            .Select(x => new MedicalCvVersionReadModel(
+                x.Id,
+                x.MedicalCvId,
+                x.Status,
+                x.PdfFileKey))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    
+public Task<MedicalCvVersion?> GetVersionForApprovalAsync(
+    Guid medicalCvVersionId,
+    CancellationToken cancellationToken)
+    {
+        return context.MedicalCvVersions
+            .Include(version => version.MedicalCv)
+            .SingleOrDefaultAsync(
+                version => version.Id == medicalCvVersionId,
+                cancellationToken);
+    }
+
 }
