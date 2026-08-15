@@ -6,6 +6,7 @@ using Hakeem.Application.Features.Admin.AduitLogs.GetAuditLogs.DTOs;
 using Hakeem.Application.Features.Admin.AduitLogs.GetAuditLogs.Queries;
 using Hakeem.Application.Features.Admin.Doctors.Commands.AddDoctor;
 using Hakeem.Application.Features.Admin.Doctors.Commands.UpdateDoctorStatus;
+using Hakeem.Application.Features.Admin.Doctors.Commands.UpdateDoctorStatus.DTOs;
 using Hakeem.Application.Features.Admin.Doctors.DTOs;
 using Hakeem.Application.Features.Admin.Doctors.Queries;
 using Hakeem.Application.Features.Admin.Doctors.Queries.GetDoctorById;
@@ -139,6 +140,5 @@ namespace Hakeem.Api.Controllers
             var result = await mediator.Send(new GetActivitySummaryQuery(fromDate, toDate),cancellationToken);
             return SuccessResponse(result);
         }
-        public sealed record UpdateDoctorStatusRequest(string Status);
     }
 }
