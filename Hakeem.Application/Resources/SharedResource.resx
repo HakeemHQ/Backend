@@ -142,6 +142,9 @@
   <data name="Auth.PasswordResetSuccess" xml:space="preserve">
     <value>Password reset completed.</value>
   </data>
+  <data name="Auth.PasswordMustBeDifferent" xml:space="preserve">
+    <value>Your new password must be different from your current password.</value>
+  </data>
   <data name="Auth.Registered" xml:space="preserve">
     <value>Account created successfully.</value>
   </data>

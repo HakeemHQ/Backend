@@ -62,7 +62,12 @@ public sealed class PasswordResetRequestCommandHandler(
 
     private string BuildResetLink(string resetToken)
     {
-        var baseUrl = configuration["WebsiteSettings:BaseUrl"]?.TrimEnd('/') ?? string.Empty;
-        return $"{baseUrl}/auth/password-reset/confirm?token={Uri.EscapeDataString(resetToken)}";
+        var frontendUrl = configuration["PasswordReset:FrontendUrl"];
+        if (string.IsNullOrWhiteSpace(frontendUrl))
+        {
+            throw new InvalidOperationException("PasswordReset:FrontendUrl is not configured.");
+        }
+
+        return $"{frontendUrl.Trim()}?token={Uri.EscapeDataString(resetToken)}";
     }
 }

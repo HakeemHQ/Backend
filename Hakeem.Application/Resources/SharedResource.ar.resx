@@ -138,6 +138,9 @@
   <data name="Auth.PasswordResetSuccess" xml:space="preserve">
     <value>تمت إعادة تعيين كلمة المرور بنجاح.</value>
   </data>
+  <data name="Auth.PasswordMustBeDifferent" xml:space="preserve">
+    <value>يجب أن تكون كلمة المرور الجديدة مختلفة عن كلمة المرور الحالية.</value>
+  </data>
   <data name="Auth.Registered" xml:space="preserve">
     <value>تم إنشاء الحساب بنجاح.</value>
   </data>

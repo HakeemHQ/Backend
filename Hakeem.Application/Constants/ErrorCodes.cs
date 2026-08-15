@@ -29,6 +29,7 @@ public static class ErrorCodes
     public const string AuthInvalidGeneratedPassword = "Auth.InvalidGeneratedPassword";
     public const string AuthInvalidRefreshToken = "Auth.InvalidRefreshToken";
     public const string AuthInvalidResetToken = "Auth.InvalidResetToken";
+    public const string AuthPasswordMustBeDifferent = "Auth.PasswordMustBeDifferent";
     public const string AuthInvalidMfaToken = "Auth.InvalidMfaToken";
     public const string AuthMfaTokenExpired = "Auth.MfaTokenExpired";
     public const string AuthLoggedOut = "Auth.LoggedOut";

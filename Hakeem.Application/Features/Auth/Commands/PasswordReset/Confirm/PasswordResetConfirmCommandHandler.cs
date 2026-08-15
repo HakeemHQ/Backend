@@ -40,6 +40,13 @@ public sealed class PasswordResetConfirmCommandHandler(
             throw new LocalizedHttpException(ErrorCodes.AuthInvalidResetToken, StatusCodes.Status422UnprocessableEntity);
         }
 
+        if (passwordHasher.Verify(request.NewPassword, user.PasswordHash))
+        {
+            throw new LocalizedHttpException(
+                ErrorCodes.AuthPasswordMustBeDifferent,
+                StatusCodes.Status422UnprocessableEntity);
+        }
+
         storedToken.IsUsed = true;
         user.PasswordHash = passwordHasher.Hash(request.NewPassword);
 
