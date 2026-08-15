@@ -1,5 +1,6 @@
 using Hakeem.Application.Features.Doctor.MedicalCvs.Commands;
 using Hakeem.Application.Features.MedicalCvs.DTOs;
+using Hakeem.Application.Interfaces.Files;
 using Hakeem.Application.Interfaces.MedicalCvs;
 using Hakeem.Application.Resources;
 using Hakeem.Domain.Enums.MedicalCvs;
@@ -26,8 +27,13 @@ public sealed class GenerateDoctorMedicalCvCommandTests
             Guid.NewGuid(),
             MedicalCvCreatedByRole.Doctor);
         var generationService = new FakeGenerationService(result);
+        var previewExpiresAt = new DateTimeOffset(
+            2026, 8, 15, 18, 25, 15, TimeSpan.Zero);
+        var previewLinkService = new FakePreviewLinkService(previewExpiresAt);
         var handler = new GenerateDoctorMedicalCvCommandHandler(
-            generationService);
+            generationService,
+            previewLinkService,
+            new FakeFileUrlResolver());
 
         var response = await handler.Handle(
             new GenerateDoctorMedicalCvCommand(
@@ -44,6 +50,14 @@ public sealed class GenerateDoctorMedicalCvCommandTests
         Assert.Equal("Queued", response.LatestVersion.GenerationStatus);
         Assert.Equal("Unreviewed", response.LatestVersion.VerificationStatus);
         Assert.Equal("Doctor", response.LatestVersion.CreatedByRole);
+        Assert.Equal(
+            $"https://api.test/medical-cv-versions/" +
+            $"{result.MedicalCvVersionId}/preview?token=token%2B%2F%3D",
+            response.LatestVersion.PdfUrl);
+        Assert.Equal(previewExpiresAt, response.LatestVersion.PreviewExpiresAt);
+        Assert.Equal(patientId, previewLinkService.PatientId);
+        Assert.Equal(result.MedicalCvId, previewLinkService.MedicalCvId);
+        Assert.Equal(result.MedicalCvVersionId, previewLinkService.VersionId);
         Assert.Equal(patientId, generationService.PatientId);
         Assert.Equal(
             MedicalCvCreatedByRole.Doctor,
@@ -94,6 +108,39 @@ public sealed class GenerateDoctorMedicalCvCommandTests
             MedicalCvCreatedByRole createdByRole,
             CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
+    }
+
+    private sealed class FakePreviewLinkService(DateTimeOffset expiresAt)
+        : IMedicalCvPreviewLinkService
+    {
+        public Guid PatientId { get; private set; }
+        public Guid MedicalCvId { get; private set; }
+        public Guid VersionId { get; private set; }
+
+        public MedicalCvPreviewLink Create(
+            Guid patientId,
+            Guid medicalCvId,
+            Guid medicalCvVersionId)
+        {
+            PatientId = patientId;
+            MedicalCvId = medicalCvId;
+            VersionId = medicalCvVersionId;
+            return new MedicalCvPreviewLink("token+/=", expiresAt);
+        }
+
+        public bool TryValidate(
+            string token,
+            Guid medicalCvVersionId,
+            out MedicalCvPreviewAccess access) =>
+            throw new NotSupportedException();
+    }
+
+    private sealed class FakeFileUrlResolver : IFileUrlResolver
+    {
+        public string ResolveFileUrl(string value) => ToAbsoluteUrl(value);
+
+        public string ToAbsoluteUrl(string relativePath) =>
+            $"https://api.test/{relativePath.TrimStart('/')}";
     }
 
     private sealed class PassThroughLocalizer : IStringLocalizer<SharedResource>

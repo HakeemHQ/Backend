@@ -10,5 +10,7 @@ namespace Hakeem.Application.Features.Doctor.MedicalCvs.DTOs
         int VersionNumber, 
         string GenerationStatus,
         string VerificationStatus,
-        string CreatedByRole);
+        string CreatedByRole,
+        string PdfUrl,
+        DateTimeOffset PreviewExpiresAt);
 }

@@ -1,5 +1,6 @@
 using Hakeem.Application.Features.Doctor.MedicalCvs.DTOs;
 using Hakeem.Application.Features.MedicalCvs.DTOs;
+using Hakeem.Application.Interfaces.Files;
 using Hakeem.Application.Interfaces.MedicalCvs;
 using Hakeem.Domain.Enums.MedicalCvs;
 using MediatR;
@@ -8,7 +9,9 @@ using System.Globalization;
 namespace Hakeem.Application.Features.Doctor.MedicalCvs.Commands
 {
     public sealed class GenerateDoctorMedicalCvCommandHandler(
-        IMedicalCvGenerationService generationService)
+        IMedicalCvGenerationService generationService,
+        IMedicalCvPreviewLinkService previewLinkService,
+        IFileUrlResolver fileUrlResolver)
         : IRequestHandler<
             GenerateDoctorMedicalCvCommand,
             GenerateDoctorMedicalCvResponse>
@@ -26,6 +29,13 @@ namespace Hakeem.Application.Features.Doctor.MedicalCvs.Commands
                 language,
                 MedicalCvCreatedByRole.Doctor,
                 cancellationToken);
+            var previewLink = previewLinkService.Create(
+                request.PatientId,
+                result.MedicalCvId,
+                result.MedicalCvVersionId);
+            var previewPath =
+                $"medical-cv-versions/{result.MedicalCvVersionId}/preview?token=" +
+                Uri.EscapeDataString(previewLink.Token);
 
             return new GenerateDoctorMedicalCvResponse(
                 result.MedicalCvId,
@@ -35,7 +45,9 @@ namespace Hakeem.Application.Features.Doctor.MedicalCvs.Commands
                     result.VersionNumber,
                     result.Status.ToString(),
                     "Unreviewed",
-                    result.CreatedByRole.ToString()));
+                    result.CreatedByRole.ToString(),
+                    fileUrlResolver.ToAbsoluteUrl(previewPath),
+                    previewLink.ExpiresAt));
         }
     }
 }

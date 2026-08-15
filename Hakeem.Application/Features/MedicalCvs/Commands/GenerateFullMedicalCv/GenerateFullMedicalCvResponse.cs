@@ -10,4 +10,6 @@ public sealed record LatestMedicalCvVersionResponse(
     int VersionNumber,
     string GenerationStatus,
     string VerificationStatus,
-    string CreatedByRole);
+    string CreatedByRole,
+    string PdfUrl,
+    DateTimeOffset PreviewExpiresAt);

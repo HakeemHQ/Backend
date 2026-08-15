@@ -2,6 +2,7 @@ using System.Globalization;
 using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Features.MedicalCvs.Commands.GenerateFullMedicalCv;
 using Hakeem.Application.Features.MedicalCvs.DTOs;
+using Hakeem.Application.Interfaces.Files;
 using Hakeem.Application.Interfaces.MedicalCvs;
 using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Application.Resources;
@@ -44,10 +45,15 @@ public sealed class GenerateFullMedicalCvCommandTests
                 generatedAt,
                 userId,
                 MedicalCvCreatedByRole.Patient));
+        var previewExpiresAt = new DateTimeOffset(
+            2026, 8, 15, 18, 25, 15, TimeSpan.Zero);
+        var previewLinkService = new FakePreviewLinkService(previewExpiresAt);
         var handler = new GenerateFullMedicalCvCommandHandler(
             new FakeCurrentUserContext(userId),
             new FakePatientProfileRepository(patient),
-            generationService);
+            generationService,
+            previewLinkService,
+            new FakeFileUrlResolver());
 
         var response = await handler.Handle(
             new GenerateFullMedicalCvCommand("Mazen Medical CV"),
@@ -62,6 +68,18 @@ public sealed class GenerateFullMedicalCvCommandTests
         Assert.Equal("Queued", response.LatestVersion.GenerationStatus);
         Assert.Equal("Unreviewed", response.LatestVersion.VerificationStatus);
         Assert.Equal("Patient", response.LatestVersion.CreatedByRole);
+        Assert.Equal(
+            $"https://api.test/medical-cv-versions/" +
+            $"{generationService.Result.MedicalCvVersionId}/preview?token=token%2B%2F%3D",
+            response.LatestVersion.PdfUrl);
+        Assert.Equal(previewExpiresAt, response.LatestVersion.PreviewExpiresAt);
+        Assert.Equal(patient.Id, previewLinkService.PatientId);
+        Assert.Equal(
+            generationService.Result.MedicalCvId,
+            previewLinkService.MedicalCvId);
+        Assert.Equal(
+            generationService.Result.MedicalCvVersionId,
+            previewLinkService.VersionId);
         Assert.Equal(
             MedicalCvCreatedByRole.Patient,
             generationService.CreatedByRole);
@@ -98,7 +116,9 @@ public sealed class GenerateFullMedicalCvCommandTests
             var handler = new GenerateFullMedicalCvCommandHandler(
                 new FakeCurrentUserContext(userId),
                 new FakePatientProfileRepository(patient),
-                generationService);
+                generationService,
+                new FakePreviewLinkService(DateTimeOffset.UtcNow.AddMinutes(15)),
+                new FakeFileUrlResolver());
 
             await handler.Handle(
                 new GenerateFullMedicalCvCommand("السيرة الطبية"),
@@ -187,6 +207,39 @@ public sealed class GenerateFullMedicalCvCommandTests
             MedicalCvCreatedByRole createdByRole,
             CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
+    }
+
+    private sealed class FakePreviewLinkService(DateTimeOffset expiresAt)
+        : IMedicalCvPreviewLinkService
+    {
+        public Guid PatientId { get; private set; }
+        public Guid MedicalCvId { get; private set; }
+        public Guid VersionId { get; private set; }
+
+        public MedicalCvPreviewLink Create(
+            Guid patientId,
+            Guid medicalCvId,
+            Guid medicalCvVersionId)
+        {
+            PatientId = patientId;
+            MedicalCvId = medicalCvId;
+            VersionId = medicalCvVersionId;
+            return new MedicalCvPreviewLink("token+/=", expiresAt);
+        }
+
+        public bool TryValidate(
+            string token,
+            Guid medicalCvVersionId,
+            out MedicalCvPreviewAccess access) =>
+            throw new NotSupportedException();
+    }
+
+    private sealed class FakeFileUrlResolver : IFileUrlResolver
+    {
+        public string ResolveFileUrl(string value) => ToAbsoluteUrl(value);
+
+        public string ToAbsoluteUrl(string relativePath) =>
+            $"https://api.test/{relativePath.TrimStart('/')}";
     }
 
     private sealed class PassThroughLocalizer : IStringLocalizer<SharedResource>
