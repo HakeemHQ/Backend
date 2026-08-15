@@ -401,7 +401,6 @@
   <data name="PatientAccess.PatientAccessesRetrieved" xml:space="preserve">
     <value>Doctors with active access retrieved successfully.</value>
   </data>
-<<<<<<< HEAD
   <data name="PushDevice.Registered" xml:space="preserve">
     <value>Push notification device registered successfully.</value>
   </data>
@@ -422,7 +421,7 @@
   </data>
   <data name="PushNotification.PatientAccessRequested.Body" xml:space="preserve">
     <value>A doctor is requesting temporary access to your Hakeem records. Open Hakeem to review the request.</value>
-=======
+  </data>
   <data name="Account.InvalidStatusTransition" xml:space="preserve">
     <value>The requested account status transition is invalid.</value>
   </data>
@@ -431,6 +430,5 @@
   </data>
   <data name="Doctor.LicenseNumberConflict" xml:space="preserve">
     <value>A Doctor account with the generated license number already exists.</value>
->>>>>>> AdminDoctorManagement
   </data>
 </root>

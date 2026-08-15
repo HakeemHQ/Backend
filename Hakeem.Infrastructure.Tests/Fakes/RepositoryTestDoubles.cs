@@ -38,6 +38,14 @@ internal sealed class NullDoctorProfileRepository : IDoctorProfileRepository
         throw new NotSupportedException();
     public Task<DoctorProfile?> GetByIdForUpdateAsync(Guid doctorId, CancellationToken cancellationToken) =>
         throw new NotSupportedException();
+    public Task<IReadOnlyList<DoctorProfile>> GetFilteredAsync(
+        string? search,
+        string? specialty,
+        Hakeem.Domain.Enums.Identity.AccountStatus? status,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
 }
 
 internal sealed class NullDoctorPatientAccessRepository : IDoctorPatientAccessRepository
@@ -62,6 +70,12 @@ internal sealed class NullDoctorPatientAccessRepository : IDoctorPatientAccessRe
     public Task<int> RevokeActiveForPatientAsync(
         Guid accessId,
         Guid patientProfileId,
+        DateTime revokedAt,
+        CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
+
+    public Task<int> RevokeAllActiveForDoctorAsync(
+        Guid doctorProfileId,
         DateTime revokedAt,
         CancellationToken cancellationToken) =>
         throw new NotSupportedException();

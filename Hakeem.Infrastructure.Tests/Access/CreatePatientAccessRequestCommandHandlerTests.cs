@@ -302,6 +302,14 @@ public sealed class CreatePatientAccessRequestCommandHandlerTests
             Task.FromResult<DoctorProfile?>(doctor.Id == doctorId ? doctor : null);
         public Task<DoctorProfile?> GetByIdForUpdateAsync(Guid doctorId, CancellationToken cancellationToken) =>
             Task.FromResult<DoctorProfile?>(doctor.Id == doctorId ? doctor : null);
+        public Task<IReadOnlyList<DoctorProfile>> GetFilteredAsync(
+            string? search,
+            string? specialty,
+            Hakeem.Domain.Enums.Identity.AccountStatus? status,
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     private sealed class FakePatientAccessRequestRepository(PatientProfile? patient)

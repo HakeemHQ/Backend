@@ -64,5 +64,13 @@ public sealed class DoctorProfileQueryHandlerTests
             Task.FromResult<DoctorProfile?>(profile.Id == doctorId ? profile : null);
         public Task<DoctorProfile?> GetByIdForUpdateAsync(Guid doctorId, CancellationToken cancellationToken) =>
             Task.FromResult<DoctorProfile?>(profile.Id == doctorId ? profile : null);
+        public Task<IReadOnlyList<DoctorProfile>> GetFilteredAsync(
+            string? search,
+            string? specialty,
+            Hakeem.Domain.Enums.Identity.AccountStatus? status,
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 }

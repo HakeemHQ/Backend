@@ -47,14 +47,7 @@ public sealed class GenerateFullMedicalCvCommandTests
         var handler = new GenerateFullMedicalCvCommandHandler(
             new FakeCurrentUserContext(userId),
             new FakePatientProfileRepository(patient),
-<<<<<<< HEAD
-            generationService,
-            new FakePreviewLinkService(previewExpiresAt),
-            new FakeAuditLogRepository(),
-            new FakeFileUrlResolver("https://hakeem.example"));
-=======
             generationService);
->>>>>>> AdminDoctorManagement
 
         var response = await handler.Handle(
             new GenerateFullMedicalCvCommand("Mazen Medical CV"),
@@ -105,14 +98,7 @@ public sealed class GenerateFullMedicalCvCommandTests
             var handler = new GenerateFullMedicalCvCommandHandler(
                 new FakeCurrentUserContext(userId),
                 new FakePatientProfileRepository(patient),
-<<<<<<< HEAD
-                generationService,
-                new FakePreviewLinkService(DateTimeOffset.UtcNow.AddMinutes(15)),
-                new FakeAuditLogRepository(),
-                new FakeFileUrlResolver("https://hakeem.example"));
-=======
                 generationService);
->>>>>>> AdminDoctorManagement
 
             await handler.Handle(
                 new GenerateFullMedicalCvCommand("السيرة الطبية"),

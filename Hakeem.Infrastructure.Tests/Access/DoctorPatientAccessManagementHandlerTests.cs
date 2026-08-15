@@ -171,6 +171,14 @@ public sealed class DoctorPatientAccessManagementHandlerTests
             Task.FromResult<DoctorProfile?>(doctor.Id == doctorId ? doctor : null);
         public Task<DoctorProfile?> GetByIdForUpdateAsync(Guid doctorId, CancellationToken cancellationToken) =>
             Task.FromResult<DoctorProfile?>(doctor.Id == doctorId ? doctor : null);
+        public Task<IReadOnlyList<DoctorProfile>> GetFilteredAsync(
+            string? search,
+            string? specialty,
+            Hakeem.Domain.Enums.Identity.AccountStatus? status,
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     private sealed class FakePatientProfileRepository(PatientProfile patient)
@@ -256,28 +264,21 @@ public sealed class DoctorPatientAccessManagementHandlerTests
             return Task.FromResult(RevokeAffectedRows);
         }
 
-<<<<<<< HEAD
-=======
         public Task<int> RevokeAllActiveForDoctorAsync(
             Guid doctorProfileId,
             DateTime revokedAt,
             CancellationToken cancellationToken) =>
             Task.FromResult(RevokeAffectedRows);
 
->>>>>>> AdminDoctorManagement
         public Task<bool> HasActiveAccessAsync(
             Guid doctorProfileId,
             Guid patientProfileId,
             DateTime utcNow,
             CancellationToken cancellationToken) =>
-<<<<<<< HEAD
             Task.FromResult(accesses.Any(access =>
                 access.DoctorProfileId == doctorProfileId &&
                 access.PatientProfileId == patientProfileId &&
                 access.Status == DoctorPatientAccessStatus.Active &&
                 access.ExpiresAt > utcNow));
-=======
-            Task.FromResult(false);
->>>>>>> AdminDoctorManagement
     }
 }

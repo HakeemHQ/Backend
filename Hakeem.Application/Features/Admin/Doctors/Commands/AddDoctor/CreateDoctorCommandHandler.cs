@@ -9,15 +9,7 @@ using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Identity;
 using Hakeem.Domain.Interfaces;
 using MediatR;
-<<<<<<< HEAD
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-=======
 using Microsoft.EntityFrameworkCore;
->>>>>>> AdminDoctorManagement
 
 namespace Hakeem.Application.Features.Admin.Doctors.Commands.AddDoctor
 {
