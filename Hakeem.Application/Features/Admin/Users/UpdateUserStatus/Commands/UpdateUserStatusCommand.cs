@@ -10,7 +10,7 @@ namespace Hakeem.Application.Features.Admin.Users.UpdateUserStatus.Commands
 {
     public sealed record UpdateUserStatusCommand(Guid UserId,string Status): IRequest<UpdateUserStatusResult>;
 
-    public sealed record UpdateUserStatusResult(Guid UserId,string Email,ApplicationRole UserType,AccountStatus Status);
+    public sealed record UpdateUserStatusResult(Guid UserId,AccountStatus Status);
 
 
 }

@@ -2,11 +2,7 @@ using Hakeem.Application.Common;
 using Hakeem.Application.Features.Admin.AduitLogs.GetAuditLogs.DTOs;
 using Hakeem.Application.Repositories.AuditLogs;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Hakeem.Application.Features.Admin.AduitLogs.GetAuditLogs.Queries
 {

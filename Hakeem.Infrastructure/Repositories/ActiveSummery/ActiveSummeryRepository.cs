@@ -31,22 +31,22 @@ namespace Hakeem.Infrastructure.Repositories.ActiveSummery
                 .AsNoTracking()
                 .Where(x =>
                     x.OccurredAt >= fromDate &&
-                    x.OccurredAt < toDate);
+                    x.OccurredAt < toDate.AddDays(1));
 
             var activePatients = await auditLogs
-                .Where (x => x.ActorUserId.HasValue)
-                .Select(x => x.ActorUserId)
+                .Where (x => x.PatientProfileId.HasValue)
+                .Select(x => x.PatientProfileId!.Value)
                 .Distinct()
                 .CountAsync (cancellationToken);
 
             var activeDoctors = await _dbContext.DoctorProfiles
-     .Where(x => x.User.Status == AccountStatus.Active)
-     .Select(x => x.UserId)
-     .Distinct()
-     .CountAsync(cancellationToken);
+                .Where(x => x.User.Status == AccountStatus.Active)
+                .Select(x => x.UserId)
+                .Distinct()
+                .CountAsync(cancellationToken);
+
             var documentsUploaded = await auditLogs
-                .CountAsync(
-                    x => x.Action == "DocumentUploaded",
+                .CountAsync(x => x.Action == "DocumentUploaded",
                     cancellationToken);
 
             var extractionsCompleted = await auditLogs
@@ -56,7 +56,7 @@ namespace Hakeem.Infrastructure.Repositories.ActiveSummery
 
             var medicalCvVersionsGenerated = await auditLogs
                 .CountAsync(
-                    x => x.Action == "MedicalCvVersionGenerated",
+                    x => x.Action == "MedicalCvVersionQueued",
                     cancellationToken);
 
             return new ActivitySummaryDto

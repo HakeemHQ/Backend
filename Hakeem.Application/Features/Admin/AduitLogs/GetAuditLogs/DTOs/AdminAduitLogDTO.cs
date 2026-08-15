@@ -10,7 +10,6 @@ namespace Hakeem.Application.Features.Admin.AduitLogs.GetAuditLogs.DTOs
     {
         public Guid AuditLogId { get; init; }
         public Guid? ActorUserId { get; init; }
-        public Guid? PatientProfileId { get; init; }
         public string Action { get; init; } = string.Empty;
         public string Target { get; init; } = string.Empty;
         public DateTime OccurredAt { get; init; }

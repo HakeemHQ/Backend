@@ -1,7 +1,9 @@
+using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Features.MedicalCvs.DTOs;
 using Hakeem.Application.Interfaces.MedicalCvs;
+using Hakeem.Application.Repositories.AuditLogs;
 using Hakeem.Application.Repositories.MedicalCvs;
 using Hakeem.Application.Repositories.MedicalRecords;
 using Hakeem.Application.Repositories.Notifications;
@@ -24,6 +26,8 @@ public sealed class MedicalCvGenerationService(
     IMedicalCvFileStorage fileStorage,
     IOutboxEventRepository outboxEventRepository,
     IUnitOfWork unitOfWork,
+    IAuditLogRepository auditLogRepository,
+    ICurrentUserContext currentUserContext,
     ILogger<MedicalCvGenerationService> logger)
     : IMedicalCvGenerationService, IScoped
 {
@@ -106,6 +110,16 @@ public sealed class MedicalCvGenerationService(
                 Language = MedicalCvLanguages.Normalize(language)
             },
             $"medical-cv-generation:{version.Id}");
+
+         auditLogRepository.Add(
+    new AuditLog
+    {
+        ActorUserId = currentUserContext.UserId,
+        PatientProfileId = patientId,
+        Action = "MedicalCvVersionQueued",
+        Target = $"MedicalCvVersion:{version.Id}",
+        OccurredAt = DateTime.UtcNow
+    });
 
         await unitOfWork.SaveChanges(cancellationToken);
 

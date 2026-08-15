@@ -10,8 +10,6 @@ namespace Hakeem.Application.Features.Admin.ActiveSummery.DTOs
     {
         public DateOnly FromDate { get; init; }
         public DateOnly ToDate { get; init; }
-
-        //public int ActiveUsers { get; init; }
         public int ActivePatients { get; init; }
         public int ActiveDoctors { get; init; }
         public int DocumentsUploaded { get; init; }

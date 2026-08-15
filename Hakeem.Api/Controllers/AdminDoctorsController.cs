@@ -32,11 +32,10 @@ namespace Hakeem.Api.Controllers
 
         [HttpGet("doctors")]
         public async Task<ActionResult<AdminDoctorsResponse>> GetDoctors(
-    [FromQuery] GetDoctorsQuery query,
-    CancellationToken cancellationToken)
+                                         [FromQuery] GetDoctorsQuery query,
+                                         CancellationToken cancellationToken)
         {
             var result = await mediator.Send(query, cancellationToken);
-
             return Ok(result);
         }
 
@@ -66,11 +65,7 @@ namespace Hakeem.Api.Controllers
         public async Task<IActionResult> GetUsers([FromQuery] GetAdminUsersQuery query)
         {
             var result = await mediator.Send(query);
-            return Ok(new
-            {
-                success = true,
-                data = result
-            });
+            return Ok(result);
         }
 
         [HttpPatch("users/{userId:guid}/status")]
@@ -78,11 +73,7 @@ namespace Hakeem.Api.Controllers
         {
             var command = new UpdateUserStatusCommand(userId,request.Status);
             var result = await mediator.Send(command);
-            return Ok(new
-            {
-                success = true,
-                data = result
-            });
+            return Ok(result);
         }
 
         [HttpGet("audit-logs")]

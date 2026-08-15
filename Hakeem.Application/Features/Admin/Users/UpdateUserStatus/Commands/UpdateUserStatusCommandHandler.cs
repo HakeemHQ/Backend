@@ -42,8 +42,6 @@ namespace Hakeem.Application.Features.Admin.Users.UpdateUserStatus.Commands
 
             return new UpdateUserStatusResult(
                 user.Id,
-                user.Email,
-                user.Role,
                 user.Status);
         }
     }
