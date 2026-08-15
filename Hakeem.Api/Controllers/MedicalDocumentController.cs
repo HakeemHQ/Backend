@@ -1,3 +1,4 @@
+using Hakeem.Api.Authorization;
 using Hakeem.Application.Common.ResponseModel;
 using Hakeem.Application.Features.MedicalDocuments.DTOs;
 using Hakeem.Application.Features.MedicalDocuments.Queries.GetDocumentById;
@@ -12,7 +13,7 @@ namespace Hakeem.Api.Controllers;
 
 [ApiController]
 [Route("documents")]
-[Authorize(Roles = "Patient")]
+[Authorize(Policy = VerifiedPatientPolicy.Name)]
 public sealed class MedicalDocumentController : ApiControllerBase
 {
     private readonly IMediator _mediator;

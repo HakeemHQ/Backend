@@ -116,7 +116,7 @@ public class AuthController : ApiControllerBase
         return SuccessResponse(result, "Auth.TokenRefreshed");
     }
 
-    [Authorize]
+    [Authorize(Roles = "Patient,Doctor,Admin")]
     [HttpPost("logout")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(

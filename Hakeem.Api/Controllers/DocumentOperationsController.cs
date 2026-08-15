@@ -1,3 +1,4 @@
+using Hakeem.Api.Authorization;
 using Hakeem.Application.Common.ResponseModel;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Features.MedicalDocuments.Commands.DeleteDocument;
@@ -24,7 +25,7 @@ public sealed class DocumentOperationsController : ApiControllerBase
     }
 
     [HttpGet("{documentId:guid}/content")]
-    [Authorize]
+    [Authorize(Policy = PatientResourceAccessPolicy.DoctorOrVerifiedPatient)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(GenericResponseModel<object>), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(GenericResponseModel<object>), StatusCodes.Status404NotFound)]
@@ -41,7 +42,7 @@ public sealed class DocumentOperationsController : ApiControllerBase
     }
 
     [HttpDelete("{documentId:guid}")]
-    [Authorize(Roles = nameof(Hakeem.Domain.Enums.Identity.ApplicationRole.Doctor))]
+    [Authorize(Policy = PatientResourceAccessPolicy.DoctorOnly)]
     [ProducesResponseType(typeof(GenericResponseModel<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(GenericResponseModel<object>), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(GenericResponseModel<object>), StatusCodes.Status403Forbidden)]

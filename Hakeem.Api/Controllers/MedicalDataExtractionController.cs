@@ -1,3 +1,4 @@
+using Hakeem.Api.Authorization;
 using Hakeem.Application.Common.ResponseModel;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Features.MedicalDataExtraction.DTOs;
@@ -13,7 +14,7 @@ namespace Hakeem.Api.Controllers;
 
 [ApiController]
 [Route("documents")]
-[Authorize(Roles = nameof(Hakeem.Domain.Enums.Identity.ApplicationRole.Doctor))]
+[Authorize(Policy = PatientResourceAccessPolicy.DoctorOnly)]
 public sealed class MedicalDataExtractionController : ApiControllerBase
 {
     private readonly IMediator _mediator;

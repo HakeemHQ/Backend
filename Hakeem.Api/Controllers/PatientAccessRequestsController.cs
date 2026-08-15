@@ -1,3 +1,4 @@
+using Hakeem.Api.Authorization;
 using Hakeem.Api.Validation;
 using Hakeem.Application.Common;
 using Hakeem.Application.Common.ResponseModel;
@@ -5,7 +6,6 @@ using Hakeem.Application.Features.PatientAccessRequests.Commands.ApprovePatientA
 using Hakeem.Application.Features.PatientAccessRequests.Commands.RejectPatientAccessRequest;
 using Hakeem.Application.Features.PatientAccessRequests.Queries.GetPatientAccessRequests;
 using Hakeem.Application.Resources;
-using Hakeem.Domain.Enums.Identity;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +15,7 @@ namespace Hakeem.Api.Controllers;
 
 [ApiController]
 [Route("patient-access-requests")]
-[Authorize(Roles = nameof(ApplicationRole.Patient))]
+[Authorize(Policy = VerifiedPatientPolicy.Name)]
 public sealed class PatientAccessRequestsController(
     IMediator mediator,
     IStringLocalizer<SharedResource> localizer)

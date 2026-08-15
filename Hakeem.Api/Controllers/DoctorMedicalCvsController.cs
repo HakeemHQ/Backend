@@ -60,6 +60,7 @@ namespace Hakeem.Api.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = DoctorPatientAccessPolicy.Name)]
         [ProducesResponseType(
     typeof(GenericResponseModel<IReadOnlyList<DoctorMedicalCvResponse>>),
     StatusCodes.Status200OK)]

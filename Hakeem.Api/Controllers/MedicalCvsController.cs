@@ -21,6 +21,7 @@ public sealed class MedicalCvsController(
     : ApiControllerBase(localizer)
 {
     [HttpGet]
+    [Authorize(Policy = VerifiedPatientPolicy.Name)]
     [ProducesResponseType(
         typeof(GenericResponseModel<GetMedicalCvsResponse>),
         StatusCodes.Status200OK)]
@@ -39,6 +40,7 @@ public sealed class MedicalCvsController(
     }
 
     [HttpGet("{medicalCvId:guid}")]
+    [Authorize(Policy = PatientResourceAccessPolicy.DoctorOrVerifiedPatient)]
     [ProducesResponseType(
         typeof(GenericResponseModel<GetMedicalCvByIdResponse>),
         StatusCodes.Status200OK)]

@@ -1,3 +1,4 @@
+using Hakeem.Api.Authorization;
 using Hakeem.Application.Common.ResponseModel;
 using Hakeem.Application.Features.MedicalCvs.Commands.ApproveMedicalCvVersion;
 using Hakeem.Application.Features.MedicalCvs.Commands.CreateMedicalCvPreviewLink;
@@ -20,6 +21,7 @@ public sealed class MedicalCvVersionsController(
     : ApiControllerBase(localizer)
 {
     [HttpPost("{versionId:guid}/approval")]
+    [Authorize(Policy = PatientResourceAccessPolicy.DoctorOnly)]
     [ProducesResponseType(
         typeof(GenericResponseModel<ApproveMedicalCvVersionResponse>),
         StatusCodes.Status200OK)]
@@ -44,6 +46,7 @@ public sealed class MedicalCvVersionsController(
     }
 
     [HttpGet("{versionId:guid}/pdf")]
+    [Authorize(Policy = PatientResourceAccessPolicy.DoctorOrVerifiedPatient)]
     [Produces("application/pdf")]
     [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(GenericResponseModel<object>), StatusCodes.Status401Unauthorized)]

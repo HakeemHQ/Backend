@@ -1,3 +1,4 @@
+using Hakeem.Api.Authorization;
 using Hakeem.Application.Common.ResponseModel;
 using Hakeem.Application.Features.MedicalIntelligence.Commands.Chat;
 using Hakeem.Application.Resources;
@@ -9,7 +10,7 @@ using Microsoft.Extensions.Localization;
 namespace Hakeem.Api.Controllers;
 
 [Route("medical-intelligence")]
-[Authorize(Roles = "Patient")]
+[Authorize(Policy = VerifiedPatientPolicy.Name)]
 public sealed class MedicalIntelligenceController(
     IMediator mediator,
     IStringLocalizer<SharedResource> localizer)
