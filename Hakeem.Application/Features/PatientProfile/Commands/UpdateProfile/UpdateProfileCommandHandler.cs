@@ -1,5 +1,7 @@
 using Hakeem.Application.Common.Interfaces;
+using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
+using Hakeem.Application.Features.Auth.Commands.Registration;
 using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Application.Features.PatientProfile.DTOs;
 using MediatR;
@@ -15,6 +17,26 @@ public sealed class UpdateProfileCommandHandler(
         UpdateProfileCommand request,
         CancellationToken cancellationToken)
     {
+        if (request.BirthDate.HasValue)
+        {
+            var existingProfile = await patientProfileRepository.GetByUserIdAsync(
+                currentUserContext.UserId,
+                cancellationToken);
+
+            if (existingProfile is null)
+            {
+                throw new UnAuthorizedException("Profile.NotFound");
+            }
+
+            if (!EgyptianNationalId.IsStructurallyValid(
+                    existingProfile.NationalId,
+                    DateOnly.FromDateTime(request.BirthDate.Value)))
+            {
+                throw new UnprocessableEntityException(
+                    ErrorCodes.PatientIdentityNationalIdMismatch);
+            }
+        }
+
         var profile = await patientProfileRepository.UpdateByUserIdAsync(
             currentUserContext.UserId,
             request.FullName,
