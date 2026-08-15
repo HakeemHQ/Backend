@@ -245,5 +245,18 @@ public sealed class DoctorPatientAccessManagementHandlerTests
             RevokedAt = revokedAt;
             return Task.FromResult(RevokeAffectedRows);
         }
+
+        public Task<int> RevokeAllActiveForDoctorAsync(
+            Guid doctorProfileId,
+            DateTime revokedAt,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(RevokeAffectedRows);
+
+        public Task<bool> HasActiveAccessAsync(
+            Guid doctorProfileId,
+            Guid patientProfileId,
+            DateTime utcNow,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(false);
     }
 }

@@ -31,7 +31,7 @@ namespace Hakeem.Infrastructure.Repositories.ActiveSummery
                 .AsNoTracking()
                 .Where(x =>
                     x.OccurredAt >= fromDate &&
-                    x.OccurredAt < toDate.AddDays(1));
+                    x.OccurredAt < toDate);
 
             var activePatients = await auditLogs
                 .Where (x => x.PatientProfileId.HasValue)
@@ -62,7 +62,7 @@ namespace Hakeem.Infrastructure.Repositories.ActiveSummery
             return new ActivitySummaryDto
             {
                 FromDate = DateOnly.FromDateTime(fromDate),
-                ToDate = DateOnly.FromDateTime(toDate),
+                ToDate = DateOnly.FromDateTime(toDate.AddDays(-1)),
                 ActivePatients = activePatients,
                 ActiveDoctors = activeDoctors,
                 DocumentsUploaded = documentsUploaded,

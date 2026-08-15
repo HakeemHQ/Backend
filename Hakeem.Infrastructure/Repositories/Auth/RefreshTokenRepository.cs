@@ -45,6 +45,23 @@ public sealed class RefreshTokenRepository(ApplicationDbContext dbContext)
             cancellationToken);
     }
 
+    public Task<int> RevokeAllActiveForUserAsync(
+        Guid userId,
+        DateTime revokedAt,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.RefreshTokens
+            .Where(refreshToken =>
+                refreshToken.UserId == userId &&
+                !refreshToken.IsUsed &&
+                !refreshToken.IsRevoked)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(refreshToken => refreshToken.IsRevoked, true)
+                    .SetProperty(refreshToken => refreshToken.UpdatedAt, revokedAt),
+                cancellationToken);
+    }
+
     public void Add(RefreshToken refreshToken)
     {
         dbContext.RefreshTokens.Add(refreshToken);

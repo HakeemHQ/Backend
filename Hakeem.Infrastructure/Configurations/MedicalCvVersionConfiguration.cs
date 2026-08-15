@@ -1,4 +1,5 @@
 ﻿using Hakeem.Domain.Entities;
+using Hakeem.Domain.Enums.MedicalCvs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -17,6 +18,17 @@ public class MedicalCvVersionConfiguration : IEntityTypeConfiguration<MedicalCvV
                .HasConversion<string>()
                .HasMaxLength(20)
                .IsRequired();
+
+        builder.Property(e => e.CreatedByRole)
+               .HasConversion<string>()
+               .HasMaxLength(20)
+               .HasDefaultValue(MedicalCvCreatedByRole.Unknown)
+               .IsRequired();
+
+        builder.HasOne(e => e.CreatedByUser)
+               .WithMany()
+               .HasForeignKey(e => e.CreatedByUserId)
+               .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(e => e.PdfFileKey)
                .HasMaxLength(500)

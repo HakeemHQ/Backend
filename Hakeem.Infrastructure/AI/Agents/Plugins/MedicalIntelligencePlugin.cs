@@ -8,6 +8,7 @@ using Hakeem.Application.Interfaces.Rag;
 using Hakeem.Application.Repositories.MedicalRecords;
 using Hakeem.Application.Resources;
 using Hakeem.Domain.Entities;
+using Hakeem.Domain.Enums.MedicalCvs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
@@ -136,6 +137,7 @@ public sealed class MedicalIntelligencePlugin(
             normalizedTitle,
             evidence,
             normalizedLanguage,
+            MedicalCvCreatedByRole.Patient,
             cancellationToken);
 
         var actionResult = new FocusedMedicalCvActionResult(

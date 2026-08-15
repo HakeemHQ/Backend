@@ -19,5 +19,10 @@ public interface IRefreshTokenRepository : IScoped
         Guid userId,
         CancellationToken cancellationToken);
 
+    Task<int> RevokeAllActiveForUserAsync(
+        Guid userId,
+        DateTime revokedAt,
+        CancellationToken cancellationToken);
+
     void Add(RefreshToken refreshToken);
 }

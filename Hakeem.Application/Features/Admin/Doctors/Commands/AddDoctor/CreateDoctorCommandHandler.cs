@@ -1,4 +1,6 @@
+using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
+using Hakeem.Application.Features.Admin.Doctors;
 using Hakeem.Application.Features.Admin.Doctors.DTOs;
 using Hakeem.Application.Interfaces.Services.Auth;
 using Hakeem.Application.Repositories.DoctorProfiles;
@@ -7,6 +9,7 @@ using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Identity;
 using Hakeem.Domain.Interfaces;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace Hakeem.Application.Features.Admin.Doctors.Commands.AddDoctor
 {
@@ -21,66 +24,94 @@ namespace Hakeem.Application.Features.Admin.Doctors.Commands.AddDoctor
             CreateDoctorCommand request,
             CancellationToken cancellationToken)
         {
-            // 1. Check email uniqueness
+            var email = request.Email.Trim().ToLowerInvariant();
             var existingUser = await userRepository.GetByEmailAsync(
-                request.Email,
+                email,
                 cancellationToken);
 
             if (existingUser is not null)
             {
-                throw new ConflictException("User.EmailAlreadyExists");
+                throw new ConflictException(ErrorCodes.UserEmailAlreadyExists);
             }
 
-            // 2. Check license uniqueness
-            var licenseExists =
-                await doctorProfileRepository.LicenseNumberExistsAsync(
-                    request.LicenseNumber,
-                    cancellationToken);
+            var (firstName, lastName) = SplitFullName(request.FullName);
+            var normalizedFullName = $"{firstName} {lastName}".Trim();
+            var passwordHash = passwordHasher.Hash(request.TemporaryPassword);
+            var userId = Guid.NewGuid();
+            var doctorId = Guid.NewGuid();
 
-            if (licenseExists)
-            {
-                throw new ConflictException(
-                    "Doctor.LicenseNumberAlreadyExists");
-            }
-
-            // 3. Hash password
-            var passwordHash = passwordHasher.Hash(request.Password);
-
-            // 4. Create User
             var user = new User
             {
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Email = request.Email,
+                Id = userId,
+                FirstName = firstName,
+                LastName = lastName,
+                Email = email,
                 PasswordHash = passwordHash,
                 Role = ApplicationRole.Doctor,
                 Status = AccountStatus.Active
             };
 
-            // 5. Create DoctorProfile
             var doctorProfile = new Domain.Entities.DoctorProfile
             {
+                Id = doctorId,
+                UserId = userId,
                 User = user,
-                Specialty = request.Specialty,
-                LicenseNumber = request.LicenseNumber
+                Specialty = request.Specialty.Trim(),
+                LicenseNumber = DoctorLicenseNumber.Generate(doctorId)
             };
 
-            // 6. Add both to DbContext
             userRepository.Add(user);
             doctorProfileRepository.Add(doctorProfile);
 
-            // 7. Save both in one transaction
-            await unitOfWork.SaveChanges(cancellationToken);
+            try
+            {
+                await unitOfWork.SaveChanges(cancellationToken);
+            }
+            catch (DbUpdateException exception)
+                when (IsEmailConflict(exception))
+            {
+                throw new ConflictException(ErrorCodes.UserEmailAlreadyExists);
+            }
+            catch (DbUpdateException exception)
+                when (IsLicenseConflict(exception))
+            {
+                throw new ConflictException(ErrorCodes.DoctorLicenseNumberConflict);
+            }
 
-            // 8. Return response
             return new CreateDoctorResponse(
-                doctorProfile.UserId,
-                doctorProfile.Id,
-                $"{user.FirstName} {user.LastName}".Trim(),
+                userId,
+                doctorId,
                 user.Email,
+                normalizedFullName,
                 doctorProfile.Specialty,
                 doctorProfile.LicenseNumber,
-                user.Status);
+                user.Status.ToString());
         }
+
+        private static (string FirstName, string LastName) SplitFullName(
+            string fullName)
+        {
+            var parts = fullName.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries |
+                StringSplitOptions.TrimEntries);
+
+            return parts.Length switch
+            {
+                0 => (string.Empty, string.Empty),
+                1 => (parts[0], string.Empty),
+                _ => (parts[0], string.Join(' ', parts.Skip(1)))
+            };
+        }
+
+        private static bool IsEmailConflict(DbUpdateException exception) =>
+            exception.ToString().Contains(
+                "IX_Users_Email",
+                StringComparison.OrdinalIgnoreCase);
+
+        private static bool IsLicenseConflict(DbUpdateException exception) =>
+            exception.ToString().Contains(
+                "IX_DoctorProfiles_LicenseNumber",
+                StringComparison.OrdinalIgnoreCase);
     }
 }

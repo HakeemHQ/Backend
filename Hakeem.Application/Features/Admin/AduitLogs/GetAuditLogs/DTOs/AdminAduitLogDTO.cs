@@ -14,4 +14,7 @@ namespace Hakeem.Application.Features.Admin.AduitLogs.GetAuditLogs.DTOs
         public string Target { get; init; } = string.Empty;
         public DateTime OccurredAt { get; init; }
     }
+
+    public sealed record AdminAuditLogsResponse(
+        IReadOnlyList<AdminAuditLogDto> Items);
 }

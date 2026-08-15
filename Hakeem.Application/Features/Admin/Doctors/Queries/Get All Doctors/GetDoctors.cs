@@ -15,5 +15,5 @@ namespace Hakeem.Application.Features.Admin.Doctors.Queries
         int PageSize = 10)
         
         
-        : IRequest<IReadOnlyList<AdminDoctorListItem>>;
+        : IRequest<AdminDoctorsResponse>;
 }

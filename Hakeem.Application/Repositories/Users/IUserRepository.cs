@@ -13,6 +13,7 @@ public interface IUserRepository : IScoped
 
     Task<(IEnumerable<AdminUserDto> Items, int TotalCount)> GetUsersAsync(
    string? search,
+   ApplicationRole? userType,
    AccountStatus? status,
    int pageNumber,
    int pageSize,

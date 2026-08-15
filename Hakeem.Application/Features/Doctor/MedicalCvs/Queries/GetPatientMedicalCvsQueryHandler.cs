@@ -85,7 +85,7 @@ namespace Hakeem.Application.Features.Doctor.MedicalCvs.Queries
                         cv.Id,
                         cv.Title,
                         latestVersion?.VersionNumber ?? 0,
-                        "Patient",
+                        latestVersion?.CreatedByRole.ToString() ?? "Unknown",
                         latestVersion?.Status.ToString() ?? "Unreviewed"
                     );
                 })

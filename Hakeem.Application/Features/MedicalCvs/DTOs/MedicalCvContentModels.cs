@@ -72,4 +72,6 @@ public sealed record MedicalCvGenerationResult(
     string? Focus,
     string PdfFileKey,
     MedicalCvVersionStatus Status,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    Guid? CreatedByUserId = null,
+    MedicalCvCreatedByRole CreatedByRole = MedicalCvCreatedByRole.Unknown);

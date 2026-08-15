@@ -462,6 +462,7 @@ public sealed class MedicalIntelligenceAgentTests
             Guid patientId,
             string title,
             string language,
+            MedicalCvCreatedByRole createdByRole,
             CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
@@ -471,6 +472,7 @@ public sealed class MedicalIntelligenceAgentTests
             string title,
             IReadOnlyList<MedicalCvEvidenceItem> evidence,
             string language,
+            MedicalCvCreatedByRole createdByRole,
             CancellationToken cancellationToken = default)
         {
             Focus = focus;

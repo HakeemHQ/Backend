@@ -59,7 +59,7 @@ namespace Hakeem.Infrastructure.Repositories.AuditLogs
             if (toDate.HasValue)
             {
                 query = query.Where(x =>
-                    x.OccurredAt <= toDate.Value);
+                    x.OccurredAt < toDate.Value);
             }
 
             var totalCount =

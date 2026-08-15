@@ -1,3 +1,4 @@
+using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Features.Admin.Doctors.DTOs;
 using Hakeem.Application.Repositories.DoctorProfiles;
@@ -24,7 +25,7 @@ namespace Hakeem.Application.Features.Admin.Doctors.Queries.GetDoctorById
 
             if (doctor is null)
             {
-                throw new NotFoundException("Doctor.NotFound");
+                throw new NotFoundException(ErrorCodes.DoctorNotFound);
             }
 
             return new AdminDoctorResponse(
@@ -34,8 +35,9 @@ namespace Hakeem.Application.Features.Admin.Doctors.Queries.GetDoctorById
                 Email: doctor.User.Email,
                 Specialty: doctor.Specialty,
                 LicenseNumber: doctor.LicenseNumber,
-                Status: doctor.User.Status,
-                CreatedAt :doctor.CreatedAt
+                Status: doctor.User.Status.ToString(),
+                CreatedAt: new DateTimeOffset(
+                    DateTime.SpecifyKind(doctor.CreatedAt, DateTimeKind.Utc))
  );
         }
     }

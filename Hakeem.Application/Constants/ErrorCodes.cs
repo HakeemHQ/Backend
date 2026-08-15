@@ -44,6 +44,11 @@ public static class ErrorCodes
     public const string UserRolesRequired = "User.RolesRequired";
     public const string UserUpdated = "User.Updated";
     public const string UserStatusUpdated = "User.StatusUpdated";
+    public const string AccountInvalidStatusTransition = "Account.InvalidStatusTransition";
+
+    // -- Doctor --------------------------------------------
+    public const string DoctorNotFound = "Doctor.NotFound";
+    public const string DoctorLicenseNumberConflict = "Doctor.LicenseNumberConflict";
 
     // -- Patient identity  --------------------------------------------
     public const string PatientIdentityNotFound = "PatientIdentity.NotFound";

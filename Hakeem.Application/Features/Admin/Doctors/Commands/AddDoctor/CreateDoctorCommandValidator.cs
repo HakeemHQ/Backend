@@ -1,40 +1,51 @@
 using FluentValidation;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Hakeem.Application.Constants;
+using Hakeem.Application.Resources;
+using Microsoft.Extensions.Localization;
 
 namespace Hakeem.Application.Features.Admin.Doctors.Commands.AddDoctor
 {
     public sealed class CreateDoctorCommandValidator
     : AbstractValidator<CreateDoctorCommand>
     {
-        public CreateDoctorCommandValidator()
+        public CreateDoctorCommandValidator(
+            IStringLocalizer<SharedResource> localizer)
         {
-            RuleFor(x => x.FirstName)
-                .NotEmpty()
-                .MaximumLength(100);
-
-            RuleFor(x => x.LastName)
-                .NotEmpty()
-                .MaximumLength(100);
-
             RuleFor(x => x.Email)
                 .NotEmpty()
-                .EmailAddress();
+                .WithMessage(localizer[ErrorCodes.ValidationRequired].Value)
+                .MaximumLength(256)
+                .WithMessage(localizer[ErrorCodes.ValidationMaxLength].Value)
+                .EmailAddress()
+                .WithMessage(localizer[ErrorCodes.ValidationInvalidEmail].Value);
+
+            RuleFor(x => x.FullName)
+                .NotEmpty()
+                .WithMessage(localizer[ErrorCodes.ValidationRequired].Value)
+                .MaximumLength(200)
+                .WithMessage(localizer[ErrorCodes.ValidationMaxLength].Value);
 
             RuleFor(x => x.Specialty)
                 .NotEmpty()
-                .MaximumLength(200);
+                .WithMessage(localizer[ErrorCodes.ValidationRequired].Value)
+                .MaximumLength(200)
+                .WithMessage(localizer[ErrorCodes.ValidationMaxLength].Value);
 
-            RuleFor(x => x.LicenseNumber)
+            RuleFor(x => x.TemporaryPassword)
                 .NotEmpty()
-                .MaximumLength(100);
-
-            RuleFor(x => x.Password)
-                .NotEmpty()
-                .MinimumLength(8);
+                .WithMessage(localizer[ErrorCodes.ValidationRequired].Value)
+                .MinimumLength(8)
+                .WithMessage(localizer[ErrorCodes.ValidationMinLength].Value)
+                .MaximumLength(128)
+                .WithMessage(localizer[ErrorCodes.ValidationMaxLength].Value)
+                .Matches("[A-Z]")
+                .WithMessage(localizer[ErrorCodes.ValidationInvalidFormat].Value)
+                .Matches("[a-z]")
+                .WithMessage(localizer[ErrorCodes.ValidationInvalidFormat].Value)
+                .Matches("[0-9]")
+                .WithMessage(localizer[ErrorCodes.ValidationInvalidFormat].Value)
+                .Matches("[^A-Za-z0-9]")
+                .WithMessage(localizer[ErrorCodes.ValidationInvalidFormat].Value);
         }
     }
 }

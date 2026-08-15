@@ -1,11 +1,12 @@
+using Hakeem.Api.Authorization;
 using Hakeem.Application.Common.ResponseModel;
+using Hakeem.Application.Constants;
 using Hakeem.Application.Features.Doctor.MedicalCvs.Commands;
 using Hakeem.Application.Features.Doctor.MedicalCvs.DTOs;
 using Hakeem.Application.Features.Doctor.MedicalCvs.Queries;
 using Hakeem.Application.Resources;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 
@@ -23,6 +24,25 @@ namespace Hakeem.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = DoctorPatientAccessPolicy.Name)]
+        [ProducesResponseType(
+            typeof(GenericResponseModel<GenerateDoctorMedicalCvResponse>),
+            StatusCodes.Status201Created)]
+        [ProducesResponseType(
+            typeof(GenericResponseModel<object>),
+            StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(
+            typeof(GenericResponseModel<object>),
+            StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(
+            typeof(GenericResponseModel<object>),
+            StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(
+            typeof(GenericResponseModel<object>),
+            StatusCodes.Status422UnprocessableEntity)]
+        [ProducesResponseType(
+            typeof(GenericResponseModel<object>),
+            StatusCodes.Status503ServiceUnavailable)]
         public async Task<IActionResult> Generate(
         Guid patientId,
         [FromBody] GenerateDoctorMedicalCvRequest request,
@@ -36,7 +56,7 @@ namespace Hakeem.Api.Controllers
                 command,
                 cancellationToken);
 
-            return Ok(result);
+            return CreatedResponse(result, ErrorCodes.MedicalCvQueued);
         }
 
         [HttpGet]

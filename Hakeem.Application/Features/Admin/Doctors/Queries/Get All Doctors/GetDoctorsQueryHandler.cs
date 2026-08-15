@@ -11,18 +11,30 @@ namespace Hakeem.Application.Features.Admin.Doctors.Queries
 {
     public sealed class GetDoctorsQueryHandler(
     IDoctorProfileRepository doctorProfileRepository)
-    : IRequestHandler<GetDoctorsQuery, IReadOnlyList<AdminDoctorListItem>>
+    : IRequestHandler<GetDoctorsQuery, AdminDoctorsResponse>
     {
-        public async Task<IReadOnlyList<AdminDoctorListItem>> Handle(
+        public async Task<AdminDoctorsResponse> Handle(
     GetDoctorsQuery request,
     CancellationToken cancellationToken)
         {
 
-            var page = request.Page < 1 ? 1 : request.Page; 
-            var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
-            var doctors = await doctorProfileRepository.GetFilteredAsync(request.Search, request.Specialty, request.Status, page, pageSize, cancellationToken); 
-            var items = doctors.Select(doctor => new AdminDoctorListItem(doctor.Id, $"{doctor.User.FirstName} {doctor.User.LastName}".Trim(), doctor.User.Email, doctor.Specialty, doctor.LicenseNumber, doctor.User.Status)).ToList();
-            return items;
+            var doctors = await doctorProfileRepository.GetFilteredAsync(
+                request.Search,
+                request.Specialty,
+                request.Status,
+                request.Page,
+                request.PageSize,
+                cancellationToken);
+            var items = doctors
+                .Select(doctor => new AdminDoctorListItem(
+                    doctor.Id,
+                    $"{doctor.User.FirstName} {doctor.User.LastName}".Trim(),
+                    doctor.User.Email,
+                    doctor.Specialty,
+                    doctor.LicenseNumber,
+                    doctor.User.Status.ToString()))
+                .ToList();
+            return new AdminDoctorsResponse(items);
         }
 
     }
