@@ -1,4 +1,5 @@
 using Hakeem.Application.Common;
+using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Features.MedicalCvs.DTOs;
@@ -12,6 +13,7 @@ using Hakeem.Domain.DomainEvents.Outbox;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.MedicalCvs;
 using Hakeem.Domain.Interfaces;
+using Hakeem.Infrastructure.Tests.Fakes;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hakeem.Infrastructure.Tests.MedicalCvs;
@@ -269,6 +271,8 @@ public sealed class MedicalCvGenerationServiceTests
             new FakeFileStorage(),
             outboxEventRepository ?? new FakeOutboxEventRepository(),
             unitOfWork,
+            new FakeAuditLogRepository(),
+            new FakeCurrentUserContext(patient.UserId),
             NullLogger<MedicalCvGenerationService>.Instance);
     }
 
@@ -281,6 +285,9 @@ public sealed class MedicalCvGenerationServiceTests
             "Condition",
             "2026-08-06T00:00:00.0000000Z")
     ];
+
+    private sealed record FakeCurrentUserContext(Guid UserId)
+        : ICurrentUserContext;
 
     private static PatientProfile CreatePatient()
     {
