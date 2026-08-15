@@ -1,9 +1,8 @@
-using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Features.PatientReviewAndConfirmation.DTOs;
 using Hakeem.Application.Repositories.MedicalDocuments;
-using Hakeem.Application.Repositories.PatientProfiles;
+using Hakeem.Application.Services.Access;
 using Hakeem.Domain.Enums.Documents;
 using Hakeem.Domain.Enums.Reviews;
 using MediatR;
@@ -11,8 +10,7 @@ using MediatR;
 namespace Hakeem.Application.Features.PatientReviewAndConfirmation.Commands;
 
 public sealed class ConfirmAllExtractedItemsCommandHandler(
-    ICurrentUserContext currentUserContext,
-    IPatientProfileRepository patientProfileRepository,
+    IDoctorPatientAccessGuard doctorPatientAccessGuard,
     IMedicalDocumentRepository medicalDocumentRepository,
     IRequestHandler<PatientReviewConfirmationCommand, ReviewExtractedItemResult>
         itemConfirmationHandler)
@@ -22,23 +20,18 @@ public sealed class ConfirmAllExtractedItemsCommandHandler(
         ConfirmAllExtractedItemsCommand request,
         CancellationToken cancellationToken)
     {
-        var patient = await patientProfileRepository.GetByUserIdAsync(
-            currentUserContext.UserId,
-            cancellationToken);
-
-        if (patient is null)
-        {
-            throw new UnAuthorizedException(ErrorCodes.AuthUnauthorized);
-        }
-
         var document = await medicalDocumentRepository.GetByIdAsync(
             request.DocumentId,
             cancellationToken);
 
-        if (document is null || document.PatientProfileId != patient.Id)
+        if (document is null)
         {
             throw new NotFoundException(ErrorCodes.DocumentNotFound);
         }
+
+        await doctorPatientAccessGuard.RequireDoctorWithActiveAccessAsync(
+            document.PatientProfileId,
+            cancellationToken);
 
         if (document.ExtractionStatus != ExtractionStatus.Completed)
         {

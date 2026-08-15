@@ -13,6 +13,7 @@ public class ExtractedItem : BaseEntity
     public ExtractedItemReviewStatus ReviewStatus { get; set; } = ExtractedItemReviewStatus.Pending;
 
     public DateTimeOffset? ReviewedAt { get; set; }
+    public Guid? ReviewedByUserId { get; set; }
     public virtual MedicalDocument MedicalDocument { get; set; } = null!;
     public virtual ICollection<ExtractedField> ExtractedFields { get; set; } = new List<ExtractedField>();
 

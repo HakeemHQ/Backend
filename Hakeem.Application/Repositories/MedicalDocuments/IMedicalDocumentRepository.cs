@@ -8,6 +8,12 @@ public interface IMedicalDocumentRepository : IScoped
 {
     void Add(MedicalDocument medicalDocument);
 
+    void Remove(MedicalDocument medicalDocument);
+
+    Task<bool> HasSourceReferencesAsync(
+        Guid documentId,
+        CancellationToken cancellationToken);
+
     Task<MedicalDocument?> GetByIdAsync(Guid documentId, CancellationToken cancellationToken);
 
     Task<MedicalDocument?> GetByIdForPatientAsync(

@@ -359,6 +359,10 @@ public sealed class MedicalCvGenerationServiceTests
         public Task<MedicalRecord?> GetByIdWithFieldsAsync(
             Guid medicalRecordId,
             CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<MedicalRecord?> GetByIdWithDetailsAsync(
+            Guid medicalRecordId,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 
     private sealed class FakeMedicalCvRepository(

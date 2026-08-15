@@ -1,38 +1,34 @@
 using System.Text.Json;
-using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Features.MedicalDataExtraction.DTOs;
 using Hakeem.Application.Repositories.MedicalDocuments;
-using Hakeem.Application.Repositories.PatientProfiles;
+using Hakeem.Application.Services.Access;
 using MediatR;
 
 namespace Hakeem.Application.Features.MedicalDataExtraction.Queries.GetExtractedFields;
 
 public sealed class GetExtractedFieldsQueryHandler(
     IMedicalDocumentRepository medicalDocumentRepository,
-    IPatientProfileRepository patientProfileRepository,
-    ICurrentUserContext currentUserContext)
+    IDoctorPatientAccessGuard doctorPatientAccessGuard)
     : IRequestHandler<GetExtractedFieldsQuery, ExtractedFieldsResponse>
 {
     public async Task<ExtractedFieldsResponse> Handle(
         GetExtractedFieldsQuery request,
         CancellationToken cancellationToken)
     {
-        var patientProfile = await patientProfileRepository.GetByUserIdAsync(
-            currentUserContext.UserId,
-            cancellationToken);
-
         var document = await medicalDocumentRepository.GetByIdAsync(
             request.DocumentId,
             cancellationToken);
 
-        if (patientProfile is null ||
-            document is null ||
-            document.PatientProfileId != patientProfile.Id)
+        if (document is null)
         {
             throw new NotFoundException(ErrorCodes.DocumentNotFound);
         }
+
+        await doctorPatientAccessGuard.RequireDoctorWithActiveAccessAsync(
+            document.PatientProfileId,
+            cancellationToken);
 
         var extractedItems =
             await medicalDocumentRepository.GetExtractedItemsAsync(

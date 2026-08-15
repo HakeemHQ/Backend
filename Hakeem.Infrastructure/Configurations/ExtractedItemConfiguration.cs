@@ -13,6 +13,9 @@ public class ExtractedItemConfiguration : IEntityTypeConfiguration<ExtractedItem
         builder.Property(e => e.ItemType)
                .IsRequired();
 
+        builder.Property(e => e.ReviewedByUserId)
+               .IsRequired(false);
+
         builder.HasIndex(e => new
                {
                    e.MedicalDocumentId,

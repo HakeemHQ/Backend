@@ -103,6 +103,20 @@ namespace Hakeem.Infrastructure.Repositories.MedicalRecords
                     cancellationToken);
         }
 
+        public Task<MedicalRecord?> GetByIdWithDetailsAsync(
+            Guid medicalRecordId,
+            CancellationToken cancellationToken)
+        {
+            return _context.MedicalRecords
+                .AsNoTracking()
+                .Include(record => record.Fields)
+                .Include(record => record.SourceReferences)
+                .ThenInclude(reference => reference.MedicalDocument)
+                .SingleOrDefaultAsync(
+                    record => record.Id == medicalRecordId,
+                    cancellationToken);
+        }
+
         public async Task<IReadOnlyList<MedicalRecord>> GetAllConfirmedAsync(
             Guid patientProfileId,
             CancellationToken cancellationToken)

@@ -250,6 +250,12 @@
   <data name="Document.NotFound" xml:space="preserve">
     <value>The requested document was not found.</value>
   </data>
+  <data name="Document.HasConfirmedReferences" xml:space="preserve">
+    <value>This document cannot be deleted because confirmed medical records reference it.</value>
+  </data>
+  <data name="Document.Deleted" xml:space="preserve">
+    <value>Medical document deleted successfully.</value>
+  </data>
   <data name="Document.ExtractedFieldsRetrieved" xml:space="preserve">
     <value>Extracted document fields retrieved successfully.</value>
   </data>

@@ -21,6 +21,16 @@ internal sealed class FakeMedicalDocumentRepository(
         throw new NotSupportedException();
     }
 
+    public void Remove(MedicalDocument medicalDocument)
+    {
+        throw new NotSupportedException();
+    }
+
+    public Task<bool> HasSourceReferencesAsync(
+        Guid documentId,
+        CancellationToken cancellationToken) =>
+        Task.FromResult(false);
+
     public Task<MedicalDocument?> GetByIdAsync(
         Guid documentId,
         CancellationToken cancellationToken)

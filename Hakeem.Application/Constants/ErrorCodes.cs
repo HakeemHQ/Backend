@@ -102,6 +102,8 @@ public static class ErrorCodes
     public const string DocumentTitleTooLong = "Document.TitleTooLong";
     public const string DocumentDateInFuture = "Document.DateInFuture";
     public const string DocumentNotFound = "Document.NotFound";
+    public const string DocumentHasConfirmedReferences = "Document.HasConfirmedReferences";
+    public const string DocumentDeleted = "Document.Deleted";
     public const string DocumentExtractedFieldsRetrieved = "Document.ExtractedFieldsRetrieved";
 
     // --- Patient Review & Confirmation  --------------------------------------------

@@ -449,6 +449,11 @@ public sealed class MedicalIntelligenceAgentTests
             Guid medicalRecordId,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+
+        public Task<MedicalRecord?> GetByIdWithDetailsAsync(
+            Guid medicalRecordId,
+            CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     private sealed class FakeMedicalCvGenerationService

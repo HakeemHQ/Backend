@@ -1,6 +1,7 @@
 using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Features.PatientReviewAndConfirmation.Commands;
 using Hakeem.Application.Repositories.PatientProfiles;
+using Hakeem.Application.Services.Access;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Reviews;
 using Hakeem.Infrastructure.Tests.DocumentExtraction.Fakes;
@@ -31,8 +32,7 @@ public sealed class ConfirmAllExtractedItemsCommandHandlerTests
             "PatientName");
         var itemHandler = new FakeItemConfirmationHandler();
         var handler = new ConfirmAllExtractedItemsCommandHandler(
-            new FakeCurrentUserContext(userId),
-            new FakePatientProfileRepository(patient),
+            new FakeDoctorPatientAccessGuard(),
             new FakeMedicalDocumentRepository(
                 document,
                 [pendingItem, confirmedItem]),
@@ -72,8 +72,7 @@ public sealed class ConfirmAllExtractedItemsCommandHandlerTests
             "MedicationName");
         var itemHandler = new FakeItemConfirmationHandler();
         var handler = new ConfirmAllExtractedItemsCommandHandler(
-            new FakeCurrentUserContext(userId),
-            new FakePatientProfileRepository(patient),
+            new FakeDoctorPatientAccessGuard(),
             new FakeMedicalDocumentRepository(document, [confirmedItem]),
             itemHandler);
 
@@ -156,6 +155,18 @@ public sealed class ConfirmAllExtractedItemsCommandHandlerTests
             string? gender,
             CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+    }
+
+    private sealed class FakeDoctorPatientAccessGuard : IDoctorPatientAccessGuard
+    {
+        public Task<DoctorProfile> RequireDoctorWithActiveAccessAsync(
+            Guid patientProfileId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new DoctorProfile
+            {
+                Id = Guid.NewGuid(),
+                UserId = Guid.NewGuid()
+            });
     }
 
     private sealed class FakeItemConfirmationHandler

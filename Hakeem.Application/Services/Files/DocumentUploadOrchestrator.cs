@@ -1,56 +1,64 @@
-using Hakeem.Application.Common.Interfaces;
-using Hakeem.Application.Constants;
-using Hakeem.Application.Exceptions;
 using Hakeem.Application.Interfaces.Files;
 using Hakeem.Application.Repositories.AuditLogs;
 using Hakeem.Application.Repositories.MedicalDocuments;
 using Hakeem.Application.Repositories.Notifications;
-using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Domain.DomainEvents.Outbox;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Interfaces;
-using MediatR;
+using Hakeem.Domain.Interfaces.ServiceLifetime;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace Hakeem.Application.Features.MedicalDocuments.Commands.UploadDocument;
+namespace Hakeem.Application.Services.Files;
 
-public sealed class UploadDocumentCommandHandler(
-    ICurrentUserContext currentUserContext,
-    IPatientProfileRepository patientProfileRepository,
-    IAuditLogRepository auditLogRepository,
+public sealed record DocumentUploadResult(
+    Guid DocumentId,
+    string DocumentType,
+    string Title,
+    DateOnly DocumentDate,
+    string ExtractionStatus);
+
+public interface IDocumentUploadOrchestrator : IScoped
+{
+    Task<DocumentUploadResult> UploadAsync(
+        Guid patientProfileId,
+        Guid actorUserId,
+        IFormFile file,
+        string title,
+        DateOnly documentDate,
+        CancellationToken cancellationToken);
+}
+
+public sealed class DocumentUploadOrchestrator(
     IMedicalDocumentRepository medicalDocumentRepository,
+    IAuditLogRepository auditLogRepository,
     IOutboxEventRepository outboxEventRepository,
     IDocumentFileStorage documentFileStorage,
     IUnitOfWork unitOfWork,
-    ILogger<UploadDocumentCommandHandler> logger)
-    : IRequestHandler<UploadDocumentCommand, UploadDocumentResult>
+    ILogger<DocumentUploadOrchestrator> logger)
+    : IDocumentUploadOrchestrator
 {
-    public async Task<UploadDocumentResult> Handle(
-        UploadDocumentCommand request,
+    public async Task<DocumentUploadResult> UploadAsync(
+        Guid patientProfileId,
+        Guid actorUserId,
+        IFormFile file,
+        string title,
+        DateOnly documentDate,
         CancellationToken cancellationToken)
     {
-        var patientProfile = await patientProfileRepository.GetByUserIdAsync(
-            currentUserContext.UserId,
-            cancellationToken);
-
-        if (patientProfile is null)
-        {
-            throw new UnAuthorizedException(ErrorCodes.DocumentPatientProfileNotFound);
-        }
-
         var documentId = Guid.NewGuid();
         var filePath = await documentFileStorage.SaveAsync(
-            request.File!,
+            file,
             documentId,
             cancellationToken);
 
         var medicalDocument = new MedicalDocument
         {
             Id = documentId,
-            PatientProfileId = patientProfile.Id,
+            PatientProfileId = patientProfileId,
             DocumentType = MedicalDocument.UnclassifiedDocumentType,
-            Title = request.Title.Trim(),
-            DocumentDate = request.DocumentDate.ToDateTime(TimeOnly.MinValue),
+            Title = title.Trim(),
+            DocumentDate = documentDate.ToDateTime(TimeOnly.MinValue),
             FilePath = filePath
         };
         medicalDocument.QueueExtraction();
@@ -58,15 +66,16 @@ public sealed class UploadDocumentCommandHandler(
         medicalDocumentRepository.Add(medicalDocument);
 
         auditLogRepository.Add(
-   new AuditLog
-   {
-       Id = Guid.NewGuid(),
-       ActorUserId = currentUserContext.UserId,
-       PatientProfileId = patientProfile.Id,
-       Action = "DocumentUploaded",
-       Target = $"MedicalDocument:{documentId}",
-       OccurredAt = DateTime.UtcNow
-   });
+            new AuditLog
+            {
+                Id = Guid.NewGuid(),
+                ActorUserId = actorUserId,
+                PatientProfileId = patientProfileId,
+                Action = "DocumentUploaded",
+                Target = $"MedicalDocument:{documentId}",
+                OccurredAt = DateTime.UtcNow
+            });
+
         outboxEventRepository.Add(
             new DocumentExtractionRequestedEvent
             {
@@ -76,7 +85,6 @@ public sealed class UploadDocumentCommandHandler(
 
         try
         {
-            // EF Core wraps all changes in this SaveChanges call in one SQL transaction.
             await unitOfWork.SaveChanges(cancellationToken);
         }
         catch
@@ -96,7 +104,7 @@ public sealed class UploadDocumentCommandHandler(
             throw;
         }
 
-        return new UploadDocumentResult(
+        return new DocumentUploadResult(
             medicalDocument.Id,
             medicalDocument.DocumentType,
             medicalDocument.Title,

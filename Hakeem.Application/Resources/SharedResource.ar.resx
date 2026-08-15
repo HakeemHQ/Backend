@@ -246,6 +246,12 @@
   <data name="Document.NotFound" xml:space="preserve">
     <value>لم يتم العثور على المستند المطلوب.</value>
   </data>
+  <data name="Document.HasConfirmedReferences" xml:space="preserve">
+    <value>لا يمكن حذف هذا المستند لأن سجلات طبية مؤكدة تشير إليه.</value>
+  </data>
+  <data name="Document.Deleted" xml:space="preserve">
+    <value>تم حذف المستند الطبي بنجاح.</value>
+  </data>
   <data name="Document.ExtractedFieldsRetrieved" xml:space="preserve">
     <value>تم استرجاع حقول المستند المستخرجة بنجاح.</value>
   </data>

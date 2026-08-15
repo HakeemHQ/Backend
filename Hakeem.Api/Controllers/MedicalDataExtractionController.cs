@@ -13,7 +13,7 @@ namespace Hakeem.Api.Controllers;
 
 [ApiController]
 [Route("documents")]
-[Authorize(Roles = "Patient")]
+[Authorize(Roles = nameof(Hakeem.Domain.Enums.Identity.ApplicationRole.Doctor))]
 public sealed class MedicalDataExtractionController : ApiControllerBase
 {
     private readonly IMediator _mediator;

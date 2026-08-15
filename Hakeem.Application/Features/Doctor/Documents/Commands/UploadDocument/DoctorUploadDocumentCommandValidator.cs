@@ -3,12 +3,18 @@ using Hakeem.Application.Constants;
 using Hakeem.Application.Resources;
 using Microsoft.Extensions.Localization;
 
-namespace Hakeem.Application.Features.MedicalDocuments.Commands.UploadDocument;
+namespace Hakeem.Application.Features.Doctor.Documents.Commands.UploadDocument;
 
-public sealed class UploadDocumentCommandValidator : AbstractValidator<UploadDocumentCommand>
+public sealed class DoctorUploadDocumentCommandValidator
+    : AbstractValidator<DoctorUploadDocumentCommand>
 {
-    public UploadDocumentCommandValidator(IStringLocalizer<SharedResource> localizer)
+    public DoctorUploadDocumentCommandValidator(IStringLocalizer<SharedResource> localizer)
     {
+        RuleFor(x => x.PatientProfileId)
+            .NotEmpty()
+            .WithMessage(localizer[ErrorCodes.ValidationRequired].Value)
+            .WithErrorCode(ErrorCodes.ValidationRequired);
+
         RuleFor(x => x.File)
             .NotNull()
             .WithMessage(localizer[ErrorCodes.DocumentFileRequired].Value)

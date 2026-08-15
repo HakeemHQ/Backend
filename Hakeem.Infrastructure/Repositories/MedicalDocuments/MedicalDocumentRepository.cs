@@ -14,6 +14,22 @@ public sealed class MedicalDocumentRepository(ApplicationDbContext dbContext)
         dbContext.MedicalDocuments.Add(medicalDocument);
     }
 
+    public void Remove(MedicalDocument medicalDocument)
+    {
+        dbContext.MedicalDocuments.Remove(medicalDocument);
+    }
+
+    public Task<bool> HasSourceReferencesAsync(
+        Guid documentId,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.SourceReferences
+            .AsNoTracking()
+            .AnyAsync(
+                reference => reference.DocumentId == documentId,
+                cancellationToken);
+    }
+
     public Task<MedicalDocument?> GetByIdAsync(
         Guid documentId,
         CancellationToken cancellationToken)
