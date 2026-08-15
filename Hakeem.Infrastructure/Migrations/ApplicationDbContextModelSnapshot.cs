@@ -176,6 +176,9 @@ namespace Hakeem.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("LicenseNumber")
+                        .IsUnique();
+
                     b.HasIndex("UserId")
                         .IsUnique();
 
@@ -376,6 +379,16 @@ namespace Hakeem.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("CreatedByRole")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Unknown");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("MedicalCvId")
                         .HasColumnType("uniqueidentifier");
 
@@ -396,6 +409,8 @@ namespace Hakeem.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("MedicalCvId", "VersionNumber")
                         .IsUnique();
@@ -1252,11 +1267,18 @@ namespace Hakeem.Infrastructure.Migrations
 
             modelBuilder.Entity("Hakeem.Domain.Entities.MedicalCvVersion", b =>
                 {
+                    b.HasOne("Hakeem.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Hakeem.Domain.Entities.MedicalCv", "MedicalCv")
                         .WithMany("Versions")
                         .HasForeignKey("MedicalCvId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("CreatedByUser");
 
                     b.Navigation("MedicalCv");
                 });

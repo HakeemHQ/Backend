@@ -1,12 +1,7 @@
-using Hakeem.Application.Common;
 using Hakeem.Application.Features.Admin.AduitLogs.GetAuditLogs.DTOs;
 using Hakeem.Application.Repositories.AuditLogs;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Hakeem.Application.Features.Admin.AduitLogs.GetAuditLogs.Queries
 {
@@ -14,9 +9,9 @@ namespace Hakeem.Application.Features.Admin.AduitLogs.GetAuditLogs.Queries
      IAuditLogRepository auditLogRepository)
      : IRequestHandler<
          GetAdminAuditLogsQuery,
-         PaginatedResult<AdminAuditLogDto>>
+         AdminAuditLogsResponse>
     {
-        public async Task<PaginatedResult<AdminAuditLogDto>> Handle(
+        public async Task<AdminAuditLogsResponse> Handle(
             GetAdminAuditLogsQuery request,
             CancellationToken cancellationToken)
         {
@@ -24,17 +19,13 @@ namespace Hakeem.Application.Features.Admin.AduitLogs.GetAuditLogs.Queries
                 await auditLogRepository.GetAuditLogsAsync(
                     request.Action,
                     request.ActorUserId,
-                    request.FromDate,
-                    request.ToDate,
+                    request.FromDate?.ToDateTime(TimeOnly.MinValue),
+                    request.ToDate?.AddDays(1).ToDateTime(TimeOnly.MinValue),
                     request.Page,
                     request.PageSize,
                     cancellationToken);
 
-            return new PaginatedResult<AdminAuditLogDto>(
-                items,
-                totalCount,
-                request.Page,
-                request.PageSize);
+            return new AdminAuditLogsResponse(items.ToArray());
         }
     }
 }

@@ -397,6 +397,7 @@
   <data name="PatientAccess.PatientAccessesRetrieved" xml:space="preserve">
     <value>تم استرجاع الأطباء الذين لديهم صلاحية وصول نشطة بنجاح.</value>
   </data>
+<<<<<<< HEAD
   <data name="PushDevice.Registered" xml:space="preserve">
     <value>تم تسجيل جهاز الإشعارات بنجاح.</value>
   </data>
@@ -417,5 +418,15 @@
   </data>
   <data name="PushNotification.PatientAccessRequested.Body" xml:space="preserve">
     <value>يرغب طبيب في الوصول مؤقتًا إلى سجلاتك في حكيم. افتح حكيم لمراجعة الطلب.</value>
+=======
+  <data name="Account.InvalidStatusTransition" xml:space="preserve">
+    <value>تغيير حالة الحساب المطلوب غير صالح.</value>
+  </data>
+  <data name="Doctor.NotFound" xml:space="preserve">
+    <value>لم يتم العثور على حساب الطبيب.</value>
+  </data>
+  <data name="Doctor.LicenseNumberConflict" xml:space="preserve">
+    <value>يوجد حساب طبيب بنفس رقم الترخيص المُنشأ.</value>
+>>>>>>> AdminDoctorManagement
   </data>
 </root>

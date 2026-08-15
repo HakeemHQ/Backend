@@ -1,15 +1,14 @@
-using Hakeem.Domain.Enums.Identity;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Hakeem.Domain.Enums.Identity;
 
 namespace Hakeem.Application.Features.Admin.Doctors.Commands.UpdateDoctorStatus
 {
     public sealed record UpdateDoctorStatusCommand(
-    Guid DoctorId,
-    AccountStatus Status
-) : IRequest;
+        Guid DoctorId,
+        string Status)
+        : IRequest<UpdateDoctorStatusResult>;
+
+    public sealed record UpdateDoctorStatusResult(
+        Guid DoctorId,
+        string Status);
 }

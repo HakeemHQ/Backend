@@ -26,6 +26,13 @@ public sealed class MedicalCvModelConfigurationTests
         Assert.NotNull(medicalCv.FindProperty(nameof(MedicalCv.Focus)));
         Assert.Null(version.FindProperty("ScopeType"));
         Assert.Null(version.FindProperty("Focus"));
+        Assert.NotNull(version.FindProperty(nameof(MedicalCvVersion.CreatedByUserId)));
+        Assert.NotNull(version.FindProperty(nameof(MedicalCvVersion.CreatedByRole)));
+        Assert.Contains(
+            version.GetForeignKeys(),
+            foreignKey => foreignKey.Properties
+                .Any(property =>
+                    property.Name == nameof(MedicalCvVersion.CreatedByUserId)));
 
         var logicalIdentityIndex = Assert.Single(
             medicalCv.GetIndexes(),

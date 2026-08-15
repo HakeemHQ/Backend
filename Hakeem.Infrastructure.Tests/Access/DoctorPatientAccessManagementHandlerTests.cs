@@ -256,15 +256,28 @@ public sealed class DoctorPatientAccessManagementHandlerTests
             return Task.FromResult(RevokeAffectedRows);
         }
 
+<<<<<<< HEAD
+=======
+        public Task<int> RevokeAllActiveForDoctorAsync(
+            Guid doctorProfileId,
+            DateTime revokedAt,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(RevokeAffectedRows);
+
+>>>>>>> AdminDoctorManagement
         public Task<bool> HasActiveAccessAsync(
             Guid doctorProfileId,
             Guid patientProfileId,
             DateTime utcNow,
             CancellationToken cancellationToken) =>
+<<<<<<< HEAD
             Task.FromResult(accesses.Any(access =>
                 access.DoctorProfileId == doctorProfileId &&
                 access.PatientProfileId == patientProfileId &&
                 access.Status == DoctorPatientAccessStatus.Active &&
                 access.ExpiresAt > utcNow));
+=======
+            Task.FromResult(false);
+>>>>>>> AdminDoctorManagement
     }
 }

@@ -2,7 +2,6 @@ using System.Globalization;
 using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Features.MedicalCvs.Commands.GenerateFullMedicalCv;
 using Hakeem.Application.Features.MedicalCvs.DTOs;
-using Hakeem.Application.Interfaces.Files;
 using Hakeem.Application.Interfaces.MedicalCvs;
 using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Application.Resources;
@@ -16,7 +15,7 @@ namespace Hakeem.Infrastructure.Tests.MedicalCvs;
 public sealed class GenerateFullMedicalCvCommandTests
 {
     [Fact]
-    public async Task Handler_ReturnsQueuedVersionMetadataAndAbsolutePdfUrl()
+    public async Task Handler_ReturnsQueuedVersionContractForPatient()
     {
         var userId = Guid.NewGuid();
         var patient = new PatientProfile
@@ -42,22 +41,20 @@ public sealed class GenerateFullMedicalCvCommandTests
                 null,
                 "medical-cvs/cv/version-1.pdf",
                 MedicalCvVersionStatus.Queued,
-                generatedAt));
-        var previewExpiresAt = new DateTimeOffset(
-            2026,
-            7,
-            19,
-            13,
-            35,
-            0,
-            TimeSpan.Zero);
+                generatedAt,
+                userId,
+                MedicalCvCreatedByRole.Patient));
         var handler = new GenerateFullMedicalCvCommandHandler(
             new FakeCurrentUserContext(userId),
             new FakePatientProfileRepository(patient),
+<<<<<<< HEAD
             generationService,
             new FakePreviewLinkService(previewExpiresAt),
             new FakeAuditLogRepository(),
             new FakeFileUrlResolver("https://hakeem.example"));
+=======
+            generationService);
+>>>>>>> AdminDoctorManagement
 
         var response = await handler.Handle(
             new GenerateFullMedicalCvCommand("Mazen Medical CV"),
@@ -65,21 +62,16 @@ public sealed class GenerateFullMedicalCvCommandTests
 
         Assert.Equal(generationService.Result.MedicalCvId, response.MedicalCvId);
         Assert.Equal("Mazen Medical CV", response.Title);
-        Assert.Equal(MedicalCvScopeType.Full, response.ScopeType);
         Assert.Equal(
             generationService.Result.MedicalCvVersionId,
             response.LatestVersion.MedicalCvVersionId);
         Assert.Equal(1, response.LatestVersion.VersionNumber);
-        Assert.Equal("Queued", response.LatestVersion.Status);
-        Assert.Equal(generatedAt, response.LatestVersion.CreatedAt);
+        Assert.Equal("Queued", response.LatestVersion.GenerationStatus);
+        Assert.Equal("Unreviewed", response.LatestVersion.VerificationStatus);
+        Assert.Equal("Patient", response.LatestVersion.CreatedByRole);
         Assert.Equal(
-            $"https://hakeem.example/medical-cv-versions/" +
-            $"{response.LatestVersion.MedicalCvVersionId}/preview" +
-            "?token=preview-token",
-            response.LatestVersion.PdfUrl);
-        Assert.Equal(
-            previewExpiresAt,
-            response.LatestVersion.PreviewExpiresAt);
+            MedicalCvCreatedByRole.Patient,
+            generationService.CreatedByRole);
         Assert.Equal("Mazen Medical CV", generationService.Title);
         Assert.Equal("en", generationService.Language);
     }
@@ -107,14 +99,20 @@ public sealed class GenerateFullMedicalCvCommandTests
                     null,
                     string.Empty,
                     MedicalCvVersionStatus.Queued,
-                    DateTime.UtcNow));
+                    DateTime.UtcNow,
+                    userId,
+                    MedicalCvCreatedByRole.Patient));
             var handler = new GenerateFullMedicalCvCommandHandler(
                 new FakeCurrentUserContext(userId),
                 new FakePatientProfileRepository(patient),
+<<<<<<< HEAD
                 generationService,
                 new FakePreviewLinkService(DateTimeOffset.UtcNow.AddMinutes(15)),
                 new FakeAuditLogRepository(),
                 new FakeFileUrlResolver("https://hakeem.example"));
+=======
+                generationService);
+>>>>>>> AdminDoctorManagement
 
             await handler.Handle(
                 new GenerateFullMedicalCvCommand("السيرة الطبية"),
@@ -179,15 +177,18 @@ public sealed class GenerateFullMedicalCvCommandTests
         public MedicalCvGenerationResult Result { get; } = result;
         public string? Title { get; private set; }
         public string? Language { get; private set; }
+        public MedicalCvCreatedByRole? CreatedByRole { get; private set; }
 
         public Task<MedicalCvGenerationResult> GenerateFullAsync(
             Guid patientId,
             string title,
             string language,
+            MedicalCvCreatedByRole createdByRole,
             CancellationToken cancellationToken = default)
         {
             Title = title;
             Language = language;
+            CreatedByRole = createdByRole;
             return Task.FromResult(Result);
         }
 
@@ -197,33 +198,8 @@ public sealed class GenerateFullMedicalCvCommandTests
             string title,
             IReadOnlyList<MedicalCvEvidenceItem> evidence,
             string language,
+            MedicalCvCreatedByRole createdByRole,
             CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
-    }
-
-    private sealed class FakeFileUrlResolver(string baseUrl) : IFileUrlResolver
-    {
-        public string ResolveFileUrl(string value) => ToAbsoluteUrl(value);
-
-        public string ToAbsoluteUrl(string relativePath)
-        {
-            return $"{baseUrl.TrimEnd('/')}/{relativePath.TrimStart('/')}";
-        }
-    }
-
-    private sealed class FakePreviewLinkService(DateTimeOffset expiresAt)
-        : IMedicalCvPreviewLinkService
-    {
-        public MedicalCvPreviewLink Create(
-            Guid patientId,
-            Guid medicalCvId,
-            Guid medicalCvVersionId) =>
-            new("preview-token", expiresAt);
-
-        public bool TryValidate(
-            string token,
-            Guid medicalCvVersionId,
-            out MedicalCvPreviewAccess access) =>
             throw new NotSupportedException();
     }
 

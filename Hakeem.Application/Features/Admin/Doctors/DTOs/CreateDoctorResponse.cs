@@ -1,4 +1,3 @@
-using Hakeem.Domain.Enums.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,11 +7,12 @@ using System.Threading.Tasks;
 namespace Hakeem.Application.Features.Admin.Doctors.DTOs
 {
     public sealed record CreateDoctorResponse(
-    Guid Id,
-    string Name,
+    Guid UserId,
+    Guid DoctorId,
     string Email,
+    string FullName,
     string Specialty,
     string LicenseNumber,
-    AccountStatus Status
+    string Status
 );
 }

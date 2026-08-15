@@ -14,7 +14,11 @@ public sealed class DoctorProfileConfiguration : IEntityTypeConfiguration<Doctor
             .HasMaxLength(200);
 
         builder.Property(profile => profile.LicenseNumber)
-            .HasMaxLength(100);
+            .HasMaxLength(100)
+            .IsRequired();
+
+        builder.HasIndex(profile => profile.LicenseNumber)
+            .IsUnique();
 
         builder.HasIndex(profile => profile.UserId)
             .IsUnique();

@@ -1,11 +1,12 @@
+using Hakeem.Api.Authorization;
 using Hakeem.Application.Common.ResponseModel;
+using Hakeem.Application.Constants;
 using Hakeem.Application.Features.Doctor.MedicalCvs.Commands;
 using Hakeem.Application.Features.Doctor.MedicalCvs.DTOs;
 using Hakeem.Application.Features.Doctor.MedicalCvs.Queries;
 using Hakeem.Application.Resources;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 
@@ -23,6 +24,25 @@ namespace Hakeem.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = DoctorPatientAccessPolicy.Name)]
+        [ProducesResponseType(
+            typeof(GenericResponseModel<GenerateDoctorMedicalCvResponse>),
+            StatusCodes.Status201Created)]
+        [ProducesResponseType(
+            typeof(GenericResponseModel<object>),
+            StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(
+            typeof(GenericResponseModel<object>),
+            StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(
+            typeof(GenericResponseModel<object>),
+            StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(
+            typeof(GenericResponseModel<object>),
+            StatusCodes.Status422UnprocessableEntity)]
+        [ProducesResponseType(
+            typeof(GenericResponseModel<object>),
+            StatusCodes.Status503ServiceUnavailable)]
         public async Task<IActionResult> Generate(
         Guid patientId,
         [FromBody] GenerateDoctorMedicalCvRequest request,
@@ -36,7 +56,7 @@ namespace Hakeem.Api.Controllers
                 command,
                 cancellationToken);
 
-            return Ok(result);
+            return CreatedResponse(result, ErrorCodes.MedicalCvQueued);
         }
 
         [HttpGet]
@@ -52,10 +72,14 @@ namespace Hakeem.Api.Controllers
         [ProducesResponseType(
     typeof(GenericResponseModel<object>),
     StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Get(Guid patientId,CancellationToken cancellationToken)
-        {
-            var response = await _mediator.Send(new GetPatientMedicalCvsQuery(patientId),cancellationToken);
-            return Ok(response);
-        }
+        public async Task<ActionResult<IReadOnlyList<DoctorMedicalCvListItem>>> 
+            GetPatientMedicalCvs(Guid patientId, 
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            CancellationToken cancellationToken = default) 
+        { 
+            var result = await _mediator.Send(
+                new GetPatientMedicalCvsQuery
+                (patientId, page, pageSize), cancellationToken); return Ok(new { items = result }); }
     }
 }

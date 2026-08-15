@@ -345,6 +345,7 @@ public sealed class MedicalIntelligencePluginTests
             Guid patientId,
             string title,
             string language,
+            MedicalCvCreatedByRole createdByRole,
             CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
 
@@ -354,6 +355,7 @@ public sealed class MedicalIntelligencePluginTests
             string title,
             IReadOnlyList<MedicalCvEvidenceItem> evidence,
             string language,
+            MedicalCvCreatedByRole createdByRole,
             CancellationToken cancellationToken = default)
         {
             CallCount++;

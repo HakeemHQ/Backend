@@ -1,4 +1,3 @@
-using Hakeem.Application.Common;
 using Hakeem.Application.Features.Admin.AduitLogs.GetAuditLogs.DTOs;
 using MediatR;
 using System;
@@ -10,11 +9,11 @@ using System.Threading.Tasks;
 namespace Hakeem.Application.Features.Admin.AduitLogs.GetAuditLogs.Queries
 {
     public sealed record GetAdminAuditLogsQuery(
-     string? Action,
-     Guid? ActorUserId,
-     DateTime? FromDate,
-     DateTime? ToDate,
+     string? Action = null,
+     Guid? ActorUserId = null,
+     DateOnly? FromDate = null,
+     DateOnly? ToDate = null,
      int Page = 1,
      int PageSize = 20)
-     : IRequest<PaginatedResult<AdminAuditLogDto>>;
+     : IRequest<AdminAuditLogsResponse>;
 }

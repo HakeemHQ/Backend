@@ -59,7 +59,7 @@ namespace Hakeem.Infrastructure.Repositories.AuditLogs
             if (toDate.HasValue)
             {
                 query = query.Where(x =>
-                    x.OccurredAt <= toDate.Value);
+                    x.OccurredAt < toDate.Value);
             }
 
             var totalCount =
@@ -73,7 +73,7 @@ namespace Hakeem.Infrastructure.Repositories.AuditLogs
                 {
                     AuditLogId = x.Id,
                     ActorUserId = x.ActorUserId,
-                    PatientProfileId = x.PatientProfileId,
+                    //PatientProfileId = x.PatientProfileId,
                     Action = x.Action,
                     Target = x.Target,
                     OccurredAt = x.OccurredAt

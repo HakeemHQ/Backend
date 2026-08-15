@@ -8,7 +8,5 @@ using System.Threading.Tasks;
 
 namespace Hakeem.Application.Features.Doctor.MedicalCvs.Queries
 {
-    public sealed record GetPatientMedicalCvsQuery(
-    Guid PatientId)
-    : IRequest<IReadOnlyList<DoctorMedicalCvResponse>>;
+    public sealed record GetPatientMedicalCvsQuery(Guid PatientId, int Page = 1, int PageSize = 10) : IRequest<DoctorMedicalCvsResponse>;
 }

@@ -164,8 +164,16 @@ public static class SecurityExtensions
                     .RequireRole(nameof(ApplicationRole.Doctor))
                     .AddRequirements(new DoctorPatientAccessRequirement()));
 
+            options.AddPolicy(
+                VerifiedPatientPolicy.Name,
+                policy => policy
+                    .RequireAuthenticatedUser()
+                    .RequireRole(nameof(ApplicationRole.Patient))
+                    .AddRequirements(new VerifiedPatientRequirement()));
+
         });
         services.AddScoped<IAuthorizationHandler, DoctorPatientAccessHandler>();
+        services.AddScoped<IAuthorizationHandler, VerifiedPatientHandler>();
         return services;
     }
 

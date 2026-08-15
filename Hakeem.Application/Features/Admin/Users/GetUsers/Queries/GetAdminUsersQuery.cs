@@ -1,4 +1,3 @@
-using Hakeem.Application.Common;
 using Hakeem.Application.Features.Admin.Users.GetUsers.DTOs;
 using Hakeem.Domain.Enums.Identity;
 using MediatR;
@@ -11,9 +10,10 @@ using System.Threading.Tasks;
 namespace Hakeem.Application.Features.Admin.Users.GetUsers.Queries
 {
     public record GetAdminUsersQuery(
-     string? Search,
-     AccountStatus? Status,
-     int PageNumber = 1,
+     string? Search = null,
+     ApplicationRole? UserType = null,
+     AccountStatus? Status = null,
+     int Page = 1,
      int PageSize = 20
- ) : IRequest<PaginatedResult<AdminUserDto>>;
+ ) : IRequest<AdminUsersResponse>;
 }

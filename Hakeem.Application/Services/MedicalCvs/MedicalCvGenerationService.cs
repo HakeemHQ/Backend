@@ -1,7 +1,9 @@
+using Hakeem.Application.Common.Interfaces;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Features.MedicalCvs.DTOs;
 using Hakeem.Application.Interfaces.MedicalCvs;
+using Hakeem.Application.Repositories.AuditLogs;
 using Hakeem.Application.Repositories.MedicalCvs;
 using Hakeem.Application.Repositories.MedicalRecords;
 using Hakeem.Application.Repositories.Notifications;
@@ -24,6 +26,8 @@ public sealed class MedicalCvGenerationService(
     IMedicalCvFileStorage fileStorage,
     IOutboxEventRepository outboxEventRepository,
     IUnitOfWork unitOfWork,
+    IAuditLogRepository auditLogRepository,
+    ICurrentUserContext currentUserContext,
     ILogger<MedicalCvGenerationService> logger)
     : IMedicalCvGenerationService, IScoped
 {
@@ -31,9 +35,11 @@ public sealed class MedicalCvGenerationService(
         Guid patientId,
         string title,
         string language,
+        MedicalCvCreatedByRole createdByRole,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
+        EnsureKnownCreatorRole(createdByRole);
 
         if (patientId == Guid.Empty)
         {
@@ -86,6 +92,8 @@ public sealed class MedicalCvGenerationService(
         {
             Id = Guid.NewGuid(),
             MedicalCvId = medicalCv.Id,
+            CreatedByUserId = currentUserContext.UserId,
+            CreatedByRole = createdByRole,
             VersionNumber = await medicalCvRepository.GetNextVersionNumberAsync(
                 medicalCv.Id,
                 cancellationToken),
@@ -107,6 +115,16 @@ public sealed class MedicalCvGenerationService(
             },
             $"medical-cv-generation:{version.Id}");
 
+         auditLogRepository.Add(
+    new AuditLog
+    {
+        ActorUserId = currentUserContext.UserId,
+        PatientProfileId = patientId,
+        Action = "MedicalCvVersionQueued",
+        Target = $"MedicalCvVersion:{version.Id}",
+        OccurredAt = DateTime.UtcNow
+    });
+
         await unitOfWork.SaveChanges(cancellationToken);
 
         logger.LogInformation(
@@ -124,7 +142,9 @@ public sealed class MedicalCvGenerationService(
             Focus: null,
             version.PdfFileKey,
             version.Status,
-            version.CreatedAt);
+            version.CreatedAt,
+            version.CreatedByUserId,
+            version.CreatedByRole);
     }
 
     public Task<MedicalCvGenerationResult> GenerateFocusedAsync(
@@ -133,11 +153,13 @@ public sealed class MedicalCvGenerationService(
         string title,
         IReadOnlyList<MedicalCvEvidenceItem> evidence,
         string language,
+        MedicalCvCreatedByRole createdByRole,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(focus);
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
         ArgumentNullException.ThrowIfNull(evidence);
+        EnsureKnownCreatorRole(createdByRole);
 
         if (focus.Trim().Length > 200)
         {
@@ -165,6 +187,7 @@ public sealed class MedicalCvGenerationService(
             title.Trim(),
             evidence,
             MedicalCvLanguages.Normalize(language),
+            createdByRole,
             cancellationToken);
     }
 
@@ -174,6 +197,7 @@ public sealed class MedicalCvGenerationService(
         string title,
         IReadOnlyList<MedicalCvEvidenceItem> evidence,
         string language,
+        MedicalCvCreatedByRole createdByRole,
         CancellationToken cancellationToken)
     {
         if (patientId == Guid.Empty)
@@ -260,6 +284,8 @@ public sealed class MedicalCvGenerationService(
             {
                 Id = versionId,
                 MedicalCvId = medicalCv.Id,
+                CreatedByUserId = currentUserContext.UserId,
+                CreatedByRole = createdByRole,
                 VersionNumber = versionNumber,
                 Status = MedicalCvVersionStatus.Draft,
                 PdfFileKey = fileKey
@@ -301,6 +327,21 @@ public sealed class MedicalCvGenerationService(
             focus,
             fileKey,
             version.Status,
-            version.CreatedAt);
+            version.CreatedAt,
+            version.CreatedByUserId,
+            version.CreatedByRole);
+    }
+
+    private static void EnsureKnownCreatorRole(
+        MedicalCvCreatedByRole createdByRole)
+    {
+        if (createdByRole is not MedicalCvCreatedByRole.Patient and
+            not MedicalCvCreatedByRole.Doctor)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(createdByRole),
+                createdByRole,
+                "A patient or doctor creator role is required.");
+        }
     }
 }

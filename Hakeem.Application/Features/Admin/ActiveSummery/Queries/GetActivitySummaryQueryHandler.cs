@@ -25,9 +25,8 @@ namespace Hakeem.Application.Features.Admin.ActiveSummery.Queries
 
             if (fromDate > toDate)
             {
-                throw new LocalizedHttpException(
-                ErrorCodes.ValidationInvalidRange,
-                400);
+                throw new UnprocessableEntityException(
+                    ErrorCodes.ValidationInvalidRange);
             }
 
             var fromDateTime = fromDate.ToDateTime(TimeOnly.MinValue);

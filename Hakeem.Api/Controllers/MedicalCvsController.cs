@@ -1,3 +1,4 @@
+using Hakeem.Api.Authorization;
 using Hakeem.Application.Common.ResponseModel;
 using Hakeem.Application.Constants;
 using Hakeem.Application.Features.MedicalCvs.Commands.GenerateFullMedicalCv;
@@ -62,9 +63,10 @@ public sealed class MedicalCvsController(
     }
 
     [HttpPost]
+    [Authorize(Policy = VerifiedPatientPolicy.Name)]
     [ProducesResponseType(
         typeof(GenericResponseModel<GenerateFullMedicalCvResponse>),
-        StatusCodes.Status202Accepted)]
+        StatusCodes.Status201Created)]
     [ProducesResponseType(
         typeof(GenericResponseModel<object>),
         StatusCodes.Status400BadRequest)]
@@ -73,13 +75,19 @@ public sealed class MedicalCvsController(
         StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(
         typeof(GenericResponseModel<object>),
+        StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(
+        typeof(GenericResponseModel<object>),
         StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(
+        typeof(GenericResponseModel<object>),
+        StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> GenerateFullMedicalCv(
         [FromBody] GenerateFullMedicalCvCommand request,
         CancellationToken cancellationToken)
     {
         var result = await mediator.Send(request, cancellationToken);
-        return AcceptedResponse(result, ErrorCodes.MedicalCvQueued);
+        return CreatedResponse(result, ErrorCodes.MedicalCvQueued);
     }
 
 }

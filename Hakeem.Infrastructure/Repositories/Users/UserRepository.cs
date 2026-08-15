@@ -37,6 +37,7 @@ public class UserRepository : IUserRepository, IScoped
 
     public async Task<(IEnumerable<AdminUserDto> Items, int TotalCount)> GetUsersAsync(
    string? search,
+   ApplicationRole? userType,
    AccountStatus? status,
    int pageNumber,
    int pageSize,
@@ -44,13 +45,19 @@ public class UserRepository : IUserRepository, IScoped
     {
         var query = _dbContext.Users
             .AsNoTracking()
-            .Where(x => x.Role == Domain.Enums.Identity.ApplicationRole.Patient)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
         {
             query = query.Where(x =>
-                x.Email.Contains(search));
+                x.Email.Contains(search) ||
+                x.FirstName.Contains(search) ||
+                x.LastName.Contains(search));
+        }
+
+        if (userType.HasValue)
+        {
+            query = query.Where(x => x.Role == userType.Value);
         }
 
         if (status.HasValue)
@@ -69,7 +76,10 @@ public class UserRepository : IUserRepository, IScoped
                 UserId = x.Id,
                 Email = x.Email,
                 UserType = x.Role,
-                Status = x.Status
+                Status = x.Status,
+                IdentityVerificationStatus = x.PatientProfile == null
+                    ? null
+                    : x.PatientProfile.IdentityVerificationStatus
             })
             .ToListAsync(cancellationToken);
 

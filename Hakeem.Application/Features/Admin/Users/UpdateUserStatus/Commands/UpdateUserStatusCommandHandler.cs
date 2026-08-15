@@ -1,3 +1,8 @@
+using Hakeem.Application.Constants;
+using Hakeem.Application.Exceptions;
+using Hakeem.Application.Repositories.Auth;
+using Hakeem.Application.Repositories.DoctorPatientAccesses;
+using Hakeem.Application.Repositories.DoctorProfiles;
 using Hakeem.Application.Repositories.Users;
 using Hakeem.Domain.Enums.Identity;
 using Hakeem.Domain.Interfaces;
@@ -12,6 +17,9 @@ namespace Hakeem.Application.Features.Admin.Users.UpdateUserStatus.Commands
 {
     public sealed class UpdateUserStatusCommandHandler(
      IUserRepository userRepository,
+     IDoctorProfileRepository doctorProfileRepository,
+     IDoctorPatientAccessRepository accessRepository,
+     IRefreshTokenRepository refreshTokenRepository,
      IUnitOfWork unitOfWork)
      : IRequestHandler<UpdateUserStatusCommand, UpdateUserStatusResult>
     {
@@ -19,12 +27,17 @@ namespace Hakeem.Application.Features.Admin.Users.UpdateUserStatus.Commands
             UpdateUserStatusCommand request,
             CancellationToken cancellationToken)
         {
-            if (!Enum.TryParse<AccountStatus>(
+            if (!Enum.GetNames<AccountStatus>().Contains(
+                    request.Status,
+                    StringComparer.OrdinalIgnoreCase) ||
+                !Enum.TryParse<AccountStatus>(
                     request.Status,
                     true,
-                    out var status))
+                    out var status) ||
+                !Enum.IsDefined(status))
             {
-                throw new ArgumentException("Unsupported user status.");
+                throw new UnprocessableEntityException(
+                    ErrorCodes.AccountInvalidStatusTransition);
             }
 
             var user = await userRepository.GetByIdAsync(
@@ -33,18 +46,56 @@ namespace Hakeem.Application.Features.Admin.Users.UpdateUserStatus.Commands
 
             if (user is null)
             {
-                throw new KeyNotFoundException("User does not exist.");
+                throw new NotFoundException(ErrorCodes.UserNotFound);
             }
 
-            user.Status = status;
+            if (user.Status == status)
+            {
+                throw new UnprocessableEntityException(
+                    ErrorCodes.AccountInvalidStatusTransition);
+            }
 
-            await unitOfWork.SaveChanges(cancellationToken);
+            await unitOfWork.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                user.Status = status;
+
+                if (status == AccountStatus.Suspended)
+                {
+                    var now = DateTime.UtcNow;
+                    await refreshTokenRepository.RevokeAllActiveForUserAsync(
+                        user.Id,
+                        now,
+                        cancellationToken);
+
+                    if (user.Role == ApplicationRole.Doctor)
+                    {
+                        var doctor = await doctorProfileRepository.GetByUserIdAsync(
+                            user.Id,
+                            cancellationToken);
+
+                        if (doctor is not null)
+                        {
+                            await accessRepository.RevokeAllActiveForDoctorAsync(
+                                doctor.Id,
+                                now,
+                                cancellationToken);
+                        }
+                    }
+                }
+
+                await unitOfWork.SaveChanges(cancellationToken);
+                await unitOfWork.CommitTransactionAsync();
+            }
+            catch
+            {
+                await unitOfWork.RollBackTransactionAsync();
+                throw;
+            }
 
             return new UpdateUserStatusResult(
                 user.Id,
-                user.Email,
-                user.Role,
-                user.Status);
+                user.Status.ToString());
         }
     }
 }

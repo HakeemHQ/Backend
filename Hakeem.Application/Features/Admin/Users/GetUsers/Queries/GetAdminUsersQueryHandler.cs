@@ -1,4 +1,3 @@
-using Hakeem.Application.Common;
 using Hakeem.Application.Features.Admin.Users.GetUsers.DTOs;
 using Hakeem.Application.Repositories.Users;
 using MediatR;
@@ -12,25 +11,22 @@ namespace Hakeem.Application.Features.Admin.Users.GetUsers.Queries
 {
     public sealed class GetAdminUsersQueryHandler(
     IUserRepository userRepository)
-    : IRequestHandler<GetAdminUsersQuery, PaginatedResult<AdminUserDto>>
+    : IRequestHandler<GetAdminUsersQuery, AdminUsersResponse>
     {
-        public async Task<PaginatedResult<AdminUserDto>> Handle(
+        public async Task<AdminUsersResponse> Handle(
             GetAdminUsersQuery request,
             CancellationToken cancellationToken)
         {
             var (items, totalCount) =
                 await userRepository.GetUsersAsync(
                     request.Search,
+                    request.UserType,
                     request.Status,
-                    request.PageNumber,
+                    request.Page,
                     request.PageSize,
                     cancellationToken);
 
-            return new PaginatedResult<AdminUserDto>(
-                items,
-                totalCount,
-                request.PageNumber,
-                request.PageSize);
+            return new AdminUsersResponse(items.ToArray());
         }
     }
 }
