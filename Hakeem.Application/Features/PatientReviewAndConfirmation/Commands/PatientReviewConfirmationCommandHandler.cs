@@ -101,9 +101,10 @@ namespace Hakeem.Application.Features.PatientReviewAndConfirmation.Commands
                 review.ReviewedAt = DateTime.UtcNow;
             }
 
-            item.ReviewStatus = ExtractedItemReviewStatus.Confirmed;
+            item.ReviewStatus = ExtractedItemReviewStatus.Reviewed;
             item.ReviewedAt = DateTimeOffset.UtcNow;
             item.ReviewedByUserId = currentUserContext.UserId;
+            item.MedicalDocument.RefreshReviewStatus();
 
             var patientProfileId = item.MedicalDocument.PatientProfileId;
 
@@ -175,6 +176,7 @@ namespace Hakeem.Application.Features.PatientReviewAndConfirmation.Commands
                 item.Id,
                 item.ItemType.ToString(),
                 item.ReviewStatus.ToString(),
+                item.MedicalDocument.ReviewStatus.ToString(),
                 medicalRecord.Id,
                 item.ReviewedAt!.Value,
                 item.ExtractedFields.Select(field =>

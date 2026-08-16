@@ -112,7 +112,10 @@ public sealed class MedicalDocumentRepository(ApplicationDbContext dbContext)
 
     public async Task<ExtractedItem?> GetExtractedItemForReviewAsync(Guid extractedItemId,CancellationToken cancellationToken)
     {
-        return await dbContext.ExtractedItems.Include(e => e.MedicalDocument).Include(e => e.ExtractedFields)
+        return await dbContext.ExtractedItems
+                                             .Include(e => e.MedicalDocument)
+                                             .ThenInclude(document => document.ExtractedItems)
+                                             .Include(e => e.ExtractedFields)
                                              .ThenInclude(f => f.FieldReview)
                                              .FirstOrDefaultAsync(
                                               e => e.Id == extractedItemId,

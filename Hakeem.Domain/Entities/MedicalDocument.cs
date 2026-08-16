@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Hakeem.Domain.Enums.Documents;
+using Hakeem.Domain.Enums.Reviews;
 
 namespace Hakeem.Domain.Entities;
 
@@ -14,6 +15,7 @@ public class MedicalDocument : BaseEntity
     public DateTime DocumentDate { get; set; }
     public string FilePath { get; set; } = string.Empty;
     public ExtractionStatus ExtractionStatus { get; private set; } = ExtractionStatus.Queued;
+    public DocumentReviewStatus ReviewStatus { get; private set; } = DocumentReviewStatus.NotReviewed;
     public string? FailureCode { get; private set; }
 
     public virtual PatientProfile PatientProfile { get; set; } = null!;
@@ -43,7 +45,22 @@ public class MedicalDocument : BaseEntity
     {
         EnsureExtractionStatus(ExtractionStatus.Processing);
         ExtractionStatus = ExtractionStatus.Completed;
+        ReviewStatus = DocumentReviewStatus.NotReviewed;
         FailureCode = null;
+    }
+
+    public void RefreshReviewStatus()
+    {
+        var itemCount = ExtractedItems.Count;
+        var reviewedItemCount = ExtractedItems.Count(
+            item => item.ReviewStatus == ExtractedItemReviewStatus.Reviewed);
+
+        ReviewStatus = reviewedItemCount switch
+        {
+            0 => DocumentReviewStatus.NotReviewed,
+            _ when reviewedItemCount == itemCount => DocumentReviewStatus.FullyReviewed,
+            _ => DocumentReviewStatus.PartiallyReviewed
+        };
     }
 
     public void FailExtraction(string failureCode)

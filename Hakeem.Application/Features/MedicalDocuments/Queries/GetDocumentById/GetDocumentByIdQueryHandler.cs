@@ -45,6 +45,7 @@ public sealed class GetDocumentByIdQueryHandler(
             document.Title,
             DateOnly.FromDateTime(document.DocumentDate),
             document.ExtractionStatus.ToString(),
+            document.ReviewStatus.ToString(),
             document.FailureCode,
             fileUrlResolver.ResolveFileUrl(document.FilePath));
     }

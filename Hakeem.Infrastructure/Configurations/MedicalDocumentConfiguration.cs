@@ -1,4 +1,5 @@
 ﻿using Hakeem.Domain.Entities;
+using Hakeem.Domain.Enums.Documents;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -18,6 +19,12 @@ public class MedicalDocumentConfiguration : IEntityTypeConfiguration<MedicalDocu
                .HasConversion<string>()
                .HasMaxLength(20)
                .IsRequired();
+
+        builder.Property(d => d.ReviewStatus)
+               .HasConversion<string>()
+               .HasMaxLength(20)
+               .IsRequired()
+               .HasDefaultValue(DocumentReviewStatus.NotReviewed);
 
         builder.Property(d => d.FailureCode)
                .HasMaxLength(100);

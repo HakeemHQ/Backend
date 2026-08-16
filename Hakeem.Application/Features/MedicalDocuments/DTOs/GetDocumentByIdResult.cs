@@ -6,5 +6,6 @@ public sealed record GetDocumentByIdResult(
     string Title,
     DateOnly DocumentDate,
     string ExtractionStatus,
+    string ReviewStatus,
     string? FailureCode,
     string DocumentPath);

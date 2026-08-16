@@ -42,6 +42,7 @@ public sealed class GetExtractedFieldsQueryHandler(
                 item.ItemType,
                 item.SequenceNumber,
                 item.PageNumber,
+                item.ReviewStatus.ToString(),
                 item.ExtractedFields
                     .Select(field => new ExtractedFieldResponse(
                         field.Id,
@@ -57,6 +58,7 @@ public sealed class GetExtractedFieldsQueryHandler(
             document.Id,
             document.DocumentType,
             document.ExtractionStatus.ToString(),
+            document.ReviewStatus.ToString(),
             items);
     }
 

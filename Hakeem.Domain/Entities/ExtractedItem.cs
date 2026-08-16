@@ -10,7 +10,7 @@ public class ExtractedItem : BaseEntity
     public string ItemType { get; set; } = string.Empty;
     public int SequenceNumber { get; set; }
     public int PageNumber { get; set; }
-    public ExtractedItemReviewStatus ReviewStatus { get; set; } = ExtractedItemReviewStatus.Pending;
+    public ExtractedItemReviewStatus ReviewStatus { get; set; } = ExtractedItemReviewStatus.NotReviewed;
 
     public DateTimeOffset? ReviewedAt { get; set; }
     public Guid? ReviewedByUserId { get; set; }

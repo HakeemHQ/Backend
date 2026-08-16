@@ -15,6 +15,7 @@ internal sealed class FakeMedicalDocumentRepository(
     public int GetExtractedItemsCallCount { get; private set; }
     public IReadOnlyList<ExtractedItem> RemovedItems { get; private set; } = [];
     public IReadOnlyList<ExtractedItem> AddedItems { get; private set; } = [];
+    public MedicalDocument? RemovedDocument { get; private set; }
 
     public void Add(MedicalDocument entity)
     {
@@ -23,7 +24,7 @@ internal sealed class FakeMedicalDocumentRepository(
 
     public void Remove(MedicalDocument medicalDocument)
     {
-        throw new NotSupportedException();
+        RemovedDocument = medicalDocument;
     }
 
     public Task<bool> HasSourceReferencesAsync(

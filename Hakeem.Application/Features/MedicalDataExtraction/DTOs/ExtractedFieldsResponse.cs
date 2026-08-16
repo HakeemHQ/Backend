@@ -4,6 +4,7 @@ public sealed record ExtractedFieldsResponse(
     Guid DocumentId,
     string DocumentType,
     string ExtractionStatus,
+    string ReviewStatus,
     IReadOnlyList<ExtractedItemResponse> Items);
 
 public sealed record ExtractedItemResponse(
@@ -11,6 +12,7 @@ public sealed record ExtractedItemResponse(
     string ItemType,
     int SequenceNumber,
     int PageNumber,
+    string ReviewStatus,
     IReadOnlyList<ExtractedFieldResponse> Fields);
 
 public sealed record ExtractedFieldResponse(

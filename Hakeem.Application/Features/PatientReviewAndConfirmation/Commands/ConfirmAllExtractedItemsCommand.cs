@@ -7,6 +7,7 @@ public sealed record ConfirmAllExtractedItemsCommand(Guid DocumentId)
 
 public sealed record ConfirmAllExtractedItemsResult(
     Guid DocumentId,
+    string ReviewStatus,
     int ConfirmedItemCount,
     int SkippedAlreadyConfirmedItemCount,
     IReadOnlyList<ReviewExtractedItemResult> Items);

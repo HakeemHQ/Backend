@@ -11,4 +11,6 @@ public sealed class MedicalDocumentDto
     public DateOnly DocumentDate { get; init; }
 
     public string ExtractionStatus { get; init; } = string.Empty;
+
+    public string ReviewStatus { get; init; } = string.Empty;
 }

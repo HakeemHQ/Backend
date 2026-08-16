@@ -3,6 +3,7 @@ using Hakeem.Application.Exceptions;
 using Hakeem.Application.Interfaces.Files;
 using Hakeem.Application.Repositories.MedicalDocuments;
 using Hakeem.Application.Services.Access;
+using Hakeem.Domain.Enums.Documents;
 using Hakeem.Domain.Interfaces;
 using MediatR;
 
@@ -31,6 +32,12 @@ public sealed class DeleteDocumentCommandHandler(
         await doctorPatientAccessGuard.RequireDoctorWithActiveAccessAsync(
             document.PatientProfileId,
             cancellationToken);
+
+        if (document.ReviewStatus != DocumentReviewStatus.NotReviewed)
+        {
+            throw new ConflictException(
+                ErrorCodes.DocumentAlreadyReviewedCannotDelete);
+        }
 
         if (await medicalDocumentRepository.HasSourceReferencesAsync(
                 document.Id,

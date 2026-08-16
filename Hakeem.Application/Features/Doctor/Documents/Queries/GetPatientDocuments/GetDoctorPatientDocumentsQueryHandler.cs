@@ -32,7 +32,8 @@ public sealed class GetDoctorPatientDocumentsQueryHandler(
             DocumentType = document.DocumentType,
             Title = document.Title,
             DocumentDate = DateOnly.FromDateTime(document.DocumentDate),
-            ExtractionStatus = document.ExtractionStatus.ToString()
+            ExtractionStatus = document.ExtractionStatus.ToString(),
+            ReviewStatus = document.ReviewStatus.ToString()
         });
 
         return new PaginatedResult<MedicalDocumentDto>(

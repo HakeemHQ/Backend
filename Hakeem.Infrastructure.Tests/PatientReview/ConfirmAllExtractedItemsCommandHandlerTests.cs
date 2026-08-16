@@ -3,6 +3,7 @@ using Hakeem.Application.Features.PatientReviewAndConfirmation.Commands;
 using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Application.Services.Access;
 using Hakeem.Domain.Entities;
+using Hakeem.Domain.Enums.Documents;
 using Hakeem.Domain.Enums.Reviews;
 using Hakeem.Infrastructure.Tests.DocumentExtraction.Fakes;
 using MediatR;
@@ -23,12 +24,12 @@ public sealed class ConfirmAllExtractedItemsCommandHandlerTests
         var document = CreateCompletedDocument(patient.Id);
         var pendingItem = CreateItem(
             document.Id,
-            ExtractedItemReviewStatus.Pending,
+            ExtractedItemReviewStatus.NotReviewed,
             "LabTestName",
             "LabValue");
         var confirmedItem = CreateItem(
             document.Id,
-            ExtractedItemReviewStatus.Confirmed,
+            ExtractedItemReviewStatus.Reviewed,
             "PatientName");
         var itemHandler = new FakeItemConfirmationHandler();
         var handler = new ConfirmAllExtractedItemsCommandHandler(
@@ -43,6 +44,7 @@ public sealed class ConfirmAllExtractedItemsCommandHandlerTests
             CancellationToken.None);
 
         Assert.Equal(document.Id, result.DocumentId);
+        Assert.Equal(DocumentReviewStatus.FullyReviewed.ToString(), result.ReviewStatus);
         Assert.Equal(1, result.ConfirmedItemCount);
         Assert.Equal(1, result.SkippedAlreadyConfirmedItemCount);
         Assert.Single(result.Items);
@@ -68,7 +70,7 @@ public sealed class ConfirmAllExtractedItemsCommandHandlerTests
         var document = CreateCompletedDocument(patient.Id);
         var confirmedItem = CreateItem(
             document.Id,
-            ExtractedItemReviewStatus.Confirmed,
+            ExtractedItemReviewStatus.Reviewed,
             "MedicationName");
         var itemHandler = new FakeItemConfirmationHandler();
         var handler = new ConfirmAllExtractedItemsCommandHandler(
@@ -81,6 +83,7 @@ public sealed class ConfirmAllExtractedItemsCommandHandlerTests
             CancellationToken.None);
 
         Assert.Equal(0, result.ConfirmedItemCount);
+        Assert.Equal(DocumentReviewStatus.FullyReviewed.ToString(), result.ReviewStatus);
         Assert.Equal(1, result.SkippedAlreadyConfirmedItemCount);
         Assert.Empty(result.Items);
         Assert.Empty(itemHandler.ReceivedCommands);
@@ -184,7 +187,8 @@ public sealed class ConfirmAllExtractedItemsCommandHandlerTests
             return Task.FromResult(new ReviewExtractedItemResult(
                 request.ExtractedItemId,
                 "LabResult",
-                ExtractedItemReviewStatus.Confirmed.ToString(),
+                ExtractedItemReviewStatus.Reviewed.ToString(),
+                DocumentReviewStatus.FullyReviewed.ToString(),
                 Guid.NewGuid(),
                 DateTimeOffset.UtcNow,
                 []));

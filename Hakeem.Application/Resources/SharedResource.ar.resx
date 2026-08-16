@@ -249,6 +249,9 @@
   <data name="Document.NotFound" xml:space="preserve">
     <value>لم يتم العثور على المستند المطلوب.</value>
   </data>
+  <data name="Document.AlreadyReviewedCannotDelete" xml:space="preserve">
+    <value>يمكن حذف المستندات التي لم تتم مراجعتها فقط.</value>
+  </data>
   <data name="Document.HasConfirmedReferences" xml:space="preserve">
     <value>لا يمكن حذف هذا المستند لأن سجلات طبية مؤكدة تشير إليه.</value>
   </data>

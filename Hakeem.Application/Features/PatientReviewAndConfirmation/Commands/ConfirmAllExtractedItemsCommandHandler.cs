@@ -42,7 +42,7 @@ public sealed class ConfirmAllExtractedItemsCommandHandler(
             document.Id,
             cancellationToken);
         var itemsToConfirm = extractedItems
-            .Where(item => item.ReviewStatus != ExtractedItemReviewStatus.Confirmed)
+            .Where(item => item.ReviewStatus != ExtractedItemReviewStatus.Reviewed)
             .OrderBy(item => item.SequenceNumber)
             .ThenBy(item => item.Id)
             .ToList();
@@ -69,6 +69,9 @@ public sealed class ConfirmAllExtractedItemsCommandHandler(
 
         return new ConfirmAllExtractedItemsResult(
             document.Id,
+            extractedItems.Count == 0
+                ? DocumentReviewStatus.NotReviewed.ToString()
+                : DocumentReviewStatus.FullyReviewed.ToString(),
             results.Count,
             extractedItems.Count - itemsToConfirm.Count,
             results);

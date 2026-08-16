@@ -11,7 +11,8 @@ namespace Hakeem.Application.Features.PatientReviewAndConfirmation.Commands
     }
     
     public sealed record ReviewExtractedItemResult(Guid ExtractedItemId,string ItemType,string ReviewStatus,
-                         Guid? MedicalRecordId,DateTimeOffset ReviewedAt,IReadOnlyCollection<ReviewedFieldResult> Fields);
+                         string DocumentReviewStatus,Guid? MedicalRecordId,DateTimeOffset ReviewedAt,
+                         IReadOnlyCollection<ReviewedFieldResult> Fields);
 
     public sealed record ReviewedFieldResult(Guid ExtractedFieldId,string FieldName,string? OriginalExtractedValue,
                                              FieldReviewDecision Decision,string? CorrectedValue,string? ConfirmedValue);
