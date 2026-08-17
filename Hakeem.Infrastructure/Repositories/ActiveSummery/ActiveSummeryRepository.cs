@@ -33,14 +33,20 @@ namespace Hakeem.Infrastructure.Repositories.ActiveSummery
                     x.OccurredAt >= fromDate &&
                     x.OccurredAt < toDate);
 
-            var activePatients = await auditLogs
-                .Where (x => x.PatientProfileId.HasValue)
-                .Select(x => x.PatientProfileId!.Value)
+            var activePatients = await _dbContext.PatientProfiles
+                .Where(x =>
+                    x.User.Status == AccountStatus.Active &&
+                    x.CreatedAt >= fromDate &&
+                    x.CreatedAt < toDate.AddDays(1))
+                .Select(x => x.UserId)
                 .Distinct()
-                .CountAsync (cancellationToken);
+                .CountAsync(cancellationToken);
 
             var activeDoctors = await _dbContext.DoctorProfiles
-                .Where(x => x.User.Status == AccountStatus.Active)
+                .Where(x =>
+                    x.User.Status == AccountStatus.Active &&
+                    x.CreatedAt >= fromDate &&
+                    x.CreatedAt < toDate.AddDays(1))
                 .Select(x => x.UserId)
                 .Distinct()
                 .CountAsync(cancellationToken);
