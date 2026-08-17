@@ -194,13 +194,13 @@ public sealed class PatientAccessRequestRepository(ApplicationDbContext dbContex
             .ToListAsync(cancellationToken);
     }
 
-    public Task<int> ExpireStaleActiveAccessAsync(
+    public async Task<int> ExpireStaleActiveAccessAsync(
         Guid doctorProfileId,
         Guid patientProfileId,
         DateTime utcNow,
         CancellationToken cancellationToken)
     {
-        return dbContext.DoctorPatientAccesses
+        var affectedAccesses = await dbContext.DoctorPatientAccesses
             .Where(access =>
                 access.DoctorProfileId == doctorProfileId &&
                 access.PatientProfileId == patientProfileId &&
@@ -211,6 +211,25 @@ public sealed class PatientAccessRequestRepository(ApplicationDbContext dbContex
                     .SetProperty(access => access.Status, DoctorPatientAccessStatus.Expired)
                     .SetProperty(access => access.UpdatedAt, utcNow),
                 cancellationToken);
+
+        await dbContext.PatientAccessRequests
+            .Where(request =>
+                request.DoctorProfileId == doctorProfileId &&
+                request.PatientProfileId == patientProfileId &&
+                request.Status == PatientAccessRequestStatus.Redeemed &&
+                dbContext.DoctorPatientAccesses.Any(access =>
+                    access.PatientAccessRequestId == request.Id &&
+                    access.Status == DoctorPatientAccessStatus.Expired &&
+                    access.ExpiresAt <= utcNow))
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(
+                        request => request.Status,
+                        PatientAccessRequestStatus.Expired)
+                    .SetProperty(request => request.UpdatedAt, utcNow),
+                cancellationToken);
+
+        return affectedAccesses;
     }
 
     public Task<int> RedeemApprovedAsync(

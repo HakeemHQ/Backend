@@ -7,6 +7,7 @@ using Hakeem.Application.Repositories.PatientAccessRequests;
 using Hakeem.Application.Repositories.PatientProfiles;
 using MediatR;
 using Microsoft.Extensions.Options;
+using Hakeem.Application.Services.Access;
 
 namespace Hakeem.Application.Features.PatientAccessRequests.Queries.GetPatientAccessRequests;
 
@@ -14,7 +15,8 @@ public sealed class GetPatientAccessRequestsQueryHandler(
     IPatientProfileRepository patientProfileRepository,
     IPatientAccessRequestRepository accessRequestRepository,
     ICurrentUserContext currentUserContext,
-    IOptions<PatientAccessConfiguration> options)
+    IOptions<PatientAccessConfiguration> options,
+    IDoctorPatientAccessExpirationService expirationService)
     : IRequestHandler<GetPatientAccessRequestsQuery, PaginatedResult<PatientAccessRequestItem>>
 {
     private readonly TimeSpan _pendingRequestLifetime = TimeSpan.FromMinutes(
@@ -34,6 +36,11 @@ public sealed class GetPatientAccessRequestsQueryHandler(
         }
 
         var utcNow = DateTime.UtcNow;
+        await expirationService.ExpireForPatientAsync(
+            patient.Id,
+            utcNow,
+            cancellationToken);
+
         await accessRequestRepository.ExpireStaleRequestsAsync(
             patient.Id,
             utcNow.Subtract(_pendingRequestLifetime),

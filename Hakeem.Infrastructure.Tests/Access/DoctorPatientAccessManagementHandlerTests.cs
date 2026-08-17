@@ -10,6 +10,8 @@ using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Access;
 using Hakeem.Domain.Enums.Identity;
+using Hakeem.Infrastructure.Tests.DocumentExtraction.Fakes;
+using Hakeem.Infrastructure.Tests.Fakes;
 
 namespace Hakeem.Infrastructure.Tests.Access;
 
@@ -22,10 +24,12 @@ public sealed class DoctorPatientAccessManagementHandlerTests
         var patient = CreatePatient();
         var access = CreateAccess(doctor.Id, patient);
         var repository = new FakeAccessRepository([access]);
+        var expiration = new FakeDoctorPatientAccessExpirationService();
         var handler = new GetDoctorPatientAccessesQueryHandler(
             repository,
             new FakeDoctorProfileRepository(doctor),
-            new FakeCurrentUserContext(doctor.UserId));
+            new FakeCurrentUserContext(doctor.UserId),
+            expiration);
 
         var result = await handler.Handle(
             new GetDoctorPatientAccessesQuery(
@@ -45,6 +49,7 @@ public sealed class DoctorPatientAccessManagementHandlerTests
         Assert.Equal(2, result.PageNumber);
         Assert.Equal(5, result.PageSize);
         Assert.Equal(1, result.TotalCount);
+        Assert.Equal(doctor.Id, expiration.DoctorProfileId);
     }
 
     [Fact]
@@ -55,10 +60,12 @@ public sealed class DoctorPatientAccessManagementHandlerTests
         var access = CreateAccess(doctor.Id, patient);
         access.Doctor = doctor;
         var repository = new FakeAccessRepository([access]);
+        var expiration = new FakeDoctorPatientAccessExpirationService();
         var handler = new GetPatientDoctorAccessesQueryHandler(
             repository,
             new FakePatientProfileRepository(patient),
-            new FakeCurrentUserContext(patient.UserId));
+            new FakeCurrentUserContext(patient.UserId),
+            expiration);
 
         var result = await handler.Handle(
             new GetPatientDoctorAccessesQuery(PageNumber: 3, PageSize: 4),
@@ -73,6 +80,7 @@ public sealed class DoctorPatientAccessManagementHandlerTests
         Assert.Equal(3, result.PageNumber);
         Assert.Equal(4, result.PageSize);
         Assert.Equal(1, result.TotalCount);
+        Assert.Equal(patient.Id, expiration.PatientProfileId);
     }
 
     [Fact]
@@ -80,10 +88,12 @@ public sealed class DoctorPatientAccessManagementHandlerTests
     {
         var patient = CreatePatient();
         var repository = new FakeAccessRepository([]);
+        var unitOfWork = new FakeUnitOfWork();
         var handler = new RevokeDoctorPatientAccessCommandHandler(
             repository,
             new FakePatientProfileRepository(patient),
-            new FakeCurrentUserContext(patient.UserId));
+            new FakeCurrentUserContext(patient.UserId),
+            unitOfWork);
         var accessId = Guid.NewGuid();
 
         await handler.Handle(
@@ -94,6 +104,11 @@ public sealed class DoctorPatientAccessManagementHandlerTests
         Assert.Equal(patient.Id, repository.RevokingPatientId);
         Assert.NotNull(repository.RevokedAt);
         Assert.Equal(DateTimeKind.Utc, repository.RevokedAt.Value.Kind);
+        Assert.Equal(accessId, repository.RevokedRequestAccessId);
+        Assert.Equal(repository.RevokedAt, repository.RequestRevokedAt);
+        Assert.Equal(1, unitOfWork.BeginTransactionCallCount);
+        Assert.Equal(1, unitOfWork.CommitTransactionCallCount);
+        Assert.Equal(0, unitOfWork.RollbackTransactionCallCount);
     }
 
     [Fact]
@@ -104,10 +119,12 @@ public sealed class DoctorPatientAccessManagementHandlerTests
         {
             RevokeAffectedRows = 0
         };
+        var unitOfWork = new FakeUnitOfWork();
         var handler = new RevokeDoctorPatientAccessCommandHandler(
             repository,
             new FakePatientProfileRepository(patient),
-            new FakeCurrentUserContext(patient.UserId));
+            new FakeCurrentUserContext(patient.UserId),
+            unitOfWork);
 
         var exception = await Assert.ThrowsAsync<NotFoundException>(() =>
             handler.Handle(
@@ -115,6 +132,32 @@ public sealed class DoctorPatientAccessManagementHandlerTests
                 CancellationToken.None));
 
         Assert.Equal(ErrorCodes.PatientAccessAccessNotFound, exception.ErrorCode);
+        Assert.Null(repository.RevokedRequestAccessId);
+        Assert.Equal(1, unitOfWork.RollbackTransactionCallCount);
+    }
+
+    [Fact]
+    public async Task Revoke_LinkedRequestUpdateFails_RollsBackAccessRevocation()
+    {
+        var patient = CreatePatient();
+        var repository = new FakeAccessRepository([])
+        {
+            RevokeRequestAffectedRows = 0
+        };
+        var unitOfWork = new FakeUnitOfWork();
+        var handler = new RevokeDoctorPatientAccessCommandHandler(
+            repository,
+            new FakePatientProfileRepository(patient),
+            new FakeCurrentUserContext(patient.UserId),
+            unitOfWork);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            handler.Handle(
+                new RevokeDoctorPatientAccessCommand(Guid.NewGuid()),
+                CancellationToken.None));
+
+        Assert.Equal(0, unitOfWork.CommitTransactionCallCount);
+        Assert.Equal(1, unitOfWork.RollbackTransactionCallCount);
     }
 
     private static DoctorProfile CreateDoctor() => new()
@@ -211,12 +254,15 @@ public sealed class DoctorPatientAccessManagementHandlerTests
         : IDoctorPatientAccessRepository
     {
         public int RevokeAffectedRows { get; init; } = 1;
+        public int RevokeRequestAffectedRows { get; init; } = 1;
         public Guid? QueriedDoctorId { get; private set; }
         public Guid? QueriedPatientId { get; private set; }
         public DoctorPatientAccessStatus? QueriedStatus { get; private set; }
         public Guid? RevokedAccessId { get; private set; }
         public Guid? RevokingPatientId { get; private set; }
         public DateTime? RevokedAt { get; private set; }
+        public Guid? RevokedRequestAccessId { get; private set; }
+        public DateTime? RequestRevokedAt { get; private set; }
 
         public Task<Hakeem.Application.Common.PaginatedResult<DoctorPatientAccess>> GetForDoctorAsync(
             Guid doctorProfileId,
@@ -263,6 +309,31 @@ public sealed class DoctorPatientAccessManagementHandlerTests
             RevokedAt = revokedAt;
             return Task.FromResult(RevokeAffectedRows);
         }
+
+        public Task<int> RevokeRedeemedRequestForAccessAsync(
+            Guid accessId,
+            Guid patientProfileId,
+            DateTime revokedAt,
+            CancellationToken cancellationToken)
+        {
+            RevokedRequestAccessId = accessId;
+            RequestRevokedAt = revokedAt;
+            return Task.FromResult(RevokeRequestAffectedRows);
+        }
+
+        public Task<int> ExpireActiveAccessesAsync(
+            Guid? doctorProfileId,
+            Guid? patientProfileId,
+            DateTime utcNow,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(0);
+
+        public Task<int> ExpireRedeemedRequestsForExpiredAccessesAsync(
+            Guid? doctorProfileId,
+            Guid? patientProfileId,
+            DateTime utcNow,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(0);
 
         public Task<int> RevokeAllActiveForDoctorAsync(
             Guid doctorProfileId,

@@ -11,6 +11,7 @@ using Hakeem.Application.Repositories.PatientProfiles;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Access;
 using Microsoft.Extensions.Options;
+using Hakeem.Infrastructure.Tests.Fakes;
 
 namespace Hakeem.Infrastructure.Tests.Access;
 
@@ -33,11 +34,13 @@ public sealed class PatientAccessRequestConsentHandlerTests
         var accessRequest = CreateAccessRequest(patient.Id);
         accessRequest.Doctor = doctor;
         var repository = new FakeAccessRequestRepository(accessRequest);
+        var expiration = new FakeDoctorPatientAccessExpirationService();
         var handler = new GetPatientAccessRequestsQueryHandler(
             new FakePatientProfileRepository(patient),
             repository,
             new FakeCurrentUserContext(patient.UserId),
-            Options.Create(new PatientAccessConfiguration()));
+            Options.Create(new PatientAccessConfiguration()),
+            expiration);
 
         var result = await handler.Handle(
             new GetPatientAccessRequestsQuery(
@@ -58,6 +61,7 @@ public sealed class PatientAccessRequestConsentHandlerTests
         Assert.Equal(5, result.PageSize);
         Assert.Equal(1, result.TotalCount);
         Assert.Equal(1, repository.ExpireStaleRequestsCalls);
+        Assert.Equal(patient.Id, expiration.PatientProfileId);
     }
 
     [Fact]
@@ -76,7 +80,8 @@ public sealed class PatientAccessRequestConsentHandlerTests
             new FakePatientProfileRepository(patient),
             repository,
             new FakeCurrentUserContext(patient.UserId),
-            Options.Create(new PatientAccessConfiguration()));
+            Options.Create(new PatientAccessConfiguration()),
+            new FakeDoctorPatientAccessExpirationService());
 
         var result = await handler.Handle(
             new GetPatientAccessRequestsQuery(),
@@ -85,6 +90,32 @@ public sealed class PatientAccessRequestConsentHandlerTests
         var item = Assert.Single(result.Items);
         Assert.Equal("Expired", item.Status);
         Assert.Equal(PatientAccessRequestStatus.Expired, accessRequest.Status);
+    }
+
+    [Fact]
+    public async Task Get_ReturnsRevokedStatusForRevokedAccessRequest()
+    {
+        var patient = CreatePatient();
+        var accessRequest = CreateAccessRequest(patient.Id);
+        accessRequest.Status = PatientAccessRequestStatus.Revoked;
+        accessRequest.Doctor = new DoctorProfile
+        {
+            Id = Guid.NewGuid(),
+            User = new User()
+        };
+        var repository = new FakeAccessRequestRepository(accessRequest);
+        var handler = new GetPatientAccessRequestsQueryHandler(
+            new FakePatientProfileRepository(patient),
+            repository,
+            new FakeCurrentUserContext(patient.UserId),
+            Options.Create(new PatientAccessConfiguration()),
+            new FakeDoctorPatientAccessExpirationService());
+
+        var result = await handler.Handle(
+            new GetPatientAccessRequestsQuery(),
+            CancellationToken.None);
+
+        Assert.Equal("Revoked", Assert.Single(result.Items).Status);
     }
 
     [Fact]

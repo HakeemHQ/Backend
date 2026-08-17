@@ -11,7 +11,7 @@ public sealed class AccessDomainModelConfigurationTests
     public void StatusEnums_ContainContractValues()
     {
         Assert.Equal(
-            ["Pending", "Approved", "Rejected", "Expired", "Redeemed"],
+            ["Pending", "Approved", "Rejected", "Expired", "Redeemed", "Revoked"],
             Enum.GetNames<PatientAccessRequestStatus>());
         Assert.Equal(
             ["Active", "Revoked", "Expired"],

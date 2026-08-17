@@ -4,6 +4,7 @@ using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Repositories.DoctorPatientAccesses;
 using Hakeem.Application.Repositories.PatientProfiles;
+using Hakeem.Application.Services.Access;
 using MediatR;
 
 namespace Hakeem.Application.Features.DoctorPatientAccesses.Queries.GetPatientDoctorAccesses;
@@ -11,7 +12,8 @@ namespace Hakeem.Application.Features.DoctorPatientAccesses.Queries.GetPatientDo
 public sealed class GetPatientDoctorAccessesQueryHandler(
     IDoctorPatientAccessRepository accessRepository,
     IPatientProfileRepository patientProfileRepository,
-    ICurrentUserContext currentUserContext)
+    ICurrentUserContext currentUserContext,
+    IDoctorPatientAccessExpirationService expirationService)
     : IRequestHandler<GetPatientDoctorAccessesQuery, PaginatedResult<PatientDoctorAccessItem>>
 {
     public async Task<PaginatedResult<PatientDoctorAccessItem>> Handle(
@@ -27,9 +29,15 @@ public sealed class GetPatientDoctorAccessesQueryHandler(
             throw new UnAuthorizedException(ErrorCodes.AuthUnauthorized);
         }
 
+        var utcNow = DateTime.UtcNow;
+        await expirationService.ExpireForPatientAsync(
+            patient.Id,
+            utcNow,
+            cancellationToken);
+
         var accesses = await accessRepository.GetActiveForPatientAsync(
             patient.Id,
-            DateTime.UtcNow,
+            utcNow,
             request.PageNumber,
             request.PageSize,
             cancellationToken);

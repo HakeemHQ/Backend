@@ -18,7 +18,8 @@ public interface IDoctorPatientAccessGuard : IScoped
 public sealed class DoctorPatientAccessGuard(
     ICurrentUserContext currentUserContext,
     IDoctorProfileRepository doctorProfileRepository,
-    IDoctorPatientAccessRepository doctorPatientAccessRepository)
+    IDoctorPatientAccessRepository doctorPatientAccessRepository,
+    IDoctorPatientAccessExpirationService expirationService)
     : IDoctorPatientAccessGuard
 {
     public async Task<DoctorProfile> RequireDoctorWithActiveAccessAsync(
@@ -39,10 +40,17 @@ public sealed class DoctorPatientAccessGuard(
             throw new UnAuthorizedException(ErrorCodes.AuthUnauthorized);
         }
 
+        var utcNow = DateTime.UtcNow;
+        await expirationService.ExpireForPairAsync(
+            doctor.Id,
+            patientProfileId,
+            utcNow,
+            cancellationToken);
+
         var hasAccess = await doctorPatientAccessRepository.HasActiveAccessAsync(
             doctor.Id,
             patientProfileId,
-            DateTime.UtcNow,
+            utcNow,
             cancellationToken);
 
         if (!hasAccess)

@@ -3,6 +3,7 @@ using Hakeem.Application.Constants;
 using Hakeem.Application.Exceptions;
 using Hakeem.Application.Repositories.DoctorPatientAccesses;
 using Hakeem.Application.Repositories.PatientProfiles;
+using Hakeem.Domain.Interfaces;
 using MediatR;
 
 namespace Hakeem.Application.Features.DoctorPatientAccesses.Commands.RevokeDoctorPatientAccess;
@@ -10,7 +11,8 @@ namespace Hakeem.Application.Features.DoctorPatientAccesses.Commands.RevokeDocto
 public sealed class RevokeDoctorPatientAccessCommandHandler(
     IDoctorPatientAccessRepository accessRepository,
     IPatientProfileRepository patientProfileRepository,
-    ICurrentUserContext currentUserContext)
+    ICurrentUserContext currentUserContext,
+    IUnitOfWork unitOfWork)
     : IRequestHandler<RevokeDoctorPatientAccessCommand>
 {
     public async Task Handle(
@@ -27,15 +29,41 @@ public sealed class RevokeDoctorPatientAccessCommandHandler(
         }
 
         var revokedAt = DateTime.UtcNow;
-        var affectedRows = await accessRepository.RevokeActiveForPatientAsync(
-            request.AccessId,
-            patient.Id,
-            revokedAt,
-            cancellationToken);
+        await unitOfWork.BeginTransactionAsync(cancellationToken);
 
-        if (affectedRows != 1)
+        try
         {
-            throw new NotFoundException(ErrorCodes.PatientAccessAccessNotFound);
+            var affectedRows = await accessRepository.RevokeActiveForPatientAsync(
+                request.AccessId,
+                patient.Id,
+                revokedAt,
+                cancellationToken);
+
+            if (affectedRows != 1)
+            {
+                throw new NotFoundException(
+                    ErrorCodes.PatientAccessAccessNotFound);
+            }
+
+            var requestRows = await accessRepository
+                .RevokeRedeemedRequestForAccessAsync(
+                    request.AccessId,
+                    patient.Id,
+                    revokedAt,
+                    cancellationToken);
+
+            if (requestRows != 1)
+            {
+                throw new InvalidOperationException(
+                    "The active access does not have one linked redeemed request.");
+            }
+
+            await unitOfWork.CommitTransactionAsync();
+        }
+        catch
+        {
+            await unitOfWork.RollBackTransactionAsync();
+            throw;
         }
     }
 }

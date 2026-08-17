@@ -103,6 +103,78 @@ public sealed class DoctorPatientAccessRepository(ApplicationDbContext dbContext
                 cancellationToken);
     }
 
+    public Task<int> RevokeRedeemedRequestForAccessAsync(
+        Guid accessId,
+        Guid patientProfileId,
+        DateTime revokedAt,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.PatientAccessRequests
+            .Where(request =>
+                request.PatientProfileId == patientProfileId &&
+                request.Status == PatientAccessRequestStatus.Redeemed &&
+                dbContext.DoctorPatientAccesses.Any(access =>
+                    access.Id == accessId &&
+                    access.PatientProfileId == patientProfileId &&
+                    access.PatientAccessRequestId == request.Id))
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(
+                        request => request.Status,
+                        PatientAccessRequestStatus.Revoked)
+                    .SetProperty(request => request.UpdatedAt, revokedAt),
+                cancellationToken);
+    }
+
+    public Task<int> ExpireActiveAccessesAsync(
+        Guid? doctorProfileId,
+        Guid? patientProfileId,
+        DateTime utcNow,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.DoctorPatientAccesses
+            .Where(access =>
+                (!doctorProfileId.HasValue ||
+                 access.DoctorProfileId == doctorProfileId.Value) &&
+                (!patientProfileId.HasValue ||
+                 access.PatientProfileId == patientProfileId.Value) &&
+                access.Status == DoctorPatientAccessStatus.Active &&
+                access.ExpiresAt <= utcNow)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(
+                        access => access.Status,
+                        DoctorPatientAccessStatus.Expired)
+                    .SetProperty(access => access.UpdatedAt, utcNow),
+                cancellationToken);
+    }
+
+    public Task<int> ExpireRedeemedRequestsForExpiredAccessesAsync(
+        Guid? doctorProfileId,
+        Guid? patientProfileId,
+        DateTime utcNow,
+        CancellationToken cancellationToken)
+    {
+        return dbContext.PatientAccessRequests
+            .Where(request =>
+                request.Status == PatientAccessRequestStatus.Redeemed &&
+                dbContext.DoctorPatientAccesses.Any(access =>
+                    access.PatientAccessRequestId == request.Id &&
+                    (!doctorProfileId.HasValue ||
+                     access.DoctorProfileId == doctorProfileId.Value) &&
+                    (!patientProfileId.HasValue ||
+                     access.PatientProfileId == patientProfileId.Value) &&
+                    access.Status == DoctorPatientAccessStatus.Expired &&
+                    access.ExpiresAt <= utcNow))
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(
+                        request => request.Status,
+                        PatientAccessRequestStatus.Expired)
+                    .SetProperty(request => request.UpdatedAt, utcNow),
+                cancellationToken);
+    }
+
     public Task<int> RevokeAllActiveForDoctorAsync(
         Guid doctorProfileId,
         DateTime revokedAt,

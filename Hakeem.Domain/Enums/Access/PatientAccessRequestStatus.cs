@@ -6,5 +6,6 @@ public enum PatientAccessRequestStatus
     Approved,
     Rejected,
     Expired,
-    Redeemed
+    Redeemed,
+    Revoked
 }

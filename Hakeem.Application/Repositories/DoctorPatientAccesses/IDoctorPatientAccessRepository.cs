@@ -28,6 +28,24 @@ public interface IDoctorPatientAccessRepository : IScoped
         DateTime revokedAt,
         CancellationToken cancellationToken);
 
+    Task<int> RevokeRedeemedRequestForAccessAsync(
+        Guid accessId,
+        Guid patientProfileId,
+        DateTime revokedAt,
+        CancellationToken cancellationToken);
+
+    Task<int> ExpireActiveAccessesAsync(
+        Guid? doctorProfileId,
+        Guid? patientProfileId,
+        DateTime utcNow,
+        CancellationToken cancellationToken);
+
+    Task<int> ExpireRedeemedRequestsForExpiredAccessesAsync(
+        Guid? doctorProfileId,
+        Guid? patientProfileId,
+        DateTime utcNow,
+        CancellationToken cancellationToken);
+
     Task<int> RevokeAllActiveForDoctorAsync(
         Guid doctorProfileId,
         DateTime revokedAt,
