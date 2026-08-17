@@ -76,6 +76,21 @@ public class MedicalDocument : BaseEntity
         FailureCode = failureCode.Trim();
     }
 
+    public void RejectExtraction(string rejectionCode)
+    {
+        EnsureExtractionStatus(ExtractionStatus.Processing);
+
+        if (string.IsNullOrWhiteSpace(rejectionCode))
+        {
+            throw new ArgumentException(
+                "A rejection code is required.",
+                nameof(rejectionCode));
+        }
+
+        ExtractionStatus = ExtractionStatus.Rejected;
+        FailureCode = rejectionCode.Trim();
+    }
+
     private void EnsureExtractionStatus(ExtractionStatus expectedStatus)
     {
         if (ExtractionStatus != expectedStatus)

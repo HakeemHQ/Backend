@@ -5,6 +5,7 @@ using Hakeem.Application.Features.MedicalDataExtraction.DTOs;
 using Hakeem.Application.Repositories.MedicalDocuments;
 using Hakeem.Application.Services.Access;
 using MediatR;
+using Hakeem.Domain.Enums.Documents;
 
 namespace Hakeem.Application.Features.MedicalDataExtraction.Queries.GetExtractedFields;
 
@@ -24,6 +25,12 @@ public sealed class GetExtractedFieldsQueryHandler(
         if (document is null)
         {
             throw new NotFoundException(ErrorCodes.DocumentNotFound);
+        }
+
+        if (document.ExtractionStatus == ExtractionStatus.Rejected)
+        {
+            throw new UnprocessableEntityException(
+                ErrorCodes.DocumentNotMedical);
         }
 
         await doctorPatientAccessGuard.RequireDoctorWithActiveAccessAsync(

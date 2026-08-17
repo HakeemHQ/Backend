@@ -30,16 +30,20 @@ public sealed class DocumentProcessingAgentTests
             Guid.NewGuid(),
             CancellationToken.None);
 
-        Assert.Same(expected, actual);
+        Assert.True(actual.Classification.IsMedical);
+        Assert.Same(expected, actual.Extraction);
         Assert.True(contentProvider.WasCalled);
         Assert.True(ocrService.WasCalled);
-        Assert.Equal(2, chatService.CallCount);
+        Assert.Equal(3, chatService.CallCount);
         Assert.Equal(
             ["read_document_ocr"],
             chatService.AvailableFunctionNames[0]);
         Assert.Equal(
-            ["submit_extraction"],
+            ["submit_classification"],
             chatService.AvailableFunctionNames[1]);
+        Assert.Equal(
+            ["submit_extraction"],
+            chatService.AvailableFunctionNames[2]);
         Assert.All(
             chatService.ReceivedExecutionSettings,
             settings =>
@@ -75,8 +79,89 @@ public sealed class DocumentProcessingAgentTests
             Guid.NewGuid(),
             CancellationToken.None);
 
-        Assert.Same(expected, actual);
+        Assert.Same(expected, actual.Extraction);
+        Assert.Equal(4, chatService.CallCount);
+    }
+
+    [Theory]
+    [InlineData(MedicalDocumentType.Prescription, "Prescription: Amoxicillin 500 mg twice daily.")]
+    [InlineData(MedicalDocumentType.LabReport, "CBC laboratory report: Hemoglobin 13.5 g/dL.")]
+    [InlineData(MedicalDocumentType.ClinicalNote, "Clinical note: patient reports improved symptoms.")]
+    [InlineData(MedicalDocumentType.MedicalVisit, "Follow-up appointment with cardiology next week.")]
+    public async Task ProcessAsync_MedicalClassification_ContinuesToExtraction(
+        MedicalDocumentType documentType,
+        string ocrText)
+    {
+        var extraction = CreateValidResult("MedicationName", documentType);
+        var chatService = new ToolInvokingChatCompletionService(
+            extraction,
+            "ignored");
+        var agent = CreateAgent(
+            new FakeDocumentContentProvider(),
+            new FakeDocumentOcrService(
+                new Application.Interfaces.Ocr.OcrResult(
+                    [new Application.Interfaces.Ocr.OcrPageResult(1, ocrText, 0.95m)])),
+            chatService);
+
+        var result = await agent.ProcessAsync(Guid.NewGuid(), CancellationToken.None);
+
+        Assert.True(result.Classification.IsMedical);
+        Assert.Equal(documentType, result.Classification.DocumentType);
+        Assert.NotNull(result.Extraction);
         Assert.Equal(3, chatService.CallCount);
+    }
+
+    [Theory]
+    [InlineData("Grocery receipt: bread, milk, apples, total 120.")]
+    [InlineData("Random personal notes about a weekend trip.")]
+    public async Task ProcessAsync_NonMedicalClassification_StopsBeforeExtraction(
+        string ocrText)
+    {
+        var classification = new MedicalDocumentClassification(
+            false,
+            null,
+            0.98,
+            "The file is unrelated to healthcare.");
+        var chatService = new ToolInvokingChatCompletionService(
+            classification,
+            [],
+            "ignored");
+        var agent = CreateAgent(
+            new FakeDocumentContentProvider(),
+            new FakeDocumentOcrService(
+                new Application.Interfaces.Ocr.OcrResult(
+                    [new Application.Interfaces.Ocr.OcrPageResult(1, ocrText, 0.95m)])),
+            chatService);
+
+        var result = await agent.ProcessAsync(Guid.NewGuid(), CancellationToken.None);
+
+        Assert.False(result.Classification.IsMedical);
+        Assert.Null(result.Extraction);
+        Assert.Equal(2, chatService.CallCount);
+        Assert.DoesNotContain(
+            chatService.AvailableFunctionNames,
+            names => names.Contains("submit_extraction"));
+    }
+
+    [Fact]
+    public async Task ProcessAsync_BlankOrRandomPhotoOcr_RejectsWithoutCallingClassifier()
+    {
+        var chatService = new ToolInvokingChatCompletionService(
+            new MedicalDocumentClassification(false, null, 1, "unused"),
+            [],
+            "ignored");
+        var agent = CreateAgent(
+            new FakeDocumentContentProvider(),
+            new FakeDocumentOcrService(
+                new Application.Interfaces.Ocr.OcrResult(
+                    [new Application.Interfaces.Ocr.OcrPageResult(1, "   ", null)])),
+            chatService);
+
+        var result = await agent.ProcessAsync(Guid.NewGuid(), CancellationToken.None);
+
+        Assert.False(result.Classification.IsMedical);
+        Assert.Null(result.Extraction);
+        Assert.Equal(1, chatService.CallCount);
     }
 
     [Fact]
@@ -117,6 +202,21 @@ public sealed class DocumentProcessingAgentTests
         Assert.False(ocrService.WasCalled);
     }
 
+    [Fact]
+    public async Task ProcessAsync_TechnicalAiFailure_PropagatesInsteadOfRejectingDocument()
+    {
+        var expected = new HttpRequestException("AI provider unavailable.");
+        var agent = CreateAgent(
+            new FakeDocumentContentProvider(),
+            CreateReadableOcrService(),
+            new FakeChatCompletionService(expected));
+
+        var actual = await Assert.ThrowsAsync<HttpRequestException>(
+            () => agent.ProcessAsync(Guid.NewGuid(), CancellationToken.None));
+
+        Assert.Same(expected, actual);
+    }
+
     private static DocumentProcessingAgent CreateAgent(
         FakeDocumentContentProvider contentProvider,
         FakeDocumentOcrService ocrService,
@@ -152,10 +252,11 @@ public sealed class DocumentProcessingAgentTests
     }
 
     private static DocumentExtractionResult CreateValidResult(
-        string fieldName)
+        string fieldName,
+        MedicalDocumentType documentType = MedicalDocumentType.Prescription)
     {
         return new DocumentExtractionResult(
-            MedicalDocumentType.Prescription,
+            documentType,
             [
                 new ExtractedItemResult(
                     "Medication",

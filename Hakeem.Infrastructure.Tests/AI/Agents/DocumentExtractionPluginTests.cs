@@ -30,6 +30,12 @@ public sealed class DocumentExtractionPluginTests
         var plugin = CreatePlugin(
             new OcrPageResult(1, "Readable text", 0.9m));
         await plugin.ReadDocumentOcrAsync(CancellationToken.None);
+        plugin.SubmitClassification(
+            new MedicalDocumentClassification(
+                true,
+                MedicalDocumentType.Other,
+                0.9,
+                null));
         var invalid = new DocumentExtractionResult(
             MedicalDocumentType.Other,
             []);
@@ -47,6 +53,12 @@ public sealed class DocumentExtractionPluginTests
         var plugin = CreatePlugin(
             new OcrPageResult(1, "Readable text", 0.9m));
         await plugin.ReadDocumentOcrAsync(CancellationToken.None);
+        plugin.SubmitClassification(
+            new MedicalDocumentClassification(
+                true,
+                MedicalDocumentType.Other,
+                0.9,
+                null));
         var valid = new DocumentExtractionResult(
             MedicalDocumentType.Other,
             [
@@ -69,6 +81,49 @@ public sealed class DocumentExtractionPluginTests
         Assert.True(submission.Success);
         Assert.Empty(submission.ValidationErrors);
         Assert.Same(valid, plugin.AcceptedResult);
+    }
+
+    [Fact]
+    public async Task SubmitClassification_NonMedicalStructuredResult_IsAccepted()
+    {
+        var plugin = CreatePlugin(
+            new OcrPageResult(1, "Bread, milk, apples", 0.9m));
+        await plugin.ReadDocumentOcrAsync(CancellationToken.None);
+        var classification = new MedicalDocumentClassification(
+            false,
+            null,
+            0.98,
+            "The content is not related to healthcare.");
+
+        var submission = plugin.SubmitClassification(classification);
+
+        Assert.True(submission.Success);
+        Assert.Same(classification, plugin.AcceptedClassification);
+    }
+
+    [Theory]
+    [InlineData(true, null)]
+    [InlineData(false, MedicalDocumentType.Prescription)]
+    public async Task SubmitClassification_InvalidDocumentTypeShape_ReturnsErrors(
+        bool isMedical,
+        MedicalDocumentType? documentType)
+    {
+        var plugin = CreatePlugin(
+            new OcrPageResult(1, "Readable text", 0.9m));
+        await plugin.ReadDocumentOcrAsync(CancellationToken.None);
+
+        var submission = plugin.SubmitClassification(
+            new MedicalDocumentClassification(
+                isMedical,
+                documentType,
+                0.9,
+                isMedical ? null : "Not medical."));
+
+        Assert.False(submission.Success);
+        Assert.Contains(
+            submission.ValidationErrors,
+            error => error.Contains("documentType", StringComparison.Ordinal));
+        Assert.Null(plugin.AcceptedClassification);
     }
 
     private static DocumentExtractionPlugin CreatePlugin(

@@ -19,6 +19,8 @@ public sealed class DocumentExtractionPlugin(
     private string? _numberedOcrPages;
 
     public bool HasReadDocumentOcr => _numberedOcrPages is not null;
+    public bool HasUsableDocumentText { get; private set; }
+    public MedicalDocumentClassification? AcceptedClassification { get; private set; }
     public DocumentExtractionResult? AcceptedResult { get; private set; }
     public IReadOnlyList<string> LastValidationErrors { get; private set; } = [];
 
@@ -43,9 +45,44 @@ public sealed class DocumentExtractionPlugin(
             cancellationToken);
 
         ValidateOcrResult(ocrResult);
-        _numberedOcrPages = BuildNumberedPages(ocrResult);
+        HasUsableDocumentText = ocrResult.Pages.Any(
+            page => !string.IsNullOrWhiteSpace(page.RecognizedText));
+        _numberedOcrPages = HasUsableDocumentText
+            ? BuildNumberedPages(ocrResult)
+            : "The OCR service found no readable text in this file.";
 
         return _numberedOcrPages;
+    }
+
+    [KernelFunction("submit_classification")]
+    [Description(
+        "Validates and submits the medical-relevance classification. " +
+        "This must be called after read_document_ocr and before extraction.")]
+    public DocumentClassificationSubmission SubmitClassification(
+        [Description("The complete medical-document classification result.")]
+        MedicalDocumentClassification result)
+    {
+        if (_numberedOcrPages is null)
+        {
+            return DocumentClassificationSubmission.Invalid(
+                "read_document_ocr must be called before submit_classification.");
+        }
+
+        var errors = ValidateClassification(result);
+        if (errors.Count > 0)
+        {
+            LastValidationErrors = errors;
+            logger.LogWarning(
+                "Classification validation failed for document {DocumentId}: {ValidationErrors}",
+                documentId,
+                string.Join(" | ", errors));
+
+            return new DocumentClassificationSubmission(false, errors);
+        }
+
+        LastValidationErrors = [];
+        AcceptedClassification = result;
+        return new DocumentClassificationSubmission(true, []);
     }
 
     [KernelFunction("submit_extraction")]
@@ -62,19 +99,32 @@ public sealed class DocumentExtractionPlugin(
                 "read_document_ocr must be called before submit_extraction.");
         }
 
+        if (AcceptedClassification?.IsMedical != true)
+        {
+            return DocumentExtractionSubmission.Invalid(
+                "A medical classification must be accepted before submit_extraction.");
+        }
+
         var validationResult = extractionValidator.Validate(result);
 
-        if (!validationResult.IsValid)
+        var validationErrors = validationResult.Errors.ToList();
+        if (AcceptedClassification.DocumentType != result.DocumentType)
         {
-            LastValidationErrors = validationResult.Errors;
+            validationErrors.Add(
+                "documentType must match the accepted medical classification.");
+        }
+
+        if (validationErrors.Count > 0)
+        {
+            LastValidationErrors = validationErrors;
             logger.LogWarning(
                 "Extraction validation failed for document {DocumentId}: {ValidationErrors}",
                 documentId,
-                string.Join(" | ", validationResult.Errors));
+                string.Join(" | ", validationErrors));
 
             return new DocumentExtractionSubmission(
                 false,
-                validationResult.Errors);
+                validationErrors);
         }
 
         LastValidationErrors = [];
@@ -86,13 +136,10 @@ public sealed class DocumentExtractionPlugin(
     {
         ArgumentNullException.ThrowIfNull(ocrResult);
 
-        if (ocrResult.Pages is null ||
-            ocrResult.Pages.Count == 0 ||
-            ocrResult.Pages.All(
-                page => string.IsNullOrWhiteSpace(page.RecognizedText)))
+        if (ocrResult.Pages is null)
         {
             throw new InvalidDataException(
-                "OCR did not produce any readable document text.");
+                "OCR returned a null page collection.");
         }
 
         if (ocrResult.Pages.Any(page => page.PageNumber <= 0))
@@ -100,6 +147,45 @@ public sealed class DocumentExtractionPlugin(
             throw new InvalidDataException(
                 "OCR returned an invalid page number.");
         }
+    }
+
+    private static IReadOnlyList<string> ValidateClassification(
+        MedicalDocumentClassification result)
+    {
+        var errors = new List<string>();
+
+        if (result.Confidence is < 0 or > 1 ||
+            double.IsNaN(result.Confidence))
+        {
+            errors.Add("confidence must be between 0 and 1.");
+        }
+
+        if (result.IsMedical)
+        {
+            if (result.DocumentType is null)
+            {
+                errors.Add("documentType is required for medical content.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(result.RejectionReason))
+            {
+                errors.Add("rejectionReason must be null for medical content.");
+            }
+        }
+        else
+        {
+            if (result.DocumentType is not null)
+            {
+                errors.Add("documentType must be null for non-medical content.");
+            }
+
+            if (string.IsNullOrWhiteSpace(result.RejectionReason))
+            {
+                errors.Add("rejectionReason is required for non-medical content.");
+            }
+        }
+
+        return errors;
     }
 
     private static string BuildNumberedPages(OcrResult ocrResult)
@@ -120,6 +206,16 @@ public sealed class DocumentExtractionPlugin(
         }
 
         return pages.ToString();
+    }
+}
+
+public sealed record DocumentClassificationSubmission(
+    bool Success,
+    IReadOnlyList<string> ValidationErrors)
+{
+    public static DocumentClassificationSubmission Invalid(string error)
+    {
+        return new DocumentClassificationSubmission(false, [error]);
     }
 }
 

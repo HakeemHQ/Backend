@@ -5,6 +5,7 @@ using Hakeem.Application.Features.MedicalDocuments.DTOs;
 using Hakeem.Application.Interfaces.Files;
 using Hakeem.Application.Repositories.MedicalDocuments;
 using Hakeem.Application.Repositories.PatientProfiles;
+using Hakeem.Domain.Enums.Documents;
 using MediatR;
 
 namespace Hakeem.Application.Features.MedicalDocuments.Queries.GetDocumentById;
@@ -37,6 +38,12 @@ public sealed class GetDocumentByIdQueryHandler(
         if (document is null)
         {
             throw new NotFoundException(ErrorCodes.DocumentNotFound);
+        }
+
+        if (document.ExtractionStatus == ExtractionStatus.Rejected)
+        {
+            throw new UnprocessableEntityException(
+                ErrorCodes.DocumentNotMedical);
         }
 
         return new GetDocumentByIdResult(

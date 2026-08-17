@@ -75,4 +75,27 @@ public sealed class DocumentExtractionRequestedEventHandlerTests
         Assert.Equal(ExtractionStatus.Queued, document.ExtractionStatus);
         Assert.Null(document.FailureCode);
     }
+
+    [Fact]
+    public async Task HandleFailureAsync_RejectedDocument_RemainsDistinctFromTechnicalFailure()
+    {
+        var document = new MedicalDocument
+        {
+            Id = Guid.NewGuid()
+        };
+        document.StartExtraction();
+        document.RejectExtraction("Document.NotMedical");
+        var handler = new DocumentExtractionRequestedEventFailureHandler(
+            new FakeMedicalDocumentRepository(document));
+
+        await handler.HandleFailureAsync(
+            new DocumentExtractionRequestedEvent
+            {
+                DocumentId = document.Id
+            },
+            CancellationToken.None);
+
+        Assert.Equal(ExtractionStatus.Rejected, document.ExtractionStatus);
+        Assert.Equal("Document.NotMedical", document.FailureCode);
+    }
 }

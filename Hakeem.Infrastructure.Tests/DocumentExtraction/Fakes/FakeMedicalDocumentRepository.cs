@@ -66,7 +66,10 @@ internal sealed class FakeMedicalDocumentRepository(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (medicalDocument is null || medicalDocument.PatientProfileId != patientProfileId)
+        if (medicalDocument is null ||
+            medicalDocument.PatientProfileId != patientProfileId ||
+            medicalDocument.ExtractionStatus ==
+            Hakeem.Domain.Enums.Documents.ExtractionStatus.Rejected)
         {
             return Task.FromResult(new PaginatedResult<MedicalDocument>(
                 [],

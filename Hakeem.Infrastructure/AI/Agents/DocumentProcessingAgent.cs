@@ -31,7 +31,7 @@ public sealed class DocumentProcessingAgent(
     private readonly GeminiChatConfiguration _configuration =
         options.Value;
 
-    public async Task<DocumentExtractionResult> ProcessAsync(
+    public async Task<DocumentProcessingResult> ProcessAsync(
         Guid documentId,
         CancellationToken cancellationToken)
     {
@@ -61,6 +61,10 @@ public sealed class DocumentProcessingAgent(
             chatCompletionService,
             extractionPlugin["read_document_ocr"],
             invocationFilter);
+        var classificationKernel = CreatePhaseKernel(
+            chatCompletionService,
+            extractionPlugin["submit_classification"],
+            invocationFilter);
         var submitKernel = CreatePhaseKernel(
             chatCompletionService,
             extractionPlugin["submit_extraction"],
@@ -68,11 +72,21 @@ public sealed class DocumentProcessingAgent(
         var readOcrAgent = CreateAgent(
             readOcrKernel,
             readOcrKernel.Plugins[ExtractionPluginName]
-                ["read_document_ocr"]);
+                ["read_document_ocr"],
+            MedicalDocumentClassificationPrompt.System,
+            "DocumentClassificationAgent");
+        var classificationAgent = CreateAgent(
+            classificationKernel,
+            classificationKernel.Plugins[ExtractionPluginName]
+                ["submit_classification"],
+            MedicalDocumentClassificationPrompt.System,
+            "DocumentClassificationAgent");
         var submitAgent = CreateAgent(
             submitKernel,
             submitKernel.Plugins[ExtractionPluginName]
-                ["submit_extraction"]);
+                ["submit_extraction"],
+            DocumentExtractionAgentPrompt.System,
+            "DocumentExtractionAgent");
 
         using var timeoutSource = new CancellationTokenSource(
             TimeSpan.FromSeconds(
@@ -92,7 +106,7 @@ public sealed class DocumentProcessingAgent(
 
             thread = await InvokeAgentAsync(
                 readOcrAgent,
-                DocumentExtractionAgentPrompt.ReadOcr,
+                MedicalDocumentClassificationPrompt.ReadOcr,
                 thread,
                 linkedSource.Token);
 
@@ -102,12 +116,52 @@ public sealed class DocumentProcessingAgent(
                     "The extraction agent did not call read_document_ocr.");
             }
 
-            var maximumSubmissionAttempts =
-                _configuration.MaxAgentIterations - 1;
+            if (!plugin.HasUsableDocumentText)
+            {
+                return DocumentProcessingResult.Rejected(
+                    new MedicalDocumentClassification(
+                        false,
+                        null,
+                        1,
+                        "The uploaded file contains no readable medical information."));
+            }
 
             for (var attempt = 1;
-                 attempt <= maximumSubmissionAttempts &&
-                 plugin.AcceptedResult is null;
+                 plugin.AcceptedClassification is null &&
+                 invocationFilter.InvocationCount < _configuration.MaxAgentIterations;
+                 attempt++)
+            {
+                var prompt = attempt == 1
+                    ? MedicalDocumentClassificationPrompt.Submit
+                    : MedicalDocumentClassificationPrompt.Repair;
+
+                thread = await InvokeAgentAsync(
+                    classificationAgent,
+                    prompt,
+                    thread,
+                    linkedSource.Token);
+            }
+
+            var classification = plugin.AcceptedClassification
+                ?? throw new InvalidDataException(
+                    plugin.LastValidationErrors.Count == 0
+                        ? "The classification agent finished without submitting a valid result."
+                        : "The classification agent finished without submitting a valid result: " +
+                          string.Join(" | ", plugin.LastValidationErrors));
+
+            if (!classification.IsMedical)
+            {
+                logger.LogInformation(
+                    "Document {DocumentId} was classified as non-medical with confidence {Confidence}.",
+                    documentId,
+                    classification.Confidence);
+
+                return DocumentProcessingResult.Rejected(classification);
+            }
+
+            for (var attempt = 1;
+                 plugin.AcceptedResult is null &&
+                 invocationFilter.InvocationCount < _configuration.MaxAgentIterations;
                  attempt++)
             {
                 var prompt = attempt == 1
@@ -142,7 +196,9 @@ public sealed class DocumentProcessingAgent(
             documentId,
             acceptedResult.Items.Count);
 
-        return acceptedResult;
+        return DocumentProcessingResult.Medical(
+            plugin.AcceptedClassification!,
+            acceptedResult);
     }
 
     private static Kernel CreatePhaseKernel(
@@ -163,7 +219,9 @@ public sealed class DocumentProcessingAgent(
 
     private ChatCompletionAgent CreateAgent(
         Kernel kernel,
-        KernelFunction requiredFunction)
+        KernelFunction requiredFunction,
+        string instructions,
+        string name)
     {
         var executionSettings = new GeminiPromptExecutionSettings
         {
@@ -186,8 +244,8 @@ public sealed class DocumentProcessingAgent(
 
         return new ChatCompletionAgent
         {
-            Name = "DocumentExtractionAgent",
-            Instructions = DocumentExtractionAgentPrompt.System,
+            Name = name,
+            Instructions = instructions,
             Kernel = kernel,
             Arguments = new KernelArguments(executionSettings)
         };

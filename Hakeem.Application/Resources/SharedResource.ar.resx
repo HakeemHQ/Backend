@@ -249,6 +249,9 @@
   <data name="Document.NotFound" xml:space="preserve">
     <value>لم يتم العثور على المستند المطلوب.</value>
   </data>
+  <data name="Document.NotMedical" xml:space="preserve">
+    <value>تم رفض هذا الملف لأنه لا يبدو أنه يحتوي على معلومات طبية.</value>
+  </data>
   <data name="Document.AlreadyReviewedCannotDelete" xml:space="preserve">
     <value>يمكن حذف المستندات التي لم تتم مراجعتها فقط.</value>
   </data>

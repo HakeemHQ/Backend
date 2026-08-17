@@ -7,6 +7,7 @@ using Hakeem.Application.Repositories.DoctorProfiles;
 using Hakeem.Application.Repositories.MedicalDocuments;
 using Hakeem.Application.Repositories.PatientProfiles;
 using MediatR;
+using Hakeem.Domain.Enums.Documents;
 using Microsoft.AspNetCore.StaticFiles;
 
 namespace Hakeem.Application.Features.MedicalDocuments.Queries.GetDocumentContent;
@@ -33,6 +34,12 @@ public sealed class GetDocumentContentQueryHandler(
         if (document is null)
         {
             throw new NotFoundException(ErrorCodes.DocumentNotFound);
+        }
+
+        if (document.ExtractionStatus == ExtractionStatus.Rejected)
+        {
+            throw new UnprocessableEntityException(
+                ErrorCodes.DocumentNotMedical);
         }
 
         if (!await CanAccessDocumentAsync(document.PatientProfileId, cancellationToken))

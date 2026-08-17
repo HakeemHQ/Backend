@@ -1,4 +1,5 @@
 using Hakeem.Application.Features.MedicalDocuments.DTOs;
+using Hakeem.Application.Interfaces.Agents;
 using Hakeem.Application.Services.DocumentExtraction;
 using Hakeem.Domain.Entities;
 using Hakeem.Domain.Enums.Documents;
@@ -152,16 +153,94 @@ public sealed class DocumentExtractionProcessorTests
         Assert.Equal(1, unitOfWork.CommitTransactionCallCount);
     }
 
+    [Fact]
+    public async Task ProcessAsync_NonMedicalDocument_RejectsWithoutCreatingExtractionRows()
+    {
+        var document = CreateQueuedDocument();
+        var repository = new FakeMedicalDocumentRepository(document);
+        var classification = new MedicalDocumentClassification(
+            false,
+            null,
+            0.98,
+            "The content is unrelated to healthcare.");
+        var agent = new FakeDocumentProcessingAgent(
+            DocumentProcessingResult.Rejected(classification));
+        var storage = new FakeDocumentFileStorage();
+        var unitOfWork = new FakeUnitOfWork();
+        var processor = CreateProcessor(
+            repository,
+            agent,
+            unitOfWork,
+            storage);
+
+        await processor.ProcessAsync(document.Id, CancellationToken.None);
+
+        Assert.Equal(ExtractionStatus.Rejected, document.ExtractionStatus);
+        Assert.Equal("Document.NotMedical", document.FailureCode);
+        Assert.Empty(document.FilePath);
+        Assert.Equal(0, repository.GetExtractedItemsCallCount);
+        Assert.Empty(repository.AddedItems);
+        Assert.Empty(repository.RemovedItems);
+        Assert.Equal(1, agent.CallCount);
+        Assert.Equal(1, storage.DeleteCallCount);
+        Assert.Equal("TestDocuments/test.pdf", storage.DeletedFilePath);
+        Assert.Equal(3, unitOfWork.SaveChangesCallCount);
+        Assert.Equal(0, unitOfWork.BeginTransactionCallCount);
+
+        var normalDocuments = await repository.GetDocumentsAsync(
+            document.PatientProfileId,
+            null,
+            1,
+            20,
+            CancellationToken.None);
+        Assert.Empty(normalDocuments.Items);
+        Assert.Equal(0, normalDocuments.TotalCount);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_RejectedCleanupFailure_RetainsPathForOutboxRetry()
+    {
+        var document = CreateQueuedDocument();
+        var repository = new FakeMedicalDocumentRepository(document);
+        var agent = new FakeDocumentProcessingAgent(
+            DocumentProcessingResult.Rejected(
+                new MedicalDocumentClassification(
+                    false,
+                    null,
+                    0.99,
+                    "No medical information.")));
+        var storage = new FakeDocumentFileStorage
+        {
+            DeleteException = new IOException("Storage unavailable.")
+        };
+        var unitOfWork = new FakeUnitOfWork();
+        var processor = CreateProcessor(
+            repository,
+            agent,
+            unitOfWork,
+            storage);
+
+        await Assert.ThrowsAsync<IOException>(
+            () => processor.ProcessAsync(document.Id, CancellationToken.None));
+
+        Assert.Equal(ExtractionStatus.Rejected, document.ExtractionStatus);
+        Assert.Equal("TestDocuments/test.pdf", document.FilePath);
+        Assert.Equal(2, unitOfWork.SaveChangesCallCount);
+        Assert.Equal(0, repository.GetExtractedItemsCallCount);
+    }
+
     private static DocumentExtractionProcessor CreateProcessor(
         FakeMedicalDocumentRepository repository,
         FakeDocumentProcessingAgent agent,
-        FakeUnitOfWork unitOfWork)
+        FakeUnitOfWork unitOfWork,
+        FakeDocumentFileStorage? storage = null)
     {
         return new DocumentExtractionProcessor(
             repository,
             agent,
             new DocumentExtractionValidator(),
             new FakeAuditLogRepository(),
+            storage ?? new FakeDocumentFileStorage(),
             unitOfWork,
             NullLogger<DocumentExtractionProcessor>.Instance);
     }
@@ -171,6 +250,7 @@ public sealed class DocumentExtractionProcessorTests
         return new MedicalDocument
         {
             Id = Guid.NewGuid(),
+            PatientProfileId = Guid.NewGuid(),
             DocumentType = "Pending",
             Title = "Test document",
             FilePath = "TestDocuments/test.pdf"

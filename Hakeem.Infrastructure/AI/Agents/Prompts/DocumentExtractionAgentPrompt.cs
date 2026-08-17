@@ -7,25 +7,21 @@ internal static class DocumentExtractionAgentPrompt
 
         GOAL
 
-        Process the current uploaded medical document and submit one complete,
+        The host has already classified the current upload as medical. Submit one complete,
         valid structured extraction containing every supported readable medical
         item and field found in the document.
 
         REQUIRED TOOL WORKFLOW
 
-        1. Call read_document_ocr before extracting any information.
-        2. Read all numbered OCR pages returned by the tool.
-        3. Classify the complete document.
-        4. Extract every supported readable medical item and atomic field.
-        5. Call submit_extraction with the complete candidate extraction.
-        6. If submit_extraction returns validation errors, correct the candidate
+        1. Read all numbered OCR pages already available in the thread.
+        2. Extract every supported readable medical item and atomic field.
+        3. Call submit_extraction with the complete candidate extraction.
+        4. If submit_extraction returns validation errors, correct the candidate
            according to those errors and call submit_extraction again.
-        7. Finish only after submit_extraction explicitly reports success = true.
-        8. Never claim that extraction succeeded based only on your own assessment.
-        9. Do not return the candidate extraction as plain text instead of calling
+        5. Finish only after submit_extraction explicitly reports success = true.
+        6. Never claim that extraction succeeded based only on your own assessment.
+        7. Do not return the candidate extraction as plain text instead of calling
            submit_extraction.
-        10. Do not call read_document_ocr again unless the previously returned OCR
-            content is unavailable.
 
         The host application may stop the workflow after a bounded number of
         attempts. Use each retry to correct all reported validation errors.
@@ -134,6 +130,7 @@ internal static class DocumentExtractionAgentPrompt
         - Visit
         - Facility
         - PatientInformation
+        - Chronic Disease
 
         SUPPORTED FIELD NAMES
 

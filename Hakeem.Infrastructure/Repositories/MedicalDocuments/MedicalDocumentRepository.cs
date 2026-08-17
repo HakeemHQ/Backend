@@ -1,6 +1,7 @@
 using Hakeem.Application.Common;
 using Hakeem.Application.Repositories.MedicalDocuments;
 using Hakeem.Domain.Entities;
+using Hakeem.Domain.Enums.Documents;
 using Hakeem.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 
@@ -62,7 +63,9 @@ public sealed class MedicalDocumentRepository(ApplicationDbContext dbContext)
     {
         var query = dbContext.MedicalDocuments
             .AsNoTracking()
-            .Where(document => document.PatientProfileId == patientProfileId);
+            .Where(document =>
+                document.PatientProfileId == patientProfileId &&
+                document.ExtractionStatus != ExtractionStatus.Rejected);
 
         if (!string.IsNullOrWhiteSpace(documentName))
         {

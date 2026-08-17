@@ -5,5 +5,6 @@ public enum ExtractionStatus
     Queued,
     Processing,
     Completed,
+    Rejected,
     Failed
 }

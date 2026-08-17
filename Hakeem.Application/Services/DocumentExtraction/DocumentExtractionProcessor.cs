@@ -1,5 +1,7 @@
 using Hakeem.Application.Features.MedicalDocuments.DTOs;
+using Hakeem.Application.Constants;
 using Hakeem.Application.Interfaces.Agents;
+using Hakeem.Application.Interfaces.Files;
 using Hakeem.Application.Interfaces.Processors;
 using Hakeem.Application.Interfaces.Validation;
 using Hakeem.Application.Repositories.AuditLogs;
@@ -17,6 +19,7 @@ public sealed class DocumentExtractionProcessor(
     IDocumentProcessingAgent documentProcessingAgent,
     IDocumentExtractionValidator extractionValidator,
     IAuditLogRepository auditLogRepository,
+    IDocumentFileStorage documentFileStorage,
     IUnitOfWork unitOfWork,
     ILogger<DocumentExtractionProcessor> logger)
     : IDocumentExtractionProcessor
@@ -55,6 +58,14 @@ public sealed class DocumentExtractionProcessor(
                 $"Medical document '{documentId}' is in the Failed extraction state.");
         }
 
+        if (medicalDocument.ExtractionStatus == ExtractionStatus.Rejected)
+        {
+            await CleanupRejectedFileAsync(
+                medicalDocument,
+                cancellationToken);
+            return;
+        }
+
         if (medicalDocument.ExtractionStatus ==
             ExtractionStatus.Queued)
         {
@@ -72,10 +83,36 @@ public sealed class DocumentExtractionProcessor(
             await unitOfWork.SaveChanges(cancellationToken);
         }
 
-        var extractionResult =
+        var processingResult =
             await documentProcessingAgent.ProcessAsync(
                 documentId,
                 cancellationToken);
+
+        if (!processingResult.Classification.IsMedical)
+        {
+            medicalDocument.RejectExtraction(ErrorCodes.DocumentNotMedical);
+            auditLogRepository.Add(
+                new AuditLog
+                {
+                    Id = Guid.NewGuid(),
+                    ActorUserId = null,
+                    PatientProfileId = medicalDocument.PatientProfileId,
+                    Action = "DocumentRejectedAsNonMedical",
+                    Target = $"MedicalDocument:{documentId}",
+                    OccurredAt = DateTime.UtcNow
+                });
+
+            // Persist the terminal outcome before removing the original binary.
+            await unitOfWork.SaveChanges(cancellationToken);
+            await CleanupRejectedFileAsync(
+                medicalDocument,
+                cancellationToken);
+            return;
+        }
+
+        var extractionResult = processingResult.Extraction
+            ?? throw new InvalidDataException(
+                "A medical document processing result must include an extraction.");
 
         var validationResult = extractionValidator.Validate(
             extractionResult);
@@ -138,6 +175,29 @@ public sealed class DocumentExtractionProcessor(
             await unitOfWork.RollBackTransactionAsync();
             throw;
         }
+    }
+
+    private async Task CleanupRejectedFileAsync(
+        MedicalDocument medicalDocument,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(medicalDocument.FilePath))
+        {
+            return;
+        }
+
+        var filePath = medicalDocument.FilePath;
+        await documentFileStorage.DeleteAsync(
+            filePath,
+            cancellationToken);
+
+        medicalDocument.FilePath = string.Empty;
+        await unitOfWork.SaveChanges(cancellationToken);
+
+        logger.LogInformation(
+            "Deleted rejected document file {FilePath} for document {DocumentId}.",
+            filePath,
+            medicalDocument.Id);
     }
 
     private static IReadOnlyList<ExtractedItem>

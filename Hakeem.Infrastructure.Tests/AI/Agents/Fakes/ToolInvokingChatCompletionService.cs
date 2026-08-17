@@ -7,6 +7,7 @@ namespace Hakeem.Infrastructure.Tests.AI.Agents.Fakes;
 internal sealed class ToolInvokingChatCompletionService
     : IChatCompletionService
 {
+    private readonly MedicalDocumentClassification _classification;
     private readonly IReadOnlyList<DocumentExtractionResult>
         _submittedResults;
     private readonly string _finalText;
@@ -14,14 +15,37 @@ internal sealed class ToolInvokingChatCompletionService
     public ToolInvokingChatCompletionService(
         DocumentExtractionResult submittedResult,
         string finalText)
-        : this([submittedResult], finalText)
+        : this(
+            new MedicalDocumentClassification(
+                true,
+                submittedResult.DocumentType,
+                0.99,
+                null),
+            [submittedResult],
+            finalText)
     {
     }
 
     public ToolInvokingChatCompletionService(
         IReadOnlyList<DocumentExtractionResult> submittedResults,
         string finalText)
+        : this(
+            new MedicalDocumentClassification(
+                true,
+                submittedResults[0].DocumentType,
+                0.99,
+                null),
+            submittedResults,
+            finalText)
     {
+    }
+
+    public ToolInvokingChatCompletionService(
+        MedicalDocumentClassification classification,
+        IReadOnlyList<DocumentExtractionResult> submittedResults,
+        string finalText)
+    {
+        _classification = classification;
         _submittedResults = submittedResults;
         _finalText = finalText;
     }
@@ -57,10 +81,20 @@ internal sealed class ToolInvokingChatCompletionService
                 kernel,
                 cancellationToken: cancellationToken);
         }
+        else if (CallCount == 2)
+        {
+            await plugin["submit_classification"].InvokeAsync(
+                kernel,
+                new KernelArguments
+                {
+                    ["result"] = _classification
+                },
+                cancellationToken);
+        }
         else
         {
             var submissionIndex = Math.Min(
-                CallCount - 2,
+                CallCount - 3,
                 _submittedResults.Count - 1);
 
             await plugin["submit_extraction"].InvokeAsync(
