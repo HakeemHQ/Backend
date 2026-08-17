@@ -1,5 +1,7 @@
 using Hakeem.Api.Authorization;
+using Hakeem.Application.Common;
 using Hakeem.Application.Common.ResponseModel;
+using Hakeem.Application.Features.MedicalRecords.DTOs;
 using Hakeem.Application.Features.MedicalRecords.Queries.GetMedicalRecordById;
 using Hakeem.Application.Features.MedicalRecords.Queries.GetMedicalRecords;
 using Hakeem.Application.Features.MedicalRecords.Queries.SearchMedicalRecords;
@@ -26,6 +28,9 @@ public class MedicalRecordController : ApiControllerBase
 
     [HttpGet]
     [Authorize(Policy = VerifiedPatientPolicy.Name)]
+    [ProducesResponseType(
+        typeof(GenericResponseModel<PaginatedResult<MedicalRecordDto>>),
+        StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMedicalRecords(
         [FromQuery] GetMedicalRecordsQuery query,
         CancellationToken cancellationToken)
@@ -36,6 +41,9 @@ public class MedicalRecordController : ApiControllerBase
 
     [HttpGet("{medicalRecordId:guid}")]
     [Authorize(Policy = PatientResourceAccessPolicy.DoctorOrVerifiedPatient)]
+    [ProducesResponseType(
+        typeof(GenericResponseModel<GetMedicalRecordByIdResult>),
+        StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMedicalRecordById(
         Guid medicalRecordId,
         CancellationToken cancellationToken)
