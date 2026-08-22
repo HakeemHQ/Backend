@@ -61,8 +61,7 @@ namespace Hakeem.Application.Features.Doctor.MedicalCvs.Queries
 
             if (!hasAccess)
             {
-                throw new ForbiddenException(
-                    "Doctor does not have active access to this patient.");
+                throw new ForbiddenException(ErrorCodes.AuthForbidden);
             }
 
             // 3. Get patient's medical CVs

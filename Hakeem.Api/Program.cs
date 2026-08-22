@@ -81,10 +81,7 @@ public class Program
 
             app.UseWebApiMiddleware();
 
-            if (!app.Environment.IsDevelopment())
-            {
-                app.UseCustomErrorPages();
-            }
+            app.UseCustomErrorPages();
 
             Log.Information("Hakeem API application started successfully");
 

@@ -81,8 +81,7 @@ public sealed class ApproveMedicalCvVersionCommandHandler(
 
         if (!hasAccess)
         {
-            throw new ForbiddenException(
-                "Doctor does not have active access to this patient.");
+            throw new ForbiddenException(ErrorCodes.AuthForbidden);
         }
 
         // 4. Doctor is authorized.

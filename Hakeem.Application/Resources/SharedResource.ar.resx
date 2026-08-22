@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!--
     Microsoft ResX Schema
@@ -435,5 +435,143 @@
   </data>
   <data name="Doctor.LicenseNumberConflict" xml:space="preserve">
     <value>يوجد حساب طبيب بنفس رقم الترخيص المُنشأ.</value>
+  </data>
+  <data name="Block_NotFound" xml:space="preserve">
+    <value>لم يتم العثور على الكتلة بالمعرف: {0}.</value>
+  </data>
+  <data name="Auth.Unauthorized" xml:space="preserve">
+    <value>لم يتم التحقق من هويتك. يرجى تسجيل الدخول.</value>
+  </data>
+  <data name="Auth.Forbidden" xml:space="preserve">
+    <value>ليس لديك صلاحية لتنفيذ هذا الإجراء.</value>
+  </data>
+  <data name="Auth.LoggedOut" xml:space="preserve">
+    <value>تم تسجيل الخروج بنجاح.</value>
+  </data>
+  <data name="Auth.InvalidGeneratedPassword" xml:space="preserve">
+    <value>كلمة المرور المُنشأة غير صالحة.</value>
+  </data>
+  <data name="Auth.InvalidMfaToken" xml:space="preserve">
+    <value>رمز المصادقة الثنائية غير صالح.</value>
+  </data>
+  <data name="Auth.MfaTokenExpired" xml:space="preserve">
+    <value>انتهت صلاحية رمز المصادقة الثنائية.</value>
+  </data>
+  <data name="Auth.PasswordConfigurationRequired" xml:space="preserve">
+    <value>لم يتم تعيين كلمة مرور لهذا الحساب.</value>
+  </data>
+  <data name="Auth.PhoneNotConfigured" xml:space="preserve">
+    <value>لا يوجد رقم هاتف مضاف لهذا الحساب.</value>
+  </data>
+  <data name="Auth.PasswordAlreadyConfigured" xml:space="preserve">
+    <value>تم تعيين كلمة مرور لهذا الحساب بالفعل.</value>
+  </data>
+  <data name="Server.InternalError" xml:space="preserve">
+    <value>حدث خطأ غير متوقع في الخادم. يرجى المحاولة مرة أخرى لاحقًا.</value>
+  </data>
+  <data name="Resource.NotFound" xml:space="preserve">
+    <value>المورد المطلوب غير موجود.</value>
+  </data>
+  <data name="Operation.Success" xml:space="preserve">
+    <value>تمت العملية بنجاح.</value>
+  </data>
+  <data name="Operation.Failure" xml:space="preserve">
+    <value>تعذّر إتمام العملية.</value>
+  </data>
+  <data name="Role.NotFound" xml:space="preserve">
+    <value>الدور المحدد غير موجود.</value>
+  </data>
+  <data name="User.NotFound" xml:space="preserve">
+    <value>حساب المستخدم غير موجود.</value>
+  </data>
+  <data name="User.Updated" xml:space="preserve">
+    <value>تم تحديث المستخدم بنجاح.</value>
+  </data>
+  <data name="User.StatusUpdated" xml:space="preserve">
+    <value>تم تحديث حالة المستخدم بنجاح.</value>
+  </data>
+  <data name="User.RolesRequired" xml:space="preserve">
+    <value>يجب تعيين دور واحد على الأقل.</value>
+  </data>
+  <data name="Validation.MaxLength" xml:space="preserve">
+    <value>القيمة تتجاوز الحد الأقصى المسموح به من الأحرف.</value>
+  </data>
+  <data name="Validation.MinLength" xml:space="preserve">
+    <value>القيمة أقل من الحد الأدنى المطلوب من الأحرف.</value>
+  </data>
+  <data name="Validation.InvalidFormat" xml:space="preserve">
+    <value>القيمة ليست بالتنسيق المتوقع.</value>
+  </data>
+  <data name="Validation.InvalidRange" xml:space="preserve">
+    <value>القيمة خارج النطاق المسموح به.</value>
+  </data>
+  <data name="Validation.Invalid" xml:space="preserve">
+    <value>القيمة المُدخلة غير صالحة.</value>
+  </data>
+  <data name="Otp.RateLimited" xml:space="preserve">
+    <value>طلبات كثيرة جدًا. يرجى الانتظار قبل طلب رمز جديد.</value>
+  </data>
+  <data name="Otp.TooManyRequests" xml:space="preserve">
+    <value>لقد تجاوزت الحد الأقصى لطلبات رمز التحقق.</value>
+  </data>
+  <data name="Otp.InvalidOrExpired" xml:space="preserve">
+    <value>رمز التحقق غير صالح أو منتهي الصلاحية.</value>
+  </data>
+  <data name="Otp.Expired" xml:space="preserve">
+    <value>انتهت صلاحية رمز التحقق.</value>
+  </data>
+  <data name="Otp.InvalidAttemptsRemaining" xml:space="preserve">
+    <value>الرمز غير صحيح. تبقى {0} محاولة(محاولات).</value>
+  </data>
+  <data name="FileValidation.NoRuleFound" xml:space="preserve">
+    <value>لم يتم العثور على قاعدة تحقق لهذا النوع من الملفات.</value>
+  </data>
+  <data name="FileValidation.MaxSize" xml:space="preserve">
+    <value>حجم الملف يتجاوز الحد الأقصى المسموح به وهو {0} بايت.</value>
+  </data>
+  <data name="FileValidation.InvalidExtension" xml:space="preserve">
+    <value>امتداد الملف غير مسموح به.</value>
+  </data>
+  <data name="FileValidation.InvalidContentType" xml:space="preserve">
+    <value>نوع محتوى الملف غير مسموح به.</value>
+  </data>
+  <data name="FileValidation.MinCount" xml:space="preserve">
+    <value>يجب إرفاق {0} ملف(ات) على الأقل.</value>
+  </data>
+  <data name="FileValidation.MaxCount" xml:space="preserve">
+    <value>الحد الأقصى المسموح به هو {0} ملف(ات).</value>
+  </data>
+  <data name="ExtractedItem.NotFound" xml:space="preserve">
+    <value>لم يتم العثور على العنصر المستخرج.</value>
+  </data>
+  <data name="ExtractedItem.ExtractionNotCompleted" xml:space="preserve">
+    <value>لم تكتمل عملية استخراج المستند بعد.</value>
+  </data>
+  <data name="ExtractedItem.AlreadyReviewed" xml:space="preserve">
+    <value>تمت مراجعة هذا العنصر المستخرج بالفعل.</value>
+  </data>
+  <data name="ExtractedField.NotFound" xml:space="preserve">
+    <value>لم يتم العثور على الحقل المستخرج.</value>
+  </data>
+  <data name="ExtractedField.DoesNotBelongToItem" xml:space="preserve">
+    <value>الحقل '{0}' لا ينتمي إلى هذا العنصر المستخرج.</value>
+  </data>
+  <data name="ExtractedField.Duplicate" xml:space="preserve">
+    <value>لا يُسمح بتكرار معرّفات الحقول.</value>
+  </data>
+  <data name="ExtractedField.CorrectedValueRequired" xml:space="preserve">
+    <value>القيمة المصحَّحة مطلوبة للحقل '{0}'.</value>
+  </data>
+  <data name="Review.Saved" xml:space="preserve">
+    <value>تم حفظ المراجعة بنجاح.</value>
+  </data>
+  <data name="MedicalRecord.NotFound" xml:space="preserve">
+    <value>لم يتم العثور على السجل الطبي.</value>
+  </data>
+  <data name="MedicalRecordField.NotFound" xml:space="preserve">
+    <value>لم يتم العثور على حقل السجل الطبي.</value>
+  </data>
+  <data name="Invalid.Json" xml:space="preserve">
+    <value>نص الطلب يحتوي على JSON غير صالح.</value>
   </data>
 </root>

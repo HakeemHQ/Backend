@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!--
     Microsoft ResX Schema
@@ -439,5 +439,140 @@
   </data>
   <data name="Doctor.LicenseNumberConflict" xml:space="preserve">
     <value>A Doctor account with the generated license number already exists.</value>
+  </data>
+  <data name="Auth.Unauthorized" xml:space="preserve">
+    <value>You are not authenticated. Please log in.</value>
+  </data>
+  <data name="Auth.Forbidden" xml:space="preserve">
+    <value>You do not have permission to perform this action.</value>
+  </data>
+  <data name="Auth.LoggedOut" xml:space="preserve">
+    <value>Logged out successfully.</value>
+  </data>
+  <data name="Auth.InvalidGeneratedPassword" xml:space="preserve">
+    <value>The generated password is invalid.</value>
+  </data>
+  <data name="Auth.InvalidMfaToken" xml:space="preserve">
+    <value>The multi-factor authentication token is invalid.</value>
+  </data>
+  <data name="Auth.MfaTokenExpired" xml:space="preserve">
+    <value>The multi-factor authentication token has expired.</value>
+  </data>
+  <data name="Auth.PasswordConfigurationRequired" xml:space="preserve">
+    <value>A password has not been configured for this account.</value>
+  </data>
+  <data name="Auth.PhoneNotConfigured" xml:space="preserve">
+    <value>No phone number is configured for this account.</value>
+  </data>
+  <data name="Auth.PasswordAlreadyConfigured" xml:space="preserve">
+    <value>A password is already configured for this account.</value>
+  </data>
+  <data name="Server.InternalError" xml:space="preserve">
+    <value>An unexpected server error occurred. Please try again later.</value>
+  </data>
+  <data name="Resource.NotFound" xml:space="preserve">
+    <value>The requested resource was not found.</value>
+  </data>
+  <data name="Operation.Success" xml:space="preserve">
+    <value>Operation completed successfully.</value>
+  </data>
+  <data name="Operation.Failure" xml:space="preserve">
+    <value>The operation could not be completed.</value>
+  </data>
+  <data name="Role.NotFound" xml:space="preserve">
+    <value>The specified role was not found.</value>
+  </data>
+  <data name="User.NotFound" xml:space="preserve">
+    <value>The user account was not found.</value>
+  </data>
+  <data name="User.Updated" xml:space="preserve">
+    <value>User updated successfully.</value>
+  </data>
+  <data name="User.StatusUpdated" xml:space="preserve">
+    <value>User status updated successfully.</value>
+  </data>
+  <data name="User.RolesRequired" xml:space="preserve">
+    <value>At least one role must be assigned.</value>
+  </data>
+  <data name="Validation.MaxLength" xml:space="preserve">
+    <value>The value exceeds the maximum allowed length.</value>
+  </data>
+  <data name="Validation.MinLength" xml:space="preserve">
+    <value>The value is below the minimum required length.</value>
+  </data>
+  <data name="Validation.InvalidFormat" xml:space="preserve">
+    <value>The value is not in the expected format.</value>
+  </data>
+  <data name="Validation.InvalidRange" xml:space="preserve">
+    <value>The value is outside the allowed range.</value>
+  </data>
+  <data name="Validation.Invalid" xml:space="preserve">
+    <value>The provided value is invalid.</value>
+  </data>
+  <data name="Otp.RateLimited" xml:space="preserve">
+    <value>Too many requests. Please wait before requesting a new code.</value>
+  </data>
+  <data name="Otp.TooManyRequests" xml:space="preserve">
+    <value>You have exceeded the maximum number of OTP requests.</value>
+  </data>
+  <data name="Otp.InvalidOrExpired" xml:space="preserve">
+    <value>The verification code is invalid or has expired.</value>
+  </data>
+  <data name="Otp.Expired" xml:space="preserve">
+    <value>The verification code has expired.</value>
+  </data>
+  <data name="Otp.InvalidAttemptsRemaining" xml:space="preserve">
+    <value>Invalid code. {0} attempt(s) remaining.</value>
+  </data>
+  <data name="FileValidation.NoRuleFound" xml:space="preserve">
+    <value>No file validation rule was found for this file type.</value>
+  </data>
+  <data name="FileValidation.MaxSize" xml:space="preserve">
+    <value>The file size exceeds the maximum allowed limit of {0} bytes.</value>
+  </data>
+  <data name="FileValidation.InvalidExtension" xml:space="preserve">
+    <value>The file extension is not allowed.</value>
+  </data>
+  <data name="FileValidation.InvalidContentType" xml:space="preserve">
+    <value>The file content type is not allowed.</value>
+  </data>
+  <data name="FileValidation.MinCount" xml:space="preserve">
+    <value>At least {0} file(s) are required.</value>
+  </data>
+  <data name="FileValidation.MaxCount" xml:space="preserve">
+    <value>A maximum of {0} file(s) is allowed.</value>
+  </data>
+  <data name="ExtractedItem.NotFound" xml:space="preserve">
+    <value>The extracted item was not found.</value>
+  </data>
+  <data name="ExtractedItem.ExtractionNotCompleted" xml:space="preserve">
+    <value>The document extraction has not completed yet.</value>
+  </data>
+  <data name="ExtractedItem.AlreadyReviewed" xml:space="preserve">
+    <value>This extracted item has already been reviewed.</value>
+  </data>
+  <data name="ExtractedField.NotFound" xml:space="preserve">
+    <value>The extracted field was not found.</value>
+  </data>
+  <data name="ExtractedField.DoesNotBelongToItem" xml:space="preserve">
+    <value>Field '{0}' does not belong to this extracted item.</value>
+  </data>
+  <data name="ExtractedField.Duplicate" xml:space="preserve">
+    <value>Duplicate field IDs are not allowed.</value>
+  </data>
+  <data name="ExtractedField.CorrectedValueRequired" xml:space="preserve">
+    <value>A corrected value is required for field '{0}'.</value>
+  </data>
+  <data name="Review.Saved" xml:space="preserve">
+    <value>Review saved successfully.</value>
+  </data>
+  <data name="MedicalRecord.NotFound" xml:space="preserve">
+    <value>The medical record was not found.</value>
+  </data>
+  <data name="MedicalRecordField.NotFound" xml:space="preserve">
+    <value>The medical record field was not found.</value>
+  </data>
+  <data name="Invalid.Json" xml:space="preserve">
+    <value>The request body contains invalid JSON.</value>
   </data>
 </root>

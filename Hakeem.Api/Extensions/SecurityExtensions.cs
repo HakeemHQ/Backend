@@ -1,10 +1,15 @@
 using System.Text;
 using Hakeem.Api.Authorization;
 using Hakeem.Api.Configuration;
+using Hakeem.Application.Common.ResponseModel;
+using Hakeem.Application.Constants;
 using Hakeem.Application.Repositories.Auth;
+using Hakeem.Application.Resources;
 using Hakeem.Domain.Enums.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Localization;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -135,16 +140,37 @@ public static class SecurityExtensions
                         logger.LogInformation("JWT Token validated for user: {User}",
                             context.Principal?.Identity?.Name ?? "Unknown");
                     },
-                    OnChallenge = context =>
+                    OnChallenge = async context =>
                     {
-                        var logger = context.HttpContext.RequestServices
-                            .GetRequiredService<ILogger<JwtBearerEvents>>();
+                        // Suppress the default empty 401 response and write a localized JSON body.
+                        context.HandleResponse();
 
-                        logger.LogWarning("JWT Challenge triggered for path: {Path} from IP: {IP}",
-                            context.Request.Path,
-                            context.HttpContext.Connection.RemoteIpAddress);
+                        var localizer = context.HttpContext.RequestServices
+                            .GetRequiredService<IStringLocalizer<SharedResource>>();
 
-                        return Task.CompletedTask;
+                        context.HttpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        context.HttpContext.Response.ContentType = "application/json";
+
+                        var response = GenericResponseModel<object>.Failure(
+                            localizer[ErrorCodes.AuthUnauthorized].Value,
+                            ErrorCodes.AuthUnauthorized);
+
+                        await context.HttpContext.Response.WriteAsJsonAsync(response);
+                    },
+                    OnForbidden = async context =>
+                    {
+                        // Write a localized 403 JSON body instead of the empty ASP.NET default.
+                        var localizer = context.HttpContext.RequestServices
+                            .GetRequiredService<IStringLocalizer<SharedResource>>();
+
+                        context.HttpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        context.HttpContext.Response.ContentType = "application/json";
+
+                        var response = GenericResponseModel<object>.Failure(
+                            localizer[ErrorCodes.AuthForbidden].Value,
+                            ErrorCodes.AuthForbidden);
+
+                        await context.HttpContext.Response.WriteAsJsonAsync(response);
                     }
                 };
             });

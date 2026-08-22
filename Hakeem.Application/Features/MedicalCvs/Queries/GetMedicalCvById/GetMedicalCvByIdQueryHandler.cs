@@ -84,8 +84,7 @@ public sealed class GetMedicalCvByIdQueryHandler(
 
         if (!hasAccess)
         {
-            throw new ForbiddenException(
-                "Doctor does not have active access to this patient.");
+            throw new ForbiddenException(ErrorCodes.AuthForbidden);
         }
 
         // 5. Authorized doctor ? get CV details

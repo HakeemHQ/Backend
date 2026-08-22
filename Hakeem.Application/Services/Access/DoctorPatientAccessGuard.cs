@@ -55,8 +55,7 @@ public sealed class DoctorPatientAccessGuard(
 
         if (!hasAccess)
         {
-            throw new ForbiddenException(
-                "Doctor does not have active access to this patient.");
+            throw new ForbiddenException(ErrorCodes.AuthForbidden);
         }
 
         return doctor;
