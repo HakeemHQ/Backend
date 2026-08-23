@@ -108,13 +108,19 @@ namespace Hakeem.Application.Features.PatientReviewAndConfirmation.Commands
 
             var patientProfileId = item.MedicalDocument.PatientProfileId;
 
-            var displayName = string.Join(
-                ", ",
-                item.ExtractedFields
-                    .Where(f =>
-                        (f.FieldReview?.Decision ?? FieldReviewDecision.Approved) !=
-                        FieldReviewDecision.Rejected)
-                    .Select(f =>
+            var acceptedFields = item.ExtractedFields
+                .Where(f =>
+                    (f.FieldReview?.Decision ?? FieldReviewDecision.Approved) !=
+                    FieldReviewDecision.Rejected)
+                .ToList();
+
+            Guid? medicalRecordId = null;
+
+            if (acceptedFields.Count > 0)
+            {
+                var displayName = string.Join(
+                    ", ",
+                    acceptedFields.Select(f =>
                     {
                         var value = (f.FieldReview?.Decision ?? FieldReviewDecision.Approved) ==
                             FieldReviewDecision.Corrected
@@ -124,51 +130,49 @@ namespace Hakeem.Application.Features.PatientReviewAndConfirmation.Commands
                         return $"{f.FieldName}: {value}";
                     }));
 
-            var medicalRecord = new MedicalRecord
-            {
-                Id = Guid.NewGuid(),
-                RecordType = item.ItemType,
-                SourceExtractedItemId = item.Id,
-                PatientProfileId = patientProfileId,
-                DisplayName = displayName,
-                Status = "Confirmed",
-                ClinicalDate = item.CreatedAt,
-            };
-            medicalRecordRepository.Add(medicalRecord);
-
-            foreach (var extractedField in item.ExtractedFields)
-            {
-                var decision = extractedField.FieldReview?.Decision ?? FieldReviewDecision.Approved;
-                if (decision == FieldReviewDecision.Rejected)
+                var medicalRecord = new MedicalRecord
                 {
-                    continue;
+                    Id = Guid.NewGuid(),
+                    RecordType = item.ItemType,
+                    SourceExtractedItemId = item.Id,
+                    PatientProfileId = patientProfileId,
+                    DisplayName = displayName,
+                    Status = "Confirmed",
+                    ClinicalDate = item.CreatedAt,
+                };
+                medicalRecordRepository.Add(medicalRecord);
+
+                foreach (var extractedField in acceptedFields)
+                {
+                    var decision = extractedField.FieldReview?.Decision ?? FieldReviewDecision.Approved;
+                    var value = decision == FieldReviewDecision.Corrected
+                        ? extractedField.FieldReview!.CorrectedValue!
+                        : extractedField.ExtractedValue;
+
+                    var field = new MedicalRecordField
+                    {
+                        Id = Guid.NewGuid(),
+                        MedicalRecordId = medicalRecord.Id,
+                        FieldName = extractedField.FieldName,
+                        SourceExtractedFieldId = extractedField.Id,
+                        Value = value ?? string.Empty
+                    };
+
+                    medicalRecord.Fields.Add(field);
                 }
 
-                var value = decision == FieldReviewDecision.Corrected
-                    ? extractedField.FieldReview!.CorrectedValue!
-                    : extractedField.ExtractedValue;
+                medicalRecordIndexOutbox.EnqueueIndexing(medicalRecord.Id);
 
-                var field = new MedicalRecordField
+                sourceReferenceRepository.Add(new SourceReference
                 {
                     Id = Guid.NewGuid(),
                     MedicalRecordId = medicalRecord.Id,
-                    FieldName = extractedField.FieldName,
-                    SourceExtractedFieldId = extractedField.Id,
-                    Value = value ?? string.Empty
-                };
+                    DocumentId = item.MedicalDocumentId,
+                    PageReference = item.PageNumber.ToString(),
+                });
 
-                medicalRecord.Fields.Add(field);
+                medicalRecordId = medicalRecord.Id;
             }
-
-            medicalRecordIndexOutbox.EnqueueIndexing(medicalRecord.Id);
-
-            sourceReferenceRepository.Add(new SourceReference
-            {
-                Id = Guid.NewGuid(),
-                MedicalRecordId = medicalRecord.Id,
-                DocumentId = item.MedicalDocumentId,
-                PageReference = item.PageNumber.ToString(),
-            });
 
             await unitOfWork.SaveChanges(cancellationToken);
 
@@ -177,7 +181,7 @@ namespace Hakeem.Application.Features.PatientReviewAndConfirmation.Commands
                 item.ItemType.ToString(),
                 item.ReviewStatus.ToString(),
                 item.MedicalDocument.ReviewStatus.ToString(),
-                medicalRecord.Id,
+                medicalRecordId,
                 item.ReviewedAt!.Value,
                 item.ExtractedFields.Select(field =>
                 {

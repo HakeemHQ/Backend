@@ -115,6 +115,12 @@ internal sealed class FakeMedicalDocumentRepository(
 
     public Task<ExtractedItem?> GetExtractedItemForReviewAsync(Guid extractedItemId, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        cancellationToken.ThrowIfCancellationRequested();
+        var item = _existingItems.FirstOrDefault(x => x.Id == extractedItemId);
+        if (item != null && item.MedicalDocument == null && medicalDocument != null)
+        {
+            item.MedicalDocument = medicalDocument;
+        }
+        return Task.FromResult(item);
     }
 }
