@@ -25,8 +25,12 @@ public static class MiddlewareExtension
 
            await next();
        });
-        // Configure error handling based on environment
 
+        // Request localization MUST execute before UseExceptionHandler so the culture is preserved
+        // across the entire request pipeline, including when exceptions are caught and handled.
+        app.UseRequestLocalization();
+
+        // Configure error handling based on environment
         app.UseExceptionHandler();
 
 
@@ -53,9 +57,6 @@ public static class MiddlewareExtension
             c.ShowExtensions();
             c.EnableValidator();
         });
-
-        // Configure localization
-        app.UseRequestLocalization();
 
         // Configure CORS with security settings (must be before StaticFiles and UseRouting)
         app.UseCors("SecurityPolicy");
@@ -127,28 +128,26 @@ public static class MiddlewareExtension
         app.UseStatusCodePages(async context =>
         {
             var response = context.HttpContext.Response;
-            var localizer = context.HttpContext.RequestServices
-                .GetRequiredService<IStringLocalizer<SharedResource>>();
+            var culture = context.HttpContext.Features.Get<Microsoft.AspNetCore.Localization.IRequestCultureFeature>()?.RequestCulture.UICulture
+                          ?? System.Globalization.CultureInfo.CurrentUICulture;
 
             response.ContentType = "application/json";
 
-            if (response.StatusCode == 404)
+            string? errorCode = response.StatusCode switch
             {
-                var notFoundResponse = GenericResponseModel<object>.Failure(
-                    localizer[ErrorCodes.ResourceNotFound]);
-                await response.WriteAsJsonAsync(notFoundResponse);
-            }
-            else if (response.StatusCode == 401)
+                StatusCodes.Status404NotFound => ErrorCodes.ResourceNotFound,
+                StatusCodes.Status401Unauthorized => ErrorCodes.AuthUnauthorized,
+                StatusCodes.Status403Forbidden => ErrorCodes.AuthForbidden,
+                _ => null
+            };
+
+            if (errorCode != null)
             {
-                var unauthorizedResponse = GenericResponseModel<object>.Failure(
-                    localizer[ErrorCodes.AuthUnauthorized]);
-                await response.WriteAsJsonAsync(unauthorizedResponse);
-            }
-            else if (response.StatusCode == 403)
-            {
-                var forbiddenResponse = GenericResponseModel<object>.Failure(
-                    localizer[ErrorCodes.AuthForbidden]);
-                await response.WriteAsJsonAsync(forbiddenResponse);
+                var message = SharedResource.ResourceManager.GetString(errorCode, culture)
+                    ?? context.HttpContext.RequestServices.GetRequiredService<IStringLocalizer<SharedResource>>()[errorCode].Value;
+
+                var failureResponse = GenericResponseModel<object>.Failure(message, errorCode);
+                await response.WriteAsJsonAsync(failureResponse);
             }
         });
         return app;

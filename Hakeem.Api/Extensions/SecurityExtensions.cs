@@ -145,30 +145,32 @@ public static class SecurityExtensions
                         // Suppress the default empty 401 response and write a localized JSON body.
                         context.HandleResponse();
 
-                        var localizer = context.HttpContext.RequestServices
-                            .GetRequiredService<IStringLocalizer<SharedResource>>();
+                        var culture = context.HttpContext.Features.Get<Microsoft.AspNetCore.Localization.IRequestCultureFeature>()?.RequestCulture?.UICulture
+                                      ?? System.Globalization.CultureInfo.CurrentUICulture;
 
                         context.HttpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
                         context.HttpContext.Response.ContentType = "application/json";
 
-                        var response = GenericResponseModel<object>.Failure(
-                            localizer[ErrorCodes.AuthUnauthorized].Value,
-                            ErrorCodes.AuthUnauthorized);
+                        var message = SharedResource.ResourceManager.GetString(ErrorCodes.AuthUnauthorized, culture)
+                            ?? context.HttpContext.RequestServices.GetRequiredService<IStringLocalizer<SharedResource>>()[ErrorCodes.AuthUnauthorized].Value;
+
+                        var response = GenericResponseModel<object>.Failure(message, ErrorCodes.AuthUnauthorized);
 
                         await context.HttpContext.Response.WriteAsJsonAsync(response);
                     },
                     OnForbidden = async context =>
                     {
                         // Write a localized 403 JSON body instead of the empty ASP.NET default.
-                        var localizer = context.HttpContext.RequestServices
-                            .GetRequiredService<IStringLocalizer<SharedResource>>();
+                        var culture = context.HttpContext.Features.Get<Microsoft.AspNetCore.Localization.IRequestCultureFeature>()?.RequestCulture?.UICulture
+                                      ?? System.Globalization.CultureInfo.CurrentUICulture;
 
                         context.HttpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
                         context.HttpContext.Response.ContentType = "application/json";
 
-                        var response = GenericResponseModel<object>.Failure(
-                            localizer[ErrorCodes.AuthForbidden].Value,
-                            ErrorCodes.AuthForbidden);
+                        var message = SharedResource.ResourceManager.GetString(ErrorCodes.AuthForbidden, culture)
+                            ?? context.HttpContext.RequestServices.GetRequiredService<IStringLocalizer<SharedResource>>()[ErrorCodes.AuthForbidden].Value;
+
+                        var response = GenericResponseModel<object>.Failure(message, ErrorCodes.AuthForbidden);
 
                         await context.HttpContext.Response.WriteAsJsonAsync(response);
                     }

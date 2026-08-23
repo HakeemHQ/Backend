@@ -26,16 +26,29 @@ public static class ServiceCollectionExtensions
             var supportedCultures = new[]
             {
                 new CultureInfo("en"),
-                new CultureInfo("ar")
+                new CultureInfo("ar"),
+                new CultureInfo("ar-EG"),
+                new CultureInfo("ar-SA"),
+                new CultureInfo("ar-AE"),
+                new CultureInfo("en-US"),
+                new CultureInfo("en-GB")
             };
             var supportedUICultures = new[]
             {
                 new CultureInfo("en"),
-                new CultureInfo("ar")
+                new CultureInfo("ar"),
+                new CultureInfo("ar-EG"),
+                new CultureInfo("ar-SA"),
+                new CultureInfo("ar-AE"),
+                new CultureInfo("en-US"),
+                new CultureInfo("en-GB")
             };
             opts.DefaultRequestCulture = new RequestCulture("en");
             opts.SupportedCultures = supportedCultures;
             opts.SupportedUICultures = supportedUICultures;
+            opts.FallBackToParentCultures = true;
+            opts.FallBackToParentUICultures = true;
+            opts.ApplyCurrentCultureToResponseHeaders = true;
 
             // Configure culture providers
             opts.RequestCultureProviders = new List<IRequestCultureProvider>
